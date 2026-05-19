@@ -30,17 +30,28 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: [
+      '@tanstack/react-query',
+      'next-themes',
+      'react/jsx-runtime'
+    ]
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
+    commonjsOptions: {
+      include: [/node_modules\/.*/],
+      transformMixedEsModules: true
+    },
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
       },
       output: {
         manualChunks(id) {
-          if (id.includes("node_modules/@meshsdk")) return "mesh-cardano";
+          if (id.includes("node_modules/@meshsdk/core")) return "mesh-cardano";
         },
       }
     }
