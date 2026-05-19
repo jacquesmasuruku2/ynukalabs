@@ -1,0 +1,205 @@
+/* Préchargeur — quadrants (charte marine / or / pervenche) + barre de progression */
+
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse 120% 100% at 50% 100%, hsl(218 45% 14%) 0%, hsl(218 52% 6%) 55%);
+}
+
+.preloader-overlay--done {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.preloader-stage {
+  position: relative;
+  width: min(92vw, 460px);
+  aspect-ratio: 1;
+  max-height: min(92vw, 460px);
+  margin-inline: auto;
+}
+
+.preloader-quad {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  border: 1px solid hsl(43 100% 50% / 0.22);
+  box-sizing: border-box;
+}
+
+.preloader-quad--tl {
+  top: 0;
+  left: 0;
+  border-radius: 0 0 20px 0;
+  border-right: none;
+  border-bottom: none;
+  background: linear-gradient(145deg, hsl(218 52% 16%) 0%, hsl(218 52% 8%) 55%, transparent 100%);
+}
+
+.preloader-quad--tr {
+  top: 0;
+  right: 0;
+  border-radius: 0 0 0 20px;
+  border-left: none;
+  border-bottom: none;
+  background: linear-gradient(215deg, hsl(230 42% 28% / 0.45) 0%, hsl(218 52% 10%) 60%, transparent 100%);
+}
+
+.preloader-quad--bl {
+  bottom: 0;
+  left: 0;
+  border-radius: 0 20px 0 0;
+  border-right: none;
+  border-top: none;
+  background: linear-gradient(35deg, hsl(218 45% 12%) 0%, hsl(230 38% 22% / 0.35) 50%, transparent 100%);
+}
+
+.preloader-quad--br {
+  bottom: 0;
+  right: 0;
+  border-radius: 20px 0 0 0;
+  border-left: none;
+  border-top: none;
+  background: linear-gradient(325deg, hsl(43 100% 50% / 0.12) 0%, hsl(218 52% 11%) 55%, transparent 100%);
+}
+
+.preloader-cross {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, transparent calc(50% - 0.5px), hsl(43 100% 50% / 0.28) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), hsl(43 100% 50% / 0.28) 50%, transparent calc(50% + 0.5px));
+  opacity: 0.85;
+}
+
+.preloader-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  width: 86%;
+  max-width: 320px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.preloader-counter-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.digit-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "SN Pro", system-ui, sans-serif;
+  font-weight: 300;
+  font-size: clamp(4.5rem, 14vw, 7.5rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #fff;
+}
+
+.digit-column {
+  position: relative;
+  width: 1em;
+  height: clamp(72px, 18vw, 112px);
+  margin: 0 0.35rem;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid hsl(0 0% 100% / 0.12);
+  background: hsl(218 52% 8% / 0.55);
+  box-shadow: inset 0 0 0 1px hsl(43 100% 50% / 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.digit-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.digit {
+  display: flex;
+  height: clamp(72px, 18vw, 112px);
+  align-items: center;
+  justify-content: center;
+  font-size: inherit;
+  font-weight: inherit;
+  color: #fff;
+  text-shadow: 0 0 24px hsl(43 100% 50% / 0.35);
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+.percent {
+  margin-left: 0.35rem;
+  font-size: 0.38em;
+  font-weight: 400;
+  color: hsl(42 25% 96% / 0.92);
+  text-shadow: 0 0 18px hsl(0 0% 100% / 0.25);
+}
+
+.preloader-progress {
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 1rem;
+}
+
+.preloader-progress-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid hsl(0 0% 100% / 0.14);
+  background: hsl(218 52% 6% / 0.85);
+  box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.25);
+}
+
+.preloader-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, hsl(218 72% 48%) 0%, hsl(175 55% 38%) 45%, hsl(43 100% 50%) 100%);
+  box-shadow: 0 0 16px hsl(43 100% 50% / 0.35);
+}
+
+.preloader-loading-label {
+  margin: 0;
+  font-family: "SN Pro", system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: hsl(42 25% 96% / 0.72);
+  animation: preloader-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes preloader-pulse {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (min-width: 640px) {
+  .digit-column {
+    margin: 0 0.5rem;
+  }
+
+  .preloader-loading-label {
+    font-size: 0.8125rem;
+    letter-spacing: 0.55em;
+  }
+}

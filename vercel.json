@@ -1,0 +1,74 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/about",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/events",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/projects",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/community",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/resources",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/blog",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/blog/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/partners",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/contact",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/validators",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/documentation",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/tools",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/admin/login",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/index.html"
+    }
+  ]
+}

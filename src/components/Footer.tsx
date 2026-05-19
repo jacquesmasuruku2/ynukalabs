@@ -1,0 +1,304 @@
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { socialLinks } from "@/data/socialLinks";
+import { strapiFetch } from "@/lib/strapi";
+
+const Footer = () => {
+  const { t } = useTranslation();
+  const [newsletterName, setNewsletterName] = useState("");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  type FooterMenuItem = { labelKey: string; path: string };
+  type FooterMenuGroup = { labelKey: string; items: FooterMenuItem[]; order: number };
+
+  const fallbackFooterGroups: FooterMenuGroup[] = [
+    {
+      labelKey: "footer.quickLinks",
+      order: 0,
+      items: [
+        { labelKey: "nav.about", path: "/about" },
+        { labelKey: "nav.events", path: "/events" },
+        { labelKey: "nav.projects", path: "/projects" },
+        { labelKey: "nav.gallery", path: "/resources#gallery" },
+        { labelKey: "nav.community", path: "/community" },
+      ],
+    },
+    {
+      labelKey: "footer.resources",
+      order: 1,
+      items: [
+        { labelKey: "nav.blog", path: "/resources#blog" },
+        { labelKey: "nav.documentation", path: "/resources#documentation" },
+        { labelKey: "nav.tools", path: "/resources#tools" },
+        { labelKey: "nav.contact", path: "/contact" },
+      ],
+    },
+  ];
+
+  const [footerMenuGroups, setFooterMenuGroups] = useState<FooterMenuGroup[]>(fallbackFooterGroups);
+
+  const resolveLabel = (labelKey: string) => {
+    if (!labelKey) return "";
+    if (labelKey.includes(".")) return t(labelKey);
+    return t(`nav.${labelKey}`);
+  };
+
+  useEffect(() => {
+    const fetchFooterMenus = async () => {
+      try {
+        type StrapiMenuGroup = {
+          attributes?: {
+            labelKey?: string;
+            location?: "header" | "footer";
+            order?: number;
+            items?: { data?: Array<{ attributes?: { labelKey?: string; path?: string; order?: number } }> };
+          };
+        };
+
+        const res = await strapiFetch<{ data?: StrapiMenuGroup[] }>(
+          "/api/site-menu-groups?populate=items&pagination[pageSize]=50"
+        );
+        const groups = (res.data ?? []).filter(Boolean);
+
+        const mapped: FooterMenuGroup[] = groups
+          .map((g) => {
+            const attrs = g.attributes ?? {};
+            if (attrs.location !== "footer") return null;
+            const labelKey = String(attrs.labelKey ?? "");
+            if (!labelKey) return null;
+
+            const items = attrs.items?.data ?? [];
+            const mappedItems: FooterMenuItem[] = items
+              .map((it) => {
+                const iAttrs = it.attributes ?? {};
+                const itemLabelKey = String(iAttrs.labelKey ?? "");
+                const path = String(iAttrs.path ?? "");
+                if (!itemLabelKey || !path) return null;
+                return { labelKey: itemLabelKey, path };
+              })
+              .filter((x): x is FooterMenuItem => x !== null);
+
+            const order = typeof attrs.order === "number" ? attrs.order : 0;
+            if (!mappedItems.length) return null;
+            return { labelKey, items: mappedItems, order };
+          })
+          .filter((x): x is FooterMenuGroup => x !== null)
+          .sort((a, b) => a.order - b.order);
+
+        if (mapped.length >= 1) setFooterMenuGroups(mapped);
+      } catch {
+        // fallback déjà présent
+      }
+    };
+
+    fetchFooterMenus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const devEmail = "ujuzilabs1@gmail.com";
+  const devMailto = `mailto:${devEmail}?subject=${encodeURIComponent(
+    "Demande de site web moderne pour mon entreprise"
+  )}&body=${encodeURIComponent(
+    "Bonjour Ynuka Labs Team,\nBonjour Jacques\n\nJ'ai visité votre site et je l'apprécie tellement. Pouvez-vous me concevoir aussi un site web moderne pour mon entreprise ?\n\nMerci."
+  )}`;
+
+  return (
+    <footer className="border-t border-border bg-gradient-to-b from-muted/40 to-background text-foreground transition-colors duration-300">
+      <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Brand */}
+          <div className="space-y-4">
+            <h3 className="font-display text-xl font-bold text-foreground">
+              Ynuka <span className="text-[#ffb800]">Labs</span>
+            </h3>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span className="text-sm">Goma, North Kivu, DR Congo</span>
+            </div>
+            <div className="flex flex-col gap-4 pt-1">
+              <div className="flex flex-wrap gap-3">
+                {socialLinks.map(({ href, ariaLabel, Icon, iconClassName }) => (
+                  <a
+                    key={ariaLabel}
+                    href={href}
+                    {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-lg shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:ring-white/20 ${iconClassName}`}
+                    aria-label={ariaLabel}
+                  >
+                    <Icon className={ariaLabel === "X" ? "h-[18px] w-[18px]" : "h-[22px] w-[22px]"} />
+                  </a>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <a href="mailto:contact@ujiuzilabs.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
+                  <Mail className="h-4 w-4" />
+                  contact@ujiuzilabs.com
+                </a>
+                <a href="tel:+243974973061" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
+                  <Phone className="h-4 w-4" />
+                  +243974973061
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="font-display font-semibold mb-6 text-sm uppercase tracking-wider text-foreground">
+              {(() => {
+                const gQuick = footerMenuGroups.find((g) => g.labelKey === "footer.quickLinks") ?? footerMenuGroups[0];
+                return resolveLabel(gQuick?.labelKey ?? "footer.quickLinks");
+              })()}
+            </h4>
+            <div className="flex flex-col gap-3">
+              {(() => {
+                const gQuick = footerMenuGroups.find((g) => g.labelKey === "footer.quickLinks") ?? footerMenuGroups[0];
+                const quickItems = [...(gQuick?.items ?? [])];
+                const hasGallery = quickItems.some((item) => item.path === "/resources#gallery");
+                if (!hasGallery) {
+                  quickItems.push({ labelKey: "nav.gallery", path: "/resources#gallery" });
+                }
+                return quickItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="text-sm text-muted-foreground hover:text-[#ffb800] transition-colors"
+                  >
+                    {resolveLabel(item.labelKey)}
+                  </Link>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="font-display font-semibold mb-6 text-sm uppercase tracking-wider text-foreground">
+              {(() => {
+                const gRes =
+                  footerMenuGroups.find((g) => g.labelKey === "footer.resources") ?? footerMenuGroups[1] ?? footerMenuGroups[0];
+                return resolveLabel(gRes?.labelKey ?? "footer.resources");
+              })()}
+            </h4>
+            <div className="flex flex-col gap-3">
+              {(() => {
+                const gRes =
+                  footerMenuGroups.find((g) => g.labelKey === "footer.resources") ?? footerMenuGroups[1] ?? footerMenuGroups[0];
+                return (gRes?.items ?? []).map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="text-sm text-muted-foreground hover:text-[#ffb800] transition-colors"
+                  >
+                    {resolveLabel(item.labelKey)}
+                  </Link>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h4 className="font-display font-semibold mb-6 text-sm uppercase tracking-wider text-foreground">
+              {t("footer.newsletter")}
+            </h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              {t("footer.newsletterCta")}
+            </p>
+            <form
+              className="flex flex-col gap-2.5"
+              onSubmit={async (e) => {
+                e.preventDefault();
+
+                if (submitting) return;
+                if (!newsletterEmail) return;
+
+                setSubmitting(true);
+                try {
+                  const apiUrl = `${window.location.origin}/php/api.php?action=insert`;
+                  const payload = {
+                    table: "newsletter_subscribers",
+                    data: {
+                      email: newsletterEmail,
+                      active: 1,
+                      subscribed_at: new Date().toISOString(),
+                    },
+                  };
+
+                  const res = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                  });
+
+                  const json = await res.json();
+                  if (json && json.success) {
+                    toast({ title: t("home.subscribeSuccess") });
+                    setNewsletterName("");
+                    setNewsletterEmail("");
+                  } else {
+                    const msg = (json && json.message) ? String(json.message) : "";
+                    if (msg.toLowerCase().includes("duplicate") || msg.includes("1062") || msg.toLowerCase().includes("unique")) {
+                      toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
+                    } else {
+                      toast({ title: t("admin.error"), variant: "destructive" });
+                    }
+                  }
+                } catch (err: unknown) {
+                  toast({ title: t("admin.error"), variant: "destructive" });
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+            >
+              <input
+                type="text"
+                value={newsletterName}
+                onChange={(e) => setNewsletterName(e.target.value)}
+                placeholder={t("footer.newsletterNamePlaceholder")}
+                className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder={t("footer.newsletterEmailPlaceholder")}
+                className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-[#ffb800] px-4 py-2 text-sm font-medium text-[#111111] hover:bg-[#e6a600] transition-colors"
+                disabled={submitting}
+              >
+                {submitting ? "..." : t("home.subscribe")}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="mt-16 pt-8 border-t border-border">
+          <p className="text-sm text-muted-foreground flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between sm:items-center sm:text-left">
+            <span className="w-full sm:w-auto">© {new Date().getFullYear()} Ynuka Labs. {t("footer.rights")}</span>
+            <span className="w-full sm:w-auto sm:text-right">
+              Developped by{" "}
+              <a
+                href={devMailto}
+                className="text-foreground hover:text-[#ffb800] transition-colors hover:underline underline-offset-4"
+                title="Envoyer une demande de création de site web moderne"
+              >
+                Ynuka Labs Developpers Team
+              </a>
+            </span>
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

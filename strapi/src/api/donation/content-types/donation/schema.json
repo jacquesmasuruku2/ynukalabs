@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "donations",
+  "info": {
+    "singularName": "donation",
+    "pluralName": "donations",
+    "displayName": "Donation",
+    "description": "Donation records for Mobile Money and Crypto"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "method": {
+      "type": "enumeration",
+      "enum": ["mobile_money", "crypto"]
+    },
+    "provider": {
+      "type": "string"
+    },
+    "network": {
+      "type": "string"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "confirmed", "failed", "manual_review"],
+      "default": "pending"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "tx_ref": {
+      "type": "string"
+    },
+    "transaction_id": {
+      "type": "string"
+    },
+    "tx_hash": {
+      "type": "string"
+    },
+    "wallet_address": {
+      "type": "text"
+    },
+    "donor_name": {
+      "type": "string"
+    },
+    "donor_email": {
+      "type": "email"
+    },
+    "donor_phone": {
+      "type": "string"
+    },
+    "note": {
+      "type": "text"
+    },
+    "raw_payload": {
+      "type": "json"
+    }
+  }
+}

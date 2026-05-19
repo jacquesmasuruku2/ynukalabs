@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemple API PHP MySQL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exemple d'utilisation API PHP MySQL</h1>
+        
+        <div class="section">
+            <h2>1. Insérer un message de contact</h2>
+            <input type="text" id="contactName" placeholder="Nom" value="Jacques Masuruku">
+            <input type="text" id="contactEmail" placeholder="Email" value="jacques@example.com">
+            <input type="text" id="contactSubject" placeholder="Sujet" value="Test API">
+            <textarea id="contactMessage" placeholder="Message">Ceci est un test de l'API PHP</textarea>
+            <button onclick="insertContact()">Envoyer message</button>
+        </div>
+
+        <div class="section">
+            <h2>2. Lire les messages de contact</h2>
+            <button onclick="selectContacts()">Lire messages</button>
+        </div>
+
+        <div class="section">
+            <h2>3. Inscrire à la newsletter</h2>
+            <input type="text" id="newsletterEmail" placeholder="Email" value="newsletter@example.com">
+            <button onclick="subscribeNewsletter()">S'inscrire</button>
+        </div>
+
+        <div class="section">
+            <h2>4. Lire les projets</h2>
+            <button onclick="selectProjects()">Lire projets</button>
+        </div>
+
+        <div class="section">
+            <h2>5. Lire les événements</h2>
+            <button onclick="selectEvents()">Lire événements</button>
+        </div>
+
+        <div class="section">
+            <h2>6. Requête personnalisée</h2>
+            <textarea id="customSql" placeholder="SELECT * FROM contact_messages LIMIT 5">SELECT * FROM contact_messages LIMIT 5</textarea>
+            <button onclick="customQuery()">Exécuter</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const currentOrigin = window.location.origin;
+        const canonicalOrigin = currentOrigin.includes('://ynukalabs.com') && !currentOrigin.includes('://www.')
+            ? currentOrigin.replace('://', '://www.')
+            : currentOrigin;
+        const API_URL = `${canonicalOrigin}/php/api.php`;
+
+        function displayResult(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            resultDiv.className = isError ? 'error' : 'success';
+        }
+
+        // Générer un UUID
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        async function insertContact() {
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value;
+
+            const data = {
+                table: 'contact_messages',
+                data: {
+                    id: generateUUID(),
+                    name: name,
+                    email: email,
+                    subject: subject,
+                    message: message,
+                    status: 'new'
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_URL}?action=insert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                displayResult({ error: error.message }, true);
+            }
+        }
+
+        async function selectContacts() {
+            try {
+                const response = await fetch(`${API_URL}?action=select&table=contact_messages&orderBy=created_at DESC&limit=10`);
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                displayResult({ error: error.message }, true);
+            }
+        }
+
+        async function subscribeNewsletter() {
+            const email = document.getElementById('newsletterEmail').value;
+
+            const data = {
+                table: 'newsletter_subscribers',
+                data: {
+                    id: generateUUID(),
+                    email: email,
+                    active: 1
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_URL}?action=insert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                displayResult({ error: error.message }, true);
+            }
+        }
+
+        async function selectProjects() {
+            try {
+                const response = await fetch(`${API_URL}?action=select&table=projects&orderBy=created_at DESC`);
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                displayResult({ error: error.message }, true);
+            }
+        }
+
+        async function selectEvents() {
+            try {
+                const response = await fetch(`${API_URL}?action=select&table=events&orderBy=date DESC`);
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                displayResult({ error: error.message }, true);
+            }
+        }
+
+        async function customQuery() {
+            const sql = document.getElementById('customSql').value;
+
+            const data = {
+                sql: sql,
+                params: []
+            };
+
+            try {
+                const response = await fetch(`${API_URL}?action=custom`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                displayResult({ error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

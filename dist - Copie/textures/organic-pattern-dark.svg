@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- M�me motif, tr�s l�ger en clair sur fond sombre (tuile transparente) -->
+  <g fill="#ffffff" opacity="0.09">
+    <path d="M-8 42c28-22 62-18 88 4s56 8 76-14 48-8 52 22v-54H-8z"/>
+    <path d="M98 88c32-8 58 18 86 10s38 42 22 68 8 48-26 52l-82-4c-24-20-20-52 0-126z"/>
+    <ellipse cx="38" cy="158" rx="52" ry="44" transform="rotate(-18 38 158)"/>
+    <ellipse cx="168" cy="148" rx="46" ry="52" transform="rotate(22 168 148)"/>
+    <ellipse cx="120" cy="-6" rx="58" ry="32" transform="rotate(6 120 -6)"/>
+    <ellipse cx="-4" cy="96" rx="36" ry="48"/>
+    <ellipse cx="206" cy="72" rx="34" ry="40"/>
+  </g>
+</svg>

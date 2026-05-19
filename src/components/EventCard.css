@@ -1,0 +1,84 @@
+/* Event Card Styles */
+.event-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.event-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.event-image:hover {
+  transform: scale(1.05);
+}
+
+.event-type-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.event-content {
+  padding: 24px;
+}
+
+.event-description {
+  margin-bottom: 20px;
+}
+
+.event-description p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  text-align: justify;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .event-image-container {
+    height: 160px;
+  }
+  
+  .event-content {
+    padding: 20px;
+  }
+  
+  .event-description p {
+    font-size: 13px;
+  }
+  
+  .event-type-badge {
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-image-container {
+    height: 140px;
+  }
+  
+  .event-content {
+    padding: 16px;
+  }
+  
+  .event-description p {
+    font-size: 12px;
+  }
+}

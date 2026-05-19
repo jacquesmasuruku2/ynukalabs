@@ -1,0 +1,401 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Palette « premium » : Azul Brant (marine), Sol de Minas (or #ffb800),
+   * Horizonte Claro (periwinkle), Nuvem (nuage / fond clair).
+   */
+  :root {
+    color-scheme: light;
+
+    --brand-navy: 218 52% 11%;
+    --brand-navy-muted: 218 38% 18%;
+    --brand-gold: 43 100% 50%;
+    --brand-gold-muted: 43 86% 44%;
+    --brand-periwinkle: 230 42% 58%;
+    --brand-periwinkle-soft: 230 38% 92%;
+    --brand-cloud: 42 28% 97%;
+
+    --background: var(--brand-cloud);
+    --foreground: var(--brand-navy);
+
+    --card: 0 0% 100%;
+    --card-foreground: var(--brand-navy);
+
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--brand-navy);
+
+    /* Sol de Minas — CTA & accents chauds */
+    --primary: var(--brand-gold);
+    --primary-foreground: 218 55% 8%;
+
+    --secondary: 230 22% 94%;
+    --secondary-foreground: var(--brand-navy);
+
+    --muted: 42 18% 94%;
+    --muted-foreground: 218 22% 32%;
+
+    --accent: var(--brand-periwinkle-soft);
+    --accent-foreground: 230 38% 32%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 18% 88%;
+    --input: 230 18% 88%;
+    --ring: var(--brand-periwinkle);
+
+    --radius: 0.75rem;
+
+    --glow: var(--brand-gold);
+    --glow-purple: 230 45% 55%;
+    --surface-glass: 0 0% 100%;
+
+    --sidebar-background: 42 25% 96%;
+    --sidebar-foreground: var(--brand-navy);
+    --sidebar-primary: var(--brand-gold);
+    --sidebar-primary-foreground: 218 55% 8%;
+    --sidebar-accent: 230 20% 93%;
+    --sidebar-accent-foreground: var(--brand-navy);
+    --sidebar-border: 230 16% 86%;
+    --sidebar-ring: var(--brand-periwinkle);
+
+    --ujuzi-accent: hsl(var(--brand-gold));
+    --ujuzi-border-subtle: rgba(12, 24, 41, 0.08);
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --background: var(--brand-navy);
+    --foreground: 42 25% 96%;
+
+    --card: 218 45% 14%;
+    --card-foreground: 42 25% 96%;
+
+    --popover: 218 48% 12%;
+    --popover-foreground: 42 25% 96%;
+
+    --primary: var(--brand-gold);
+    --primary-foreground: 218 55% 8%;
+
+    --secondary: 218 35% 18%;
+    --secondary-foreground: 42 20% 94%;
+
+    --muted: 218 30% 16%;
+    --muted-foreground: 230 15% 72%;
+
+    --accent: 218 32% 20%;
+    --accent-foreground: 43 96% 58%;
+
+    --destructive: 0 62% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 218 28% 22%;
+    --input: 218 30% 18%;
+    --ring: var(--brand-gold);
+
+    --glow: var(--brand-gold);
+    --glow-purple: 230 45% 55%;
+    --surface-glass: 218 45% 14%;
+
+    --sidebar-background: 218 50% 9%;
+    --sidebar-foreground: 42 25% 96%;
+    --sidebar-primary: var(--brand-gold);
+    --sidebar-primary-foreground: 218 55% 8%;
+    --sidebar-accent: 218 32% 16%;
+    --sidebar-accent-foreground: 42 25% 96%;
+    --sidebar-border: 218 28% 20%;
+    --sidebar-ring: var(--brand-gold);
+
+    --ujuzi-border-subtle: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: "SN Pro", system-ui, sans-serif;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  html {
+    scroll-padding-top: 9rem;
+  }
+
+  /* Texture organique : désactivée (motif retiré de l'ensemble du site). */
+
+  h1,
+  h2,
+  h3 {
+    font-family: "SN Pro", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-family: "SN Pro", system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .glass {
+    backdrop-filter: blur(18px) saturate(1.15);
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      hsl(230 35% 98% / 0.88) 100%
+    );
+    border: 1px solid hsl(var(--brand-periwinkle) / 0.12);
+    box-shadow:
+      0 1px 0 hsl(0 0% 100% / 0.65) inset,
+      0 18px 48px hsl(var(--brand-navy) / 0.06);
+    color: hsl(var(--foreground));
+  }
+
+  .dark .glass {
+    background: linear-gradient(145deg, hsl(218 40% 16% / 0.85), hsl(218 45% 12% / 0.92));
+    border-color: hsl(var(--brand-gold) / 0.12);
+    box-shadow: 0 18px 48px hsl(0 0% 0% / 0.35);
+    color: hsl(var(--foreground));
+  }
+
+  /* Cartes de contenu (pages sous main, hors accueil isolé) */
+  main.site-inner-pages .glass {
+    background: #ffffff !important;
+    color: #0a0a0a;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+    backdrop-filter: none;
+    transition:
+      box-shadow 0.35s ease,
+      transform 0.35s ease;
+  }
+
+  main.site-inner-pages .glass:hover {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px);
+  }
+
+  main.site-inner-pages .glass .font-display,
+  main.site-inner-pages .glass h3 {
+    color: #0a0a0a;
+  }
+
+  main.site-inner-pages .glass .text-foreground {
+    color: #0a0a0a !important;
+  }
+
+  main.site-inner-pages .glass .text-muted-foreground {
+    color: #525252 !important;
+  }
+
+  /* Images dans les cartes — coins arrondis, taille inchangée */
+  main.site-inner-pages .glass img:not([class*='h-3']):not([class*='h-4']):not([class*='w-3']):not([class*='w-4']) {
+    border-radius: 16px;
+  }
+
+  .glow-cyan {
+    box-shadow:
+      0 0 22px hsl(var(--brand-gold) / 0.4),
+      0 0 56px hsl(var(--brand-periwinkle) / 0.2);
+  }
+
+  .glow-text {
+    text-shadow:
+      0 0 28px hsl(var(--brand-gold) / 0.35),
+      0 0 52px hsl(var(--brand-periwinkle) / 0.18);
+  }
+
+  .dark .glow-text {
+    text-shadow:
+      0 0 24px hsl(var(--brand-gold) / 0.45),
+      0 0 48px hsl(var(--brand-gold) / 0.15);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--brand-gold)) 0%, hsl(var(--brand-gold-muted)) 100%);
+  }
+
+  /* Azul Brant → Horizonte Claro → Sol de Minas */
+  .gradient-text {
+    background: linear-gradient(
+      120deg,
+      hsl(var(--brand-navy)) 0%,
+      hsl(var(--brand-periwinkle)) 48%,
+      hsl(var(--brand-gold)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .gradient-text {
+    background: linear-gradient(
+      120deg,
+      hsl(42 28% 96%) 0%,
+      hsl(var(--brand-periwinkle-soft)) 45%,
+      hsl(var(--brand-gold)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .grid-pattern {
+    background-image:
+      linear-gradient(hsl(var(--brand-navy) / 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--brand-navy) / 0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .dark .grid-pattern {
+    background-image:
+      linear-gradient(hsl(0 0% 100% / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(0 0% 100% / 0.06) 1px, transparent 1px);
+  }
+
+  .hero-gradient {
+    background:
+      radial-gradient(ellipse 100% 90% at 50% -35%, hsl(var(--brand-gold) / 0.14) 0%, transparent 58%),
+      radial-gradient(ellipse 55% 45% at 100% 0%, hsl(var(--brand-periwinkle) / 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, hsl(var(--brand-navy) / 0.06) 0%, transparent 55%),
+      hsl(var(--brand-cloud));
+  }
+
+  .dark .hero-gradient {
+    background:
+      radial-gradient(ellipse 100% 90% at 50% -35%, hsl(var(--brand-gold) / 0.18) 0%, transparent 58%),
+      radial-gradient(ellipse 55% 45% at 90% 15%, hsl(var(--brand-periwinkle) / 0.15) 0%, transparent 50%),
+      hsl(var(--brand-navy));
+  }
+
+  .section-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .event-card {
+    background: #ffffff;
+    color: #0a0a0a;
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+    transition:
+      box-shadow 0.35s ease,
+      transform 0.35s ease;
+  }
+
+  .event-card:hover {
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+    transform: translateY(-4px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, hsl(var(--brand-gold)), hsl(var(--brand-gold-muted)));
+    color: hsl(var(--primary-foreground));
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition:
+      transform 0.25s ease,
+      filter 0.25s ease,
+      box-shadow 0.25s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 20px hsl(var(--brand-gold) / 0.35);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.06);
+    transform: scale(1.05);
+    box-shadow: 0 10px 32px hsl(var(--brand-gold) / 0.42);
+  }
+
+  /* Scroll reveal (pages internes) */
+  main.site-inner-pages .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-stagger, 0s);
+  }
+
+  main.site-inner-pages .reveal-on-scroll.reveal-on-scroll-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 1s ease-out;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Bande partenaires (Partners.tsx) */
+  @keyframes partner-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll {
+    animation: partner-marquee 30s linear infinite;
+  }
+
+  .animate-scroll:hover {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.site-inner-pages .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .btn-primary:hover,
+  main.site-inner-pages .glass:hover {
+    transform: none !important;
+  }
+}

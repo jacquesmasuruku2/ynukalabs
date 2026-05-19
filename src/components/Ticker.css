@@ -1,0 +1,98 @@
+/* Ticker Styles */
+.ticker-container {
+  position: relative;
+  left: 0;
+  width: 100%;
+  background: #000000;
+  color: #00ff88;
+  overflow: hidden;
+  z-index: 50;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border-top: 2px solid #00ff88;
+  border-bottom: 2px solid #00ff88;
+}
+
+/* Mode clair : même univers que le hero vidéo (fond marine, accents type bandeau sombre) */
+.light .ticker-container {
+  background: hsl(218 52% 11%);
+  color: hsl(165 90% 48%);
+  border-top-color: hsl(165 65% 42%);
+  border-bottom-color: hsl(165 65% 42%);
+}
+
+.ticker-content {
+  display: flex;
+  white-space: nowrap;
+  animation: scroll-left 60s linear infinite;
+  will-change: transform;
+}
+
+.ticker-text {
+  font-family: "SN Pro", system-ui, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding-right: 50px;
+  color: #00ff88;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.light .ticker-text {
+  color: hsl(165 88% 52%);
+  text-shadow: 0 0 10px rgba(0, 200, 160, 0.35);
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ticker-container {
+    height: 35px;
+  }
+  
+  .ticker-text {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  
+  .ticker-content {
+    animation-duration: 50s;
+  }
+}
+
+@media (max-width: 480px) {
+  .ticker-container {
+    height: 30px;
+  }
+  
+  .ticker-text {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  
+  .ticker-content {
+    animation-duration: 40s;
+  }
+}
+
+/* Alternative color scheme - optionnel */
+.ticker-container.blue-theme {
+  background: linear-gradient(90deg, #1e3a8a, #1e40af);
+  border-top: 2px solid #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.ticker-container.blue-theme .ticker-text {
+  color: #60a5fa;
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
