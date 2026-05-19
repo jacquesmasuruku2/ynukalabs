@@ -25,23 +25,49 @@ Changes made by our team will be manually committed to this repo.
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in our development workflow.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Prerequisites
 
-Follow these steps:
+- **Node.js** (v16+) or **Bun** (recommended)
+  - Install Node.js: [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or [nodejs.org](https://nodejs.org)
+  - Install Bun: [bun.sh](https://bun.sh)
+
+## Installation & Setup
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Step 2: Navigate to the project directory
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install dependencies (choose one)
+# Option A: Using Bun (faster, recommended)
+bun install
 
-# Step 4: Start the development server with automatic reloading and instant preview.
-npm run dev
+# Option B: Using npm
+npm ci
+
+# Step 4: Start the development server
+bun run dev    # if using bun
+npm run dev    # if using npm
+
+# Step 5: Build for production
+bun run build  # if using bun
+npm run build  # if using npm
 ```
+
+## Important Notes
+
+⚠️ **Lock Files**: This project uses both `bun.lockb` and `package-lock.json` to ensure consistent dependency versions across all machines. **Always use `bun install` or `npm ci`** - never `npm install` or `bun add` to avoid changing lock files.
+
+✅ **Switching Machines**: When working on a different computer:
+```sh
+git clone <repo-url>
+cd <project-name>
+bun install  # This will use the exact versions from bun.lockb
+```
+
+All dependencies will be installed exactly as they were originally - nothing will be lost or changed.
 
 **Edit a file directly in GitHub**
 
