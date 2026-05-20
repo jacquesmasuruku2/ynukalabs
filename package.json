@@ -5,6 +5,9 @@
   "type": "module",
   "description": "Ynuka Labs - Plateforme d'innovation Web3 en RD Congo",
   "author": "Jacques MASURUKU <jacques.masuruku@domain.com>",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "node --max-old-space-size=8192 ./node_modules/vite/bin/vite.js build",
