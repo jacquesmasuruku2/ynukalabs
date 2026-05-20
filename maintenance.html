@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ynuka Labs - Maintenance en cours</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            background: white;
+            padding: 60px 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            font-size: 4em;
+            margin-bottom: 30px;
+        }
+        
+        .message {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            display: inline-block;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .spinner {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .spinner div {
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        
+        .spinner div:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .spinner div:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 80%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            40% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+        
+        .contact {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .contact a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .contact a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <h1>Ynuka Labs</h1>
+        
+        <div class="status">⏳ Maintenance en cours...</div>
+        
+        <p class="message">
+            Nous améliorons actuellement notre infrastructure pour vous offrir une meilleure expérience.
+            <br><br>
+            Nous devrions être de retour très bientôt.
+        </p>
+        
+        <div class="spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        
+        <div class="contact">
+            <p>Pour toute question, contactez-nous à <a href="mailto:support@ynukalabs.com">support@ynukalabs.com</a></p>
+            <p style="margin-top: 10px; color: #ccc; font-size: 0.8em;">
+                Ticket InterServer: Demander restart LiteSpeed Web Server
+            </p>
+        </div>
+    </div>
+</body>
+</html>

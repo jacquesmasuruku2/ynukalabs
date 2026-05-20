@@ -1,0 +1,50 @@
+SUJET: [URGENT] LiteSpeed Web Server Arrêté - ynukalabs.com (205.209.109.3)
+
+---
+
+Bonjour,
+
+Je signale un problème critique sur mon compte d'hébergement.
+
+**COMPTE AFFECTÉ:**
+- Domaine: ynukalabs.com
+- IP: 205.209.109.3
+- Utilisateur DirectAdmin: ynukalab
+- Email: jacquesmasuruku2@gmail.com
+
+**PROBLÈME:**
+LiteSpeed Web Server s'est arrêté et n'écoute plus sur les ports 80/443. Le domaine affiche une erreur 404.
+
+**VÉRIFICATIONS EFFECTUÉES:**
+✗ Aucun processus lshttpd en cours d'exécution
+✗ Aucun processus en écoute sur le port 80
+✗ Aucun processus en écoute sur le port 443
+✓ Les fichiers d'application sont présents sur le serveur
+✓ Les permissions utilisateur sont correctes
+
+**ACTION REQUISE:**
+Veuillez exécuter (en tant que root):
+```
+/usr/local/lsws/bin/lswsctrl start
+```
+
+**SERVICES À VÉRIFIER:**
+En plus de LiteSpeed, veuillez également confirmer que les services suivants sont actifs:
+- MySQL/Bases de données
+- Service e-mail
+- Redis (utilisateur ynukalab)
+- Certificats SSL
+
+**URGENCE:** Critique - Site complètement indisponible
+
+Merci de traiter cette demande en priorité.
+
+Cordialement,
+Jacques Masuruku
+jacquesmasuruku2@gmail.com
+
+---
+Channels de contact InterServer:
+- Support: https://my.interserver.net/support
+- Email: billing@interserver.net
+- Téléphone: +1 877-566-8398
