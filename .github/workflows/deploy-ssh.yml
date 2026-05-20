@@ -34,20 +34,25 @@ jobs:
           npm run build
 
       - name: Create admin output directory
-        run: mkdir -p dist/admin
+        run: mkdir -p dist-admin
 
-      - name: Copy admin build to dist
+      - name: Copy admin build to dist-admin
         run: |
           if [ -d "ynuka-admin/dist" ]; then
-            cp -r ynuka-admin/dist/* dist/admin/
+            cp -r ynuka-admin/dist/* dist-admin/
           fi
 
-      - name: Copy admin API to dist
+      - name: Copy admin API to dist-admin
         run: |
           if [ -d "ynuka-admin/php-api" ]; then
-            mkdir -p dist/admin/api
-            cp ynuka-admin/php-api/api.php dist/admin/api.php
-            cp ynuka-admin/php-api/setup.sql dist/admin/setup.sql
+            cp ynuka-admin/php-api/api.php dist-admin/
+            cp ynuka-admin/php-api/setup.sql dist-admin/
+          fi
+
+      - name: Copy .htaccess for admin SPA routing
+        run: |
+          if [ -f "ynuka-admin/.htaccess" ]; then
+            cp ynuka-admin/.htaccess dist-admin/
           fi
 
       - name: Start SSH agent
@@ -55,6 +60,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy to remote server via rsync
+      - name: Deploy main frontend to remote server
         run: |
           rsync -avz --delete dist/ "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_TARGET_DIR }}"
+
+      - name: Deploy admin panel to subdomain
+        run: |
+          rsync -avz --delete dist-admin/ "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/domains/admin.ynukalabs.com/public_html/"
