@@ -27,6 +27,14 @@
       "dest": "/index.html"
     },
     {
+      "src": "/onboarding",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/onboarding/(.*)",
+      "dest": "/index.html"
+    },
+    {
       "src": "/community",
       "dest": "/index.html"
     },

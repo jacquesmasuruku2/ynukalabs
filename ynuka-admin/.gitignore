@@ -6,18 +6,19 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-build_output.txt
 
 node_modules
 dist
 dist-ssr
+.output
+.vinxi
+.tanstack/**
+.nitro
 *.local
 
-# Node modules and builds in subdirectories
-**/node_modules/
-**/dist/
-**/dist-ssr/
-**/build/
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars
 
 # Editor directories and files
 .vscode/*
@@ -29,9 +30,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Large files and archives
-dist - Copie.zip
-php.zip
-dist - Copie/
-

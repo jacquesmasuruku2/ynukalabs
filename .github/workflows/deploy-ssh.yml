@@ -20,17 +20,40 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build project
+      - name: Build main frontend
         run: npm run build
 
       - name: Copy PHP folder to dist
         run: cp -r php dist/
+
+      - name: Build admin panel
+        working-directory: ./ynuka-admin
+        run: |
+          npm install
+          npm run build
+
+      - name: Create admin output directory
+        run: mkdir -p dist/admin
+
+      - name: Copy admin build to dist
+        run: |
+          if [ -d "ynuka-admin/dist" ]; then
+            cp -r ynuka-admin/dist/* dist/admin/
+          fi
+
+      - name: Copy admin API to dist
+        run: |
+          if [ -d "ynuka-admin/php-api" ]; then
+            mkdir -p dist/admin/api
+            cp ynuka-admin/php-api/api.php dist/admin/api.php
+            cp ynuka-admin/php-api/setup.sql dist/admin/setup.sql
+          fi
 
       - name: Start SSH agent
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy dist to remote server via rsync
+      - name: Deploy to remote server via rsync
         run: |
           rsync -avz --delete dist/ "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_TARGET_DIR }}"

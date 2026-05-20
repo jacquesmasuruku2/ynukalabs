@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Ne pas rediriger les fichiers existants
+  RewriteCond %{REQUEST_FILENAME} !-f
+  # Ne pas rediriger les répertoires existants
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Rediriger toutes les requêtes vers index.html pour les routes SPA du panel admin
+  RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+
+# Cache pour les assets (fichiers avec hash)
+<FilesMatch "^.+\.(js|css|woff2|woff|ttf|svg|png|jpg|jpeg|gif)$">
+  Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>
+
+# Pas de cache pour index.html
+<Files "index.html">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+</Files>
