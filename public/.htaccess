@@ -4,11 +4,9 @@
 
   # Ne pas rediriger les fichiers existants
   RewriteCond %{REQUEST_FILENAME} !-f
-  # Ne pas rediriger les répertoires existants
-  RewriteCond %{REQUEST_FILENAME} !-d
 
   # Rediriger toutes les requêtes vers index.html pour les routes SPA
-  RewriteRule ^(.*)$ index.html [L]
+  RewriteRule ^(.*)$ /index.html [L]
 </IfModule>
 
 # Cache pour les assets (fichiers avec hash)
