@@ -1,14 +1,25 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
-  const currentLang = (i18n.language || "en").toLowerCase();
+  const currentLang = (i18n.resolvedLanguage || i18n.language || "en").toLowerCase();
 
-  const toggle = () => {
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = currentLang.startsWith("fr") ? "fr" : "en";
+    }
+  }, [currentLang]);
+
+  const toggle = async () => {
     const nextLang = currentLang.startsWith("en") ? "fr" : "en";
-    // Persist pour que toutes les pages gardent la même langue (et au refresh).
-    if (typeof window !== "undefined") window.localStorage.setItem("lang", nextLang);
-    i18n.changeLanguage(nextLang);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("lang", nextLang);
+    }
+    await i18n.changeLanguage(nextLang);
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = nextLang;
+    }
   };
 
   return (
