@@ -398,7 +398,7 @@ const About = () => {
   return (
     <div className="min-h-screen" style={{ background: "var(--dark-bg)" }}>
       {/* Hero Section */}
-      <section id="presentation" className="relative overflow-hidden py-16 md:py-24">
+      <section id="presentation" className="relative overflow-hidden py-8 sm:py-12 md:py-24">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/70 via-slate-950/60 to-transparent" />
           <div
@@ -410,27 +410,27 @@ const About = () => {
           />
         </div>
 
-        <Container size="lg" className="relative">
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
+        <Container size="lg" className="relative px-4 sm:px-6 md:px-8">
+          <div className="grid lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center">
             {/* Right: text */}
-            <div className="lg:col-span-6 lg:order-2">
+            <div className="lg:col-span-6 lg:order-2 order-2">
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.7 }}
-                className="space-y-6"
+                className="space-y-4 sm:space-y-6"
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-100">
-                  <Star className="h-4 w-4 text-blue-300" />
-                  <span>Centre d'Innovation Hybride</span>
+                <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-100">
+                  <Star className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-blue-300" />
+                  <span className="whitespace-nowrap">Centre d'Innovation Hybride</span>
                 </div>
 
-                <h1 className="text-3xl md:text-[42px] font-bold leading-tight text-white whitespace-nowrap">
+                <h1 className="text-2xl sm:text-3xl md:text-[42px] font-bold leading-tight text-white">
                   À propos de <span className="text-blue-400">Ynuka Labs</span>
                 </h1>
 
-                <p className="text-base md:text-lg leading-relaxed text-blue-50/90 max-w-xl text-justify">
+                <p className="text-sm sm:text-base md:text-lg leading-relaxed text-blue-50/90 max-w-xl text-justify">
                   Ynuka Labs est un centre d'innovation engagé dans l'éducation et l'incubation des
                   talents en Afrique Centrale. Notre approche conjugue rigueur académique et
                   expérimentation terrain pour former des builders capables de concevoir, déployer et
@@ -439,36 +439,38 @@ const About = () => {
                   apprentissage structuré, projets incubés et impact concret au bénéfice des communautés.
                 </p>
 
-                <div className="flex items-center gap-4 pt-2 flex-nowrap">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 pt-2">
                   <a
                     href="/community"
-                    className="btn-primary rounded-2xl"
+                    className="btn-primary rounded-2xl w-full sm:w-auto text-center text-sm sm:text-base"
                     style={{
                       background: "#ffb800",
                       color: "#111111",
                     }}
                   >
-                    <Zap className="w-5 h-5" />
-                    Rejoindre la communauté
-                    <ArrowRight className="w-5 h-5" />
+                    <Zap className="w-4 sm:w-5 h-4 sm:h-5 inline" />
+                    <span className="hidden sm:inline ml-1">Rejoindre la communauté</span>
+                    <span className="inline sm:hidden">Rejoindre</span>
+                    <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 inline ml-1" />
                   </a>
-                  <a href="/events" className="btn-secondary rounded-2xl shadow-md shadow-black/20">
-                    <Calendar className="w-5 h-5" />
-                    Voir les événements
+                  <a href="/events" className="btn-secondary rounded-2xl w-full sm:w-auto text-center text-sm sm:text-base shadow-md shadow-black/20">
+                    <Calendar className="w-4 sm:w-5 h-4 sm:h-5 inline" />
+                    <span className="hidden sm:inline ml-1">Voir les événements</span>
+                    <span className="inline sm:hidden">Événements</span>
                   </a>
                 </div>
               </motion.div>
             </div>
 
             {/* Left: overlapping portraits */}
-            <div className="lg:col-span-6 lg:order-1 flex justify-start">
-              <div className="relative w-full max-w-[560px] h-[520px]">
+            <div className="lg:col-span-6 lg:order-1 order-1 w-full flex justify-center lg:justify-start px-2 sm:px-0">
+              <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[560px] aspect-square sm:aspect-auto sm:h-80 md:h-96 lg:h-[520px]">
                 <motion.div
                   initial={{ opacity: 0, x: 28 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7 }}
-                  className="absolute left-0 top-0 w-[320px] h-[360px] rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="hidden sm:block absolute left-0 top-0 w-32 sm:w-40 md:w-48 lg:w-[320px] h-40 sm:h-52 md:h-64 lg:h-[360px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
                 >
                   <img
                     src={heroLeft?.image ?? FALLBACK_ABOUT_HERO_BG}
@@ -483,7 +485,7 @@ const About = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.05 }}
-                  className="absolute left-[230px] top-[300px] w-[300px] h-[200px] rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="absolute left-1/2 transform -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:left-[45%] md:left-[50%] lg:left-[230px] top-1/2 sm:top-auto sm:top-[60%] md:top-[65%] lg:top-[300px] -translate-y-1/2 sm:translate-y-0 w-28 sm:w-36 md:w-44 lg:w-[300px] h-28 sm:h-36 md:h-44 lg:h-[200px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
                 >
                   <img
                     src={heroRight?.image ?? FALLBACK_ABOUT_HERO_BG}
@@ -498,17 +500,17 @@ const About = () => {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.15 }}
-                  className="absolute left-[335px] top-[230px] z-20 rounded-xl bg-white px-5 py-3 shadow-2xl border border-white/70"
+                  className="absolute right-4 sm:right-auto sm:left-[55%] md:left-[55%] lg:left-[335px] bottom-8 sm:top-auto sm:bottom-auto sm:top-[50%] -translate-y-1/2 z-20 rounded-lg sm:rounded-xl bg-white px-3 sm:px-5 py-2 sm:py-3 shadow-2xl border border-white/70"
                 >
                   <img
                     src="/logo.PNG"
                     alt="Logo Ynuka Labs"
-                    className="block h-16 w-16 object-contain"
+                    className="block h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain"
                     loading="lazy"
                   />
                 </motion.div>
 
-                <div className="absolute -left-8 -bottom-8 w-48 h-48 rounded-full bg-blue-500/15 blur-2xl" />
+                <div className="absolute -left-12 -bottom-12 w-32 sm:w-40 md:w-48 lg:w-48 h-32 sm:h-40 md:h-48 lg:h-48 rounded-full bg-blue-500/15 blur-2xl hidden sm:block" />
               </div>
             </div>
           </div>
