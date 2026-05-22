@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "deploy_site/*"
-          target: "/domains/ynukalabs.com/public_html/"
+          target: "domains/ynukalabs.com/public_html/"
           strip_components: 1
           overwrite: true
 
@@ -61,7 +61,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "✓ Ynuka Site deployment started"
-            SITE_DIR="/domains/ynukalabs.com/public_html"
+            SITE_DIR="domains/ynukalabs.com/public_html"
             
             # Fix permissions
             chmod 755 "$SITE_DIR"
