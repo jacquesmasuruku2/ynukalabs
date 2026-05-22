@@ -78,13 +78,13 @@ jobs:
             # Fix permissions
             chmod 755 "$ADMIN_DIR"
             chmod 644 "$ADMIN_DIR/.htaccess"
-            chmod 644 "$ADMIN_DIR/index-spa.html"
+            chmod 644 "$ADMIN_DIR/index.html"
             chmod -R 755 "$ADMIN_DIR/assets" 2>/dev/null || true
             chmod -R 644 "$ADMIN_DIR/assets"/* 2>/dev/null || true
             
             # Verify critical files exist
             echo "✓ Verifying deployment files:"
-            ls -lh "$ADMIN_DIR/index-spa.html"
+            ls -lh "$ADMIN_DIR/index.html"
             echo "✓ Checking assets directory:"
             ls -la "$ADMIN_DIR/assets/" | head -5
             echo "✓ .htaccess configuration:"

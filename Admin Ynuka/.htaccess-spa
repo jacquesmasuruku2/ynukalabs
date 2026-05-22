@@ -13,8 +13,8 @@
   # Explicitly allow /assets/ directory
   RewriteRule ^assets/ - [L]
   
-  # Rewrite all other requests to index-spa.html for React Router SPA
-  RewriteRule ^(.*)$ index-spa.html [L,QSA]
+  # Rewrite all other requests to index.html for React Router SPA
+  RewriteRule ^(.*)$ index.html [L,QSA]
 </IfModule>
 
 # Security: prevent directory listing
