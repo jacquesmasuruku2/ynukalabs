@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: cd "Admin Ynuka" && npm install
 
-      - name: Build admin panel
-        run: cd "Admin Ynuka" && npm run build
+      - name: Build admin panel (SPA)
+        run: cd "Admin Ynuka" && npm run build:spa
 
       - name: Deploy dist to Interserver
         uses: appleboy/scp-action@master
