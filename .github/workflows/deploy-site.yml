@@ -25,19 +25,26 @@ jobs:
       - name: Build project
         run: cd "Ynuka Site" && npm run build
 
+      - name: Inspect build output
+        run: |
+          ls -la "Ynuka Site"
+          ls -la "Ynuka Site/dist" || true
+          ls -la "Ynuka Site/php" || true
+
       - name: Deploy to Interserver
         uses: appleboy/scp-action@master
+        working-directory: "Ynuka Site"
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
-            Ynuka Site/dist/*
-            Ynuka Site/php/api.php
-            Ynuka Site/php/config.php
-            Ynuka Site/php/database.php
+            dist/*
+            php/api.php
+            php/config.php
+            php/database.php
           target: "/home/ynukalab/public_html/"
-          strip_components: 2
+          strip_components: 1
           overwrite: true
 
       - name: Verify deployment
