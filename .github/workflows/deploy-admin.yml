@@ -33,7 +33,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
             Admin Ynuka/dist/*
-            Admin Ynuka/index-spa.html
             Admin Ynuka/.htaccess-spa
           target: "/home/ynukalab/admin.ynukalabs.com/"
           strip_components: 2
