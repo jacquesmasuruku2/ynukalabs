@@ -1,0 +1,7 @@
+# Pass Authorization header to PHP (needed on many shared hosts including Interserver)
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Optional: send all /api requests to api.php
+# RewriteRule ^api/?(.*)$ api.php [QSA,L]
