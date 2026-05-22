@@ -15,8 +15,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'es2020',
+    emptyOutDir: true,
     rollupOptions: {
-      input: path.resolve(__dirname, 'index-spa.html'),
+      input: 'index.html',
     },
   },
   server: {
