@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "deploy_site/*"
-          target: "/home/ynukalab/public_html/"
+          target: "/domains/ynukalabs.com/public_html/"
           strip_components: 1
           overwrite: true
 
@@ -60,6 +60,23 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "✓ Ynuka Site deployed"
-            ls /home/ynukalab/public_html/index.html
-            curl -s https://ynukalabs.com/api.php?action=ping | head -20
+            echo "✓ Ynuka Site deployment started"
+            SITE_DIR="/domains/ynukalabs.com/public_html"
+            
+            # Fix permissions
+            chmod 755 "$SITE_DIR"
+            chmod 644 "$SITE_DIR/index.html"
+            chmod -R 755 "$SITE_DIR/api" 2>/dev/null || true
+            chmod -R 644 "$SITE_DIR/api"/* 2>/dev/null || true
+            chmod -R 755 "$SITE_DIR/assets" 2>/dev/null || true
+            chmod -R 644 "$SITE_DIR/assets"/* 2>/dev/null || true
+            
+            # Verify critical files exist
+            echo "✓ Verifying deployment files:"
+            ls -lh "$SITE_DIR/index.html"
+            echo "✓ Checking API directory:"
+            ls -la "$SITE_DIR/api/" | head -5
+            echo "✓ Testing API endpoint:"
+            curl -s https://ynukalabs.com/api/api.php?action=ping | head -c 100
+            echo ""
+            echo "✓ Ynuka Site deployed successfully to $SITE_DIR"
