@@ -47,7 +47,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "deploy_admin/*"
-          target: "/home/ynukalab/admin.ynukalabs.com/"
+          target: "/domains/admin.ynukalabs.com/public_html/"
           strip_components: 1
           overwrite: true
 
@@ -59,7 +59,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "✓ Admin SPA deployment started"
-            ADMIN_DIR="/home/ynukalab/admin.ynukalabs.com"
+            ADMIN_DIR="/domains/admin.ynukalabs.com/public_html"
             
             # Move .htaccess-spa to .htaccess
             if [ -f "$ADMIN_DIR/.htaccess-spa" ]; then
@@ -81,4 +81,4 @@ jobs:
             ls -la "$ADMIN_DIR/assets/" | head -5
             echo "✓ .htaccess configuration:"
             head -5 "$ADMIN_DIR/.htaccess"
-            echo "✓ Admin SPA deployed successfully"
+            echo "✓ Admin SPA deployed successfully to $ADMIN_DIR"
