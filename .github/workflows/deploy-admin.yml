@@ -58,7 +58,27 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "✓ Admin SPA deployed"
-            mv /home/ynukalab/admin.ynukalabs.com/.htaccess-spa /home/ynukalab/admin.ynukalabs.com/.htaccess 2>/dev/null || true
-            ls /home/ynukalab/admin.ynukalabs.com/index-spa.html
-            ls /home/ynukalab/admin.ynukalabs.com/.htaccess
+            echo "✓ Admin SPA deployment started"
+            ADMIN_DIR="/home/ynukalab/admin.ynukalabs.com"
+            
+            # Move .htaccess-spa to .htaccess
+            if [ -f "$ADMIN_DIR/.htaccess-spa" ]; then
+              mv "$ADMIN_DIR/.htaccess-spa" "$ADMIN_DIR/.htaccess"
+              echo "✓ .htaccess configured for SPA routing"
+            fi
+            
+            # Fix permissions
+            chmod 755 "$ADMIN_DIR"
+            chmod 644 "$ADMIN_DIR/.htaccess"
+            chmod 644 "$ADMIN_DIR/index-spa.html"
+            chmod -R 755 "$ADMIN_DIR/assets" 2>/dev/null || true
+            chmod -R 644 "$ADMIN_DIR/assets"/* 2>/dev/null || true
+            
+            # Verify critical files exist
+            echo "✓ Verifying deployment files:"
+            ls -lh "$ADMIN_DIR/index-spa.html"
+            echo "✓ Checking assets directory:"
+            ls -la "$ADMIN_DIR/assets/" | head -5
+            echo "✓ .htaccess configuration:"
+            head -5 "$ADMIN_DIR/.htaccess"
+            echo "✓ Admin SPA deployed successfully"
