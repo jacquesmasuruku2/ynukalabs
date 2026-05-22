@@ -1,238 +1,279 @@
 <?php
 /**
- * Ynuka Labs — Admin API (single-file PHP backend)
- *
- * DEPLOYMENT (Interserver shared hosting):
- *   1. Edit the DB_* + JWT_SECRET constants below
- *   2. Upload this file to public_html/api.php (or a subfolder)
- *   3. Open https://ynukalabs.com/api.php?action=ping in a browser
- *      → must return JSON with "db": "ok" and the list of tables
- *   4. Run setup.sql once in phpMyAdmin to create admin_users
- *   5. Set the API URL in the panel login screen
+ * Ynuka Labs — Unified REST API
+ * Used by both Admin Panel and Public Website
+ * 
+ * Deployment: Upload to /php/api.php
+ * Database: ynukalab_database_website
  */
 
-// ============ CONFIGURATION ============
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'ynukalab_database_website');
-define('DB_USER', 'ynukalab_admin-jacques');
-define('DB_PASS', 'Admin-Jacques.ynuka_db');
-define('DB_CHARSET', 'utf8mb4');
-define('JWT_SECRET', 'CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS');
-define('ALLOWED_ORIGIN', '*'); // for production, set to panel URL
+// ============ HEADERS ============
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Max-Age: 86400');
 
-$ALLOWED_TABLES = [
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+// ============ CONFIG ============
+require_once 'config.php';
+
+// ============ HELPER FUNCTIONS ============
+function json_response($data, $code = 200) {
+    http_response_code($code);
+    echo json_encode($data);
+    exit;
+}
+
+function error($message, $code = 400) {
+    json_response(['error' => $message], $code);
+}
+
+function jwt_secret() {
+    return 'CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS';
+}
+
+function encode_jwt($payload) {
+    $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $body = base64_encode(json_encode($payload));
+    $signature = hash_hmac('sha256', "$header.$body", jwt_secret(), true);
+    $signature = base64_encode($signature);
+    return "$header.$body.$signature";
+}
+
+function decode_jwt($token) {
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) return null;
+    
+    $payload = json_decode(base64_decode($parts[1]), true);
+    if (!is_array($payload)) return null;
+    
+    // Check expiration
+    if (isset($payload['exp']) && $payload['exp'] < time()) return null;
+    
+    return $payload;
+}
+
+function get_auth_user() {
+    $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (!preg_match('/Bearer\s+(.+)/', $header, $matches)) return null;
+    return decode_jwt($matches[1]);
+}
+
+// ============ DATABASE TABLES ============
+$allowed_tables = [
     'users', 'user_roles', 'blog_posts', 'blog_comments',
     'contact_messages', 'donations', 'events', 'event_registrations',
     'gallery_images', 'newsletter_subscribers', 'projects',
-    'resource_items', 'team_members',
+    'resource_items', 'team_members', 'admin_users',
 ];
 
-// ============ CORS ============
-header('Access-Control-Allow-Origin: ' . ALLOWED_ORIGIN);
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Max-Age: 86400');
-header('Content-Type: application/json; charset=utf-8');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-
-// ============ HELPERS ============
-function json_out($data, int $code = 200) { http_response_code($code); echo json_encode($data); exit; }
-function err(string $msg, int $code = 400, array $extra = []) { json_out(['error' => $msg] + $extra, $code); }
-
-function db(): PDO {
-    static $pdo = null;
-    if ($pdo === null) {
-        $pdo = new PDO(
-            'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
-            DB_USER, DB_PASS,
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
-        );
-    }
-    return $pdo;
-}
-
-function b64url(string $s): string { return rtrim(strtr(base64_encode($s), '+/', '-_'), '='); }
-function b64url_decode(string $s): string {
-    return base64_decode(strtr($s, '-_', '+/') . str_repeat('=', (4 - strlen($s) % 4) % 4));
-}
-function jwt_encode(array $payload): string {
-    $h = b64url(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $b = b64url(json_encode($payload));
-    $s = b64url(hash_hmac('sha256', "$h.$b", JWT_SECRET, true));
-    return "$h.$b.$s";
-}
-function jwt_decode(string $token): ?array {
-    $p = explode('.', $token);
-    if (count($p) !== 3) return null;
-    [$h, $b, $s] = $p;
-    if (!hash_equals(b64url(hash_hmac('sha256', "$h.$b", JWT_SECRET, true)), $s)) return null;
-    $payload = json_decode(b64url_decode($b), true);
-    if (!is_array($payload) || (isset($payload['exp']) && $payload['exp'] < time())) return null;
-    return $payload;
-}
-function current_user(): ?array {
-    $h = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-    if (!preg_match('/Bearer\s+(.*)/', $h, $m)) return null;
-    return jwt_decode(trim($m[1]));
-}
-function require_auth(): array { $u = current_user(); if (!$u) err('Unauthorized', 401); return $u; }
-
-function table_columns(string $t): array {
-    return array_map(fn($r) => $r['Field'], db()->query("SHOW COLUMNS FROM `$t`")->fetchAll());
-}
-function pk_of(string $t): string {
-    $r = db()->query("SHOW KEYS FROM `$t` WHERE Key_name = 'PRIMARY'")->fetch();
-    return $r ? $r['Column_name'] : 'id';
-}
-
-// ============ ROUTER ============
-$action   = $_GET['action']   ?? '';
+// ============ ROUTES ============
+$action = $_GET['action'] ?? '';
 $resource = $_GET['resource'] ?? '';
-$id       = $_GET['id']       ?? null;
-$body     = json_decode(file_get_contents('php://input'), true) ?: [];
+$id = $_GET['id'] ?? null;
+$page = intval($_GET['page'] ?? 1);
+$limit = intval($_GET['limit'] ?? 25);
+$search = $_GET['search'] ?? '';
+
+$body = json_decode(file_get_contents('php://input'), true) ?? [];
 
 try {
-    switch ($action) {
-
-        // ---- DIAGNOSTIC (no auth) ----
-        case 'ping': {
-            $out = [
-                'ok' => true,
-                'php_version' => PHP_VERSION,
-                'time' => date('c'),
-                'config' => [
-                    'db_host' => DB_HOST,
-                    'db_name' => DB_NAME,
-                    'db_user_set' => DB_USER !== 'YOUR_DB_USER',
-                    'jwt_secret_set' => JWT_SECRET !== 'CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS',
-                ],
-            ];
-            try {
-                $tables = array_map(fn($r) => array_values($r)[0],
-                    db()->query("SHOW TABLES")->fetchAll());
-                $out['db'] = 'ok';
-                $out['tables_found'] = $tables;
-                $out['tables_expected'] = $ALLOWED_TABLES;
-                $out['tables_missing'] = array_values(array_diff($ALLOWED_TABLES, $tables));
-                $out['admin_users_table'] = in_array('admin_users', $tables, true);
-                if ($out['admin_users_table']) {
-                    $out['admin_users_count'] = (int) db()->query("SELECT COUNT(*) FROM admin_users")->fetchColumn();
-                }
-            } catch (Throwable $e) {
-                $out['db'] = 'error';
-                $out['db_error'] = $e->getMessage();
-            }
-            json_out($out);
+    // PING (diagnostic, no auth)
+    if ($action === 'ping') {
+        $tables = [];
+        $result = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = '" . DB_NAME . "'");
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $tables[] = $row['table_name'];
         }
-
-        case 'login': {
-            $email = trim($body['email'] ?? '');
-            $pass  = $body['password'] ?? '';
-            if (!$email || !$pass) err('Missing credentials');
-            $stmt = db()->prepare('SELECT id, email, password_hash, name FROM admin_users WHERE email = ? LIMIT 1');
-            $stmt->execute([$email]);
-            $u = $stmt->fetch();
-            if (!$u || !password_verify($pass, $u['password_hash'])) err('Invalid credentials', 401);
-            $token = jwt_encode([
-                'sub' => $u['id'], 'email' => $u['email'], 'name' => $u['name'],
-                'iat' => time(), 'exp' => time() + 60 * 60 * 24 * 7,
-            ]);
-            json_out(['token' => $token, 'user' => ['id' => $u['id'], 'email' => $u['email'], 'name' => $u['name']]]);
-        }
-
-        case 'me': {
-            $u = require_auth();
-            json_out(['user' => $u]);
-        }
-
-        case 'list': {
-            require_auth();
-            if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
-            $cols  = table_columns($resource);
-            $page  = max(1, (int)($_GET['page']  ?? 1));
-            $limit = min(200, max(1, (int)($_GET['limit'] ?? 25)));
-            $off   = ($page - 1) * $limit;
-            $search = trim($_GET['search'] ?? '');
-            $where = ''; $params = [];
-            if ($search !== '') {
-                $likeCols = array_filter($cols, fn($c) => !in_array($c, ['id', 'created_at', 'updated_at']));
-                if ($likeCols) {
-                    $parts = [];
-                    foreach ($likeCols as $c) { $parts[] = "`$c` LIKE ?"; $params[] = '%' . $search . '%'; }
-                    $where = ' WHERE ' . implode(' OR ', $parts);
-                }
-            }
-            $totalStmt = db()->prepare("SELECT COUNT(*) c FROM `$resource`$where");
-            $totalStmt->execute($params);
-            $total = (int)$totalStmt->fetchColumn();
-            $orderCol = in_array('created_at', $cols) ? 'created_at' : pk_of($resource);
-            $stmt = db()->prepare("SELECT * FROM `$resource`$where ORDER BY `$orderCol` DESC LIMIT $limit OFFSET $off");
-            $stmt->execute($params);
-            json_out(['rows' => $stmt->fetchAll(), 'total' => $total, 'columns' => $cols]);
-        }
-
-        case 'get': {
-            require_auth();
-            if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
-            $pk = pk_of($resource);
-            $stmt = db()->prepare("SELECT * FROM `$resource` WHERE `$pk` = ? LIMIT 1");
-            $stmt->execute([$id]);
-            $row = $stmt->fetch();
-            if (!$row) err('Not found', 404);
-            json_out(['row' => $row, 'columns' => table_columns($resource)]);
-        }
-
-        case 'create': {
-            require_auth();
-            if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
-            $cols = table_columns($resource);
-            $pk = pk_of($resource);
-            $data = array_intersect_key($body, array_flip($cols));
-            unset($data[$pk]);
-            if (isset($data['password']) && in_array('password_hash', $cols, true)) {
-                $data['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
-                unset($data['password']);
-            }
-            if (!$data) err('No data');
-            $fields = array_keys($data);
-            $place  = implode(',', array_fill(0, count($fields), '?'));
-            $stmt = db()->prepare("INSERT INTO `$resource` (`" . implode('`,`', $fields) . "`) VALUES ($place)");
-            $stmt->execute(array_values($data));
-            json_out(['id' => db()->lastInsertId()]);
-        }
-
-        case 'update': {
-            require_auth();
-            if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
-            $cols = table_columns($resource);
-            $pk = pk_of($resource);
-            $data = array_intersect_key($body, array_flip($cols));
-            unset($data[$pk]);
-            if (isset($data['password']) && in_array('password_hash', $cols, true)) {
-                if ($data['password'] !== '') {
-                    $data['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
-                }
-                unset($data['password']);
-            }
-            if (!$data) err('No data');
-            $set = implode(',', array_map(fn($c) => "`$c` = ?", array_keys($data)));
-            $stmt = db()->prepare("UPDATE `$resource` SET $set WHERE `$pk` = ?");
-            $stmt->execute([...array_values($data), $id]);
-            json_out(['ok' => true]);
-        }
-
-        case 'delete': {
-            require_auth();
-            if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
-            $pk = pk_of($resource);
-            $stmt = db()->prepare("DELETE FROM `$resource` WHERE `$pk` = ?");
-            $stmt->execute([$id]);
-            json_out(['ok' => true]);
-        }
-
-        default:
-            err('Unknown action. Try ?action=ping');
+        json_response([
+            'status' => 'ok',
+            'database' => DB_NAME,
+            'tables' => $tables,
+            'timestamp' => date('c')
+        ]);
     }
-} catch (Throwable $e) {
-    err($e->getMessage(), 500);
+
+    // LOGIN (create JWT token)
+    if ($action === 'login') {
+        if (!isset($body['email']) || !isset($body['password'])) {
+            error('Missing email or password', 400);
+        }
+        
+        $stmt = $pdo->prepare('SELECT id, name, email, password_hash FROM admin_users WHERE email = ?');
+        $stmt->execute([$body['email']]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$user || !password_verify($body['password'], $user['password_hash'])) {
+            error('Invalid credentials', 401);
+        }
+        
+        $token = encode_jwt([
+            'user_id' => $user['id'],
+            'email' => $user['email'],
+            'name' => $user['name'],
+            'exp' => time() + 86400 * 7  // 7 days
+        ]);
+        
+        json_response([
+            'token' => $token,
+            'user' => [
+                'id' => $user['id'],
+                'email' => $user['email'],
+                'name' => $user['name']
+            ]
+        ]);
+    }
+
+    // ME (get current user)
+    if ($action === 'me') {
+        $user = get_auth_user();
+        if (!$user) error('Unauthorized', 401);
+        json_response(['user' => $user]);
+    }
+
+    // LIST (get all rows with pagination & search)
+    if ($action === 'list') {
+        if (!$resource || !in_array($resource, $allowed_tables)) {
+            error('Invalid resource', 400);
+        }
+
+        $offset = ($page - 1) * $limit;
+        
+        // Count total
+        $countStmt = $pdo->query("SELECT COUNT(*) FROM `$resource`");
+        $total = $countStmt->fetchColumn();
+        
+        // Get rows
+        $query = "SELECT * FROM `$resource` LIMIT $limit OFFSET $offset";
+        $stmt = $pdo->query($query);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get columns
+        $columnsStmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
+        $columns = array_map(fn($r) => $r['Field'], $columnsStmt->fetchAll(PDO::FETCH_ASSOC));
+        
+        json_response([
+            'rows' => $rows,
+            'total' => $total,
+            'columns' => $columns,
+            'page' => $page,
+            'limit' => $limit
+        ]);
+    }
+
+    // GET (single row by id)
+    if ($action === 'get') {
+        if (!$resource || !$id || !in_array($resource, $allowed_tables)) {
+            error('Invalid resource or id', 400);
+        }
+
+        // Find primary key
+        $pkStmt = $pdo->query("SHOW KEYS FROM `$resource` WHERE Key_name = 'PRIMARY'");
+        $pkRow = $pkStmt->fetch(PDO::FETCH_ASSOC);
+        $pk = $pkRow ? $pkRow['Column_name'] : 'id';
+        
+        $stmt = $pdo->prepare("SELECT * FROM `$resource` WHERE `$pk` = ?");
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$row) error('Not found', 404);
+        
+        // Get columns
+        $columnsStmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
+        $columns = array_map(fn($r) => $r['Field'], $columnsStmt->fetchAll(PDO::FETCH_ASSOC));
+        
+        json_response([
+            'row' => $row,
+            'columns' => $columns
+        ]);
+    }
+
+    // CREATE (insert new row) - requires auth
+    if ($action === 'create') {
+        $user = get_auth_user();
+        if (!$user) error('Unauthorized', 401);
+        
+        if (!$resource || !in_array($resource, $allowed_tables)) {
+            error('Invalid resource', 400);
+        }
+        
+        if (empty($body)) error('No data provided', 400);
+        
+        $columns = array_keys($body);
+        $placeholders = array_fill(0, count($body), '?');
+        $columnsList = implode(', ', array_map(fn($c) => "`$c`", $columns));
+        $placeholdersList = implode(', ', $placeholders);
+        
+        $stmt = $pdo->prepare("INSERT INTO `$resource` ($columnsList) VALUES ($placeholdersList)");
+        $stmt->execute(array_values($body));
+        
+        $insertId = $pdo->lastInsertId();
+        
+        json_response([
+            'id' => $insertId,
+            'message' => 'Created successfully'
+        ], 201);
+    }
+
+    // UPDATE (modify row) - requires auth
+    if ($action === 'update') {
+        $user = get_auth_user();
+        if (!$user) error('Unauthorized', 401);
+        
+        if (!$resource || !$id || !in_array($resource, $allowed_tables)) {
+            error('Invalid resource or id', 400);
+        }
+        
+        if (empty($body)) error('No data provided', 400);
+        
+        // Find primary key
+        $pkStmt = $pdo->query("SHOW KEYS FROM `$resource` WHERE Key_name = 'PRIMARY'");
+        $pkRow = $pkStmt->fetch(PDO::FETCH_ASSOC);
+        $pk = $pkRow ? $pkRow['Column_name'] : 'id';
+        
+        $setClause = implode(', ', array_map(fn($c) => "`$c` = ?", array_keys($body)));
+        $values = array_values($body);
+        $values[] = $id;  // for WHERE clause
+        
+        $stmt = $pdo->prepare("UPDATE `$resource` SET $setClause WHERE `$pk` = ?");
+        $stmt->execute($values);
+        
+        json_response([
+            'ok' => true,
+            'message' => 'Updated successfully'
+        ]);
+    }
+
+    // DELETE (remove row) - requires auth
+    if ($action === 'delete') {
+        $user = get_auth_user();
+        if (!$user) error('Unauthorized', 401);
+        
+        if (!$resource || !$id || !in_array($resource, $allowed_tables)) {
+            error('Invalid resource or id', 400);
+        }
+        
+        // Find primary key
+        $pkStmt = $pdo->query("SHOW KEYS FROM `$resource` WHERE Key_name = 'PRIMARY'");
+        $pkRow = $pkStmt->fetch(PDO::FETCH_ASSOC);
+        $pk = $pkRow ? $pkRow['Column_name'] : 'id';
+        
+        $stmt = $pdo->prepare("DELETE FROM `$resource` WHERE `$pk` = ?");
+        $stmt->execute([$id]);
+        
+        json_response([
+            'ok' => true,
+            'message' => 'Deleted successfully'
+        ]);
+    }
+
+    error('Unknown action', 400);
+
+} catch (Exception $e) {
+    error('Server error: ' . $e->getMessage(), 500);
 }
