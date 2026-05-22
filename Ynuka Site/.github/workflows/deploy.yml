@@ -1,22 +1,63 @@
-name: Deploy Site
+name: Deploy Ynuka Site to Interserver
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'Ynuka Site/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - run: |
-          npm install
-          npm run build
-      - uses: appleboy/scp-action@master
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: cd "Ynuka Site" && npm install
+
+      - name: Build site
+        run: cd "Ynuka Site" && npm run build
+
+      - name: Deploy dist to Interserver
+        uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/*"
-          target: "domains/ynukalabs.com/public_html/"
-          strip_components: 1
+          source: "Ynuka Site/dist/*"
+          target: "/home/ynukalab/public_html/"
+          strip_components: 2
+          overwrite: true
+
+      - name: Deploy PHP API files
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: |
+            Ynuka Site/php/api.php
+            Ynuka Site/php/config.php
+            Ynuka Site/php/.htaccess
+          target: "/home/ynukalab/public_html/"
+          strip_components: 2
+          overwrite: true
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "✓ Deployment complete"
+            ls -la /home/ynukalab/public_html/index.html
+            curl -s "https://ynukalabs.com/api.php?action=ping" | head -c 50
+
