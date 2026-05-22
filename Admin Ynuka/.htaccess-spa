@@ -2,11 +2,15 @@
   RewriteEngine On
   RewriteBase /
   
-  # Don't rewrite files or directories
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  # Explicitly allow access to real files
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+  
+  # Explicitly allow access to real directories
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
   
-  # Rewrite all other requests to index-spa.html for React Router SPA
-  RewriteRule ^ index-spa.html [QSA,L]
+  # Rewrite all other requests (including /login, /dashboard, etc.) to index-spa.html
+  # This allows React Router to handle all routes client-side
+  RewriteRule ^.*$ index-spa.html [L,QSA]
 </IfModule>
