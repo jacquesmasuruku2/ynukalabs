@@ -43,8 +43,8 @@ jobs:
           ls -la deploy_admin/
           echo "Checking .htaccess-spa presence:"
           ls -la deploy_admin/.htaccess-spa || echo "WARNING: .htaccess-spa not found in deploy_admin/"
-          echo "Checking index-spa.html:"
-          ls -la deploy_admin/index-spa.html
+          echo "Checking index.html:"
+          ls -la deploy_admin/index.html
           echo "Checking assets:"
           ls -la deploy_admin/assets/ | head -5
 
