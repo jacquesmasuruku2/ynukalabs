@@ -14,8 +14,9 @@
 // ============ CONFIGURATION ============
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'ynukalab_database_website');
-define('DB_USER', 'YOUR_DB_USER');
-define('DB_PASS', 'YOUR_DB_PASSWORD');
+define('DB_USER', 'ynukalab_admin-jacques');
+define('DB_PASS', 'Admin-Jacques.ynuka_db');
+define('DB_CHARSET', 'utf8mb4');
 define('JWT_SECRET', 'CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS');
 define('ALLOWED_ORIGIN', '*'); // for production, set to your panel URL
 
