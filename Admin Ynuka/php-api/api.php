@@ -18,7 +18,7 @@ require_once 'config.php';
 // Google OAuth2 — read from environment with fallback to definitions
 define('GOOGLE_CLIENT_ID',     getenv('GOOGLE_CLIENT_ID')     ?: (defined('GOOGLE_CLIENT_ID') ? GOOGLE_CLIENT_ID : 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'));
 define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: (defined('GOOGLE_CLIENT_SECRET') ? GOOGLE_CLIENT_SECRET : 'YOUR_GOOGLE_CLIENT_SECRET'));
-define('GOOGLE_REDIRECT_URI',  getenv('GOOGLE_REDIRECT_URI')  ?: (defined('GOOGLE_REDIRECT_URI') ? GOOGLE_REDIRECT_URI : 'https://admin.ynukalabs.com/api.php?action=google_callback'));
+define('GOOGLE_REDIRECT_URI',  getenv('GOOGLE_REDIRECT_URI')  ?: (defined('GOOGLE_REDIRECT_URI') ? GOOGLE_REDIRECT_URI : 'https://admin.ynukalabs.com/api/api.php?action=google_callback'));
 define('PANEL_URL',            getenv('PANEL_URL')            ?: (defined('PANEL_URL') ? PANEL_URL : 'https://admin.ynukalabs.com'));
 define('ALLOWED_GOOGLE_EMAILS', getenv('ALLOWED_GOOGLE_EMAILS') ?: (defined('ALLOWED_GOOGLE_EMAILS') ? ALLOWED_GOOGLE_EMAILS : ''));
 
@@ -27,11 +27,26 @@ if (!defined('JWT_SECRET')) {
     define('JWT_SECRET', getenv('JWT_SECRET') ?: 'CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS');
 }
 
-// CORS
+// CORS — * ou origine exacte du panel
 define('ALLOWED_ORIGIN', getenv('ALLOWED_ORIGIN') ?: (defined('ALLOWED_ORIGIN') ? ALLOWED_ORIGIN : '*'));
 
 // ============ CORS ============
-header('Access-Control-Allow-Origin: ' . ALLOWED_ORIGIN);
+$corsOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowedOrigins = array_filter(array_map('trim', explode(',', ALLOWED_ORIGIN === '*' ? '' : ALLOWED_ORIGIN)));
+$allowedOrigins = array_merge($allowedOrigins, [
+    'https://admin.ynukalabs.com',
+    'https://www.admin.ynukalabs.com',
+    'https://ynukalabs.com',
+    'https://www.ynukalabs.com',
+]);
+if ($corsOrigin && in_array($corsOrigin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $corsOrigin);
+    header('Vary: Origin');
+} elseif (ALLOWED_ORIGIN === '*') {
+    header('Access-Control-Allow-Origin: *');
+} else {
+    header('Access-Control-Allow-Origin: ' . ALLOWED_ORIGIN);
+}
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Max-Age: 86400');
@@ -79,6 +94,19 @@ function current_user(): ?array {
     return jwt_decode(trim($m[1]));
 }
 
+function oauth_session_start(): void {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start([
+            'cookie_httponly' => true,
+            'cookie_secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+            'cookie_samesite' => 'Lax',
+        ]);
+    }
+}
+
+function google_redirect(string $fragment): void {
+    header('Location: ' . PANEL_URL . '/login#' . $fragment);
+    exit;
 }
 
 function require_auth(): array { 
@@ -214,6 +242,10 @@ try {
                     'google_oauth_set' => GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
                         && GOOGLE_CLIENT_SECRET !== 'YOUR_GOOGLE_CLIENT_SECRET',
                     'google_redirect_uri' => GOOGLE_REDIRECT_URI,
+                    'panel_url' => PANEL_URL,
+                    'allowed_google_emails_set' => ALLOWED_GOOGLE_EMAILS !== '',
+                    'curl_enabled' => function_exists('curl_init'),
+                    'php_sessions' => function_exists('session_start'),
                 ],
             ];
             try {
@@ -242,7 +274,10 @@ try {
             $stmt = db()->prepare('SELECT id, email, password_hash, name FROM admin_users WHERE email = ? LIMIT 1');
             $stmt->execute([$email]);
             $u = $stmt->fetch();
-            if (!$u || !password_verify($pass, $u['password_hash'])) err('Invalid credentials', 401);
+            $hash = $u['password_hash'] ?? '';
+            if (!$u || $hash === '' || $hash === null || !password_verify($pass, (string) $hash)) {
+                err('Invalid credentials', 401);
+            }
             $token = jwt_encode([
                 'sub' => $u['id'], 'email' => $u['email'], 'name' => $u['name'],
                 'iat' => time(), 'exp' => time() + 60 * 60 * 24 * 7,
@@ -256,7 +291,13 @@ try {
             if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
                 err('Google OAuth not configured on the server', 500);
             }
+            if (!function_exists('curl_init')) {
+                err('PHP cURL extension is required for Google OAuth', 500);
+            }
+            oauth_session_start();
             $state = bin2hex(random_bytes(16));
+            $_SESSION['oauth_state'] = $state;
+            $_SESSION['oauth_state_at'] = time();
             $params = http_build_query([
                 'client_id'     => GOOGLE_CLIENT_ID,
                 'redirect_uri'  => GOOGLE_REDIRECT_URI,
@@ -273,8 +314,27 @@ try {
         // We exchange the code, look up the admin, then 302 back to the panel
         // with #token=... in the URL hash so the frontend can store it.
         case 'google_callback': {
+            if (!function_exists('curl_init')) {
+                google_redirect('error=curl_missing');
+            }
+
+            if (!empty($_GET['error'])) {
+                google_redirect('error=' . urlencode((string) $_GET['error']));
+            }
+
+            oauth_session_start();
+            $state = (string) ($_GET['state'] ?? '');
+            $expected = (string) ($_SESSION['oauth_state'] ?? '');
+            $stateAt = (int) ($_SESSION['oauth_state_at'] ?? 0);
+            unset($_SESSION['oauth_state'], $_SESSION['oauth_state_at']);
+            if (!$state || !$expected || !hash_equals($expected, $state) || (time() - $stateAt) > 600) {
+                google_redirect('error=invalid_state');
+            }
+
             $code = $_GET['code'] ?? '';
-            if (!$code) { header('Location: ' . PANEL_URL . '/login#error=missing_code'); exit; }
+            if (!$code) {
+                google_redirect('error=missing_code');
+            }
 
             $ch = curl_init('https://oauth2.googleapis.com/token');
             curl_setopt_array($ch, [
@@ -292,10 +352,15 @@ try {
             $tokenResp = curl_exec($ch);
             $tokenHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            if ($tokenHttp !== 200) { header('Location: ' . PANEL_URL . '/login#error=token_exchange_failed'); exit; }
+            if ($tokenHttp !== 200) {
+                error_log('Google token exchange failed: HTTP ' . $tokenHttp . ' body=' . $tokenResp);
+                google_redirect('error=token_exchange_failed');
+            }
             $tokenData = json_decode($tokenResp, true) ?: [];
             $accessToken = $tokenData['access_token'] ?? '';
-            if (!$accessToken) { header('Location: ' . PANEL_URL . '/login#error=no_access_token'); exit; }
+            if (!$accessToken) {
+                google_redirect('error=no_access_token');
+            }
 
             $ch = curl_init('https://www.googleapis.com/oauth2/v3/userinfo');
             curl_setopt_array($ch, [
@@ -311,12 +376,22 @@ try {
             $picture  = $profile['picture']        ?? '';
             $verified = $profile['email_verified'] ?? false;
             if (!$googleId || !$email || !$verified) {
-                header('Location: ' . PANEL_URL . '/login#error=invalid_profile'); exit;
+                google_redirect('error=invalid_profile');
+            }
+
+            $adminCols = table_columns('admin_users');
+            if (!in_array('email', $adminCols, true)) {
+                google_redirect('error=db_schema');
             }
 
             // 1) Find the admin row by google_id or email.
-            $stmt = db()->prepare('SELECT id, email, name, avatar_url FROM admin_users WHERE google_id = ? OR email = ? LIMIT 1');
-            $stmt->execute([$googleId, $email]);
+            if (in_array('google_id', $adminCols, true)) {
+                $stmt = db()->prepare('SELECT id, email, name, avatar_url FROM admin_users WHERE google_id = ? OR email = ? LIMIT 1');
+                $stmt->execute([$googleId, $email]);
+            } else {
+                $stmt = db()->prepare('SELECT id, email, name, avatar_url FROM admin_users WHERE email = ? LIMIT 1');
+                $stmt->execute([$email]);
+            }
             $u = $stmt->fetch();
 
             // 2) If no admin row, auto-provision (only if email is allowlisted).
@@ -324,14 +399,17 @@ try {
                 $allow = array_filter(array_map('trim', explode(',', strtolower(ALLOWED_GOOGLE_EMAILS))));
                 $isAllowed = in_array('*', $allow, true) || in_array($email, $allow, true);
                 if (!$isAllowed) {
-                    header('Location: ' . PANEL_URL . '/login#error=not_authorized'); exit;
+                    google_redirect('error=not_authorized');
                 }
-                $cols = table_columns('admin_users');
+                $cols = $adminCols;
                 $row = ['email' => $email];
                 if (in_array('name', $cols, true))          $row['name'] = $name ?: $email;
                 if (in_array('avatar_url', $cols, true))    $row['avatar_url'] = $picture;
                 if (in_array('google_id', $cols, true))     $row['google_id'] = $googleId;
-                if (in_array('password_hash', $cols, true)) $row['password_hash'] = null; // Google-only account
+                // Google-only account: omit password_hash if NOT NULL, else null
+                if (in_array('password_hash', $cols, true)) {
+                    $row['password_hash'] = null;
+                }
                 $fields = array_keys($row);
                 $place  = implode(',', array_fill(0, count($fields), '?'));
                 $ins = db()->prepare("INSERT INTO admin_users (`" . implode('`,`', $fields) . "`) VALUES ($place)");
@@ -342,9 +420,17 @@ try {
                 // 3) Also provision the matching row in `users` + `user_roles` (best-effort).
                 provision_app_user($email, $name, $picture, 'admin');
             } else {
-                // Existing admin: refresh google_id + avatar.
-                $upd = db()->prepare('UPDATE admin_users SET google_id = ?, avatar_url = COALESCE(NULLIF(?, ""), avatar_url) WHERE id = ?');
-                $upd->execute([$googleId, $picture, $u['id']]);
+                // Existing admin: refresh google_id + avatar when columns exist.
+                if (in_array('google_id', $adminCols, true) && in_array('avatar_url', $adminCols, true)) {
+                    $upd = db()->prepare('UPDATE admin_users SET google_id = ?, avatar_url = COALESCE(NULLIF(?, ""), avatar_url) WHERE id = ?');
+                    $upd->execute([$googleId, $picture, $u['id']]);
+                } elseif (in_array('google_id', $adminCols, true)) {
+                    $upd = db()->prepare('UPDATE admin_users SET google_id = ? WHERE id = ?');
+                    $upd->execute([$googleId, $u['id']]);
+                } elseif (in_array('avatar_url', $adminCols, true)) {
+                    $upd = db()->prepare('UPDATE admin_users SET avatar_url = COALESCE(NULLIF(?, ""), avatar_url) WHERE id = ?');
+                    $upd->execute([$picture, $u['id']]);
+                }
                 // Make sure they also have a row in users + the admin role.
                 provision_app_user($email, $name, $picture, 'admin');
             }
@@ -356,8 +442,7 @@ try {
                 'picture' => $picture ?: ($u['avatar_url'] ?? ''),
                 'iat' => time(), 'exp' => time() + 60 * 60 * 24 * 7,
             ]);
-            header('Location: ' . PANEL_URL . '/login#token=' . urlencode($token));
-            exit;
+            google_redirect('token=' . urlencode($token));
         }
 
         // ---- USER ENDPOINTS ----

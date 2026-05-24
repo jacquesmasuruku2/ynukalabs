@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api, type Resource, RESOURCE_LABELS } from "@/lib/api";
+import { toControlledString } from "@/lib/safe-input";
 
 export function ResourceTable({ resource }: { resource: Resource }) {
   const [rows, setRows] = useState<any[]>([]);
@@ -92,7 +93,7 @@ export function ResourceTable({ resource }: { resource: Resource }) {
           >
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              value={search}
+              value={toControlledString(search)}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher…"
               className="pl-8 w-64"
@@ -213,6 +214,18 @@ export function ResourceTable({ resource }: { resource: Resource }) {
   );
 }
 
+function emptyForm(
+  editable: string[],
+  row?: Record<string, unknown> | null,
+): Record<string, string> {
+  const init: Record<string, string> = {};
+  for (const c of editable) {
+    const raw = row?.[c];
+    init[c] = raw == null ? "" : String(raw);
+  }
+  return init;
+}
+
 function formatCell(v: any) {
   if (v === null || v === undefined) return <span className="text-muted-foreground">—</span>;
   if (typeof v === "boolean") return v ? "Oui" : "Non";
@@ -238,13 +251,13 @@ function RowDialog({
   const editable = columns.filter(
     (c) => c !== idKey && c !== "created_at" && c !== "updated_at",
   );
-  const [form, setForm] = useState<Record<string, any>>({});
+  const [form, setForm] = useState<Record<string, string>>(() =>
+    emptyForm(editable, row),
+  );
 
   useEffect(() => {
     if (open) {
-      const init: Record<string, any> = {};
-      editable.forEach((c) => (init[c] = row?.[c] ?? ""));
-      setForm(init);
+      setForm(emptyForm(editable, row));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, row]);
@@ -270,14 +283,14 @@ function RowDialog({
                 {long ? (
                   <Textarea
                     id={c}
-                    value={v ?? ""}
+                    value={toControlledString(v)}
                     onChange={(e) => setForm({ ...form, [c]: e.target.value })}
                     rows={4}
                   />
                 ) : (
                   <Input
                     id={c}
-                    value={v ?? ""}
+                    value={toControlledString(v)}
                     onChange={(e) => setForm({ ...form, [c]: e.target.value })}
                   />
                 )}
