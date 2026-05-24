@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { getApiUrl, setApiUrl } from "@/lib/api";
+import { toControlledString } from "@/lib/safe-input";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/admin/settings")({
 });
 
 function Settings() {
-  const [url, setUrl] = useState(getApiUrl());
+  const [url, setUrl] = useState(getApiUrl() || "");
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -22,15 +23,22 @@ function Settings() {
       <Card className="p-6 space-y-4">
         <div className="grid gap-1.5">
           <Label>URL de l'API PHP</Label>
-          <Input value={url} onChange={(e) => setUrl(e.target.value)} />
+          <Input
+            value={toControlledString(url)}
+            onChange={(e) => setUrl(e.target.value)}
+          />
           <p className="text-xs text-muted-foreground">
-            Ex. <code>https://ynukalabs.com/api.php</code>
+            Ex. <code>https://admin.ynukalabs.com/api/api.php</code>
           </p>
         </div>
         <Button
           onClick={() => {
-            setApiUrl(url);
-            toast.success("Enregistré");
+            try {
+              setApiUrl(url);
+              toast.success("Enregistré");
+            } catch (err: unknown) {
+              toast.error(err instanceof Error ? err.message : "URL invalide");
+            }
           }}
         >
           Enregistrer

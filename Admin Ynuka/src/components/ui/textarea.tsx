@@ -1,9 +1,20 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { toControlledString } from "@/lib/safe-input";
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"textarea">>(
-  ({ className, ...props }, ref) => {
+  ({ className, value, defaultValue, ...props }, ref) => {
+    // Ensure textarea never receives undefined or null as value
+    const textareaProps: any = { ...props };
+    if (value !== undefined) {
+      textareaProps.value = toControlledString(value);
+    } else if (defaultValue != null) {
+      textareaProps.defaultValue = toControlledString(defaultValue);
+    } else {
+      textareaProps.value = "";
+    }
+
     return (
       <textarea
         className={cn(
@@ -11,7 +22,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"tex
           className,
         )}
         ref={ref}
-        {...props}
+        {...textareaProps}
       />
     );
   },

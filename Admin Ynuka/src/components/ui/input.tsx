@@ -1,9 +1,23 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { toControlledString } from "@/lib/safe-input";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, value, defaultValue, ...props }, ref) => {
+    // Avoid passing uncontrolled values like undefined/null to React inputs.
+    const isCheckbox = type === "checkbox" || type === "radio";
+    const inputProps: any = { ...props };
+    if (!isCheckbox) {
+      if (value !== undefined) {
+        inputProps.value = toControlledString(value);
+      } else if (defaultValue != null) {
+        inputProps.defaultValue = toControlledString(defaultValue);
+      } else {
+        inputProps.value = "";
+      }
+    }
+
     return (
       <input
         type={type}
@@ -12,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
-        {...props}
+        {...inputProps}
       />
     );
   },

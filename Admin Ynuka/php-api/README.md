@@ -49,12 +49,46 @@ define('ALLOWED_ORIGIN', '*');
 ```
 par l'URL exacte de votre panel, ex : `'https://admin.ynukalabs.com'`.
 
+## Connexion Google OAuth2
+
+### Prérequis
+
+1. Déployer `api.php` + `config.php` au même domaine que le panel (ex. `https://admin.ynukalabs.com/api/api.php`).
+2. Exécuter `migrate-google-oauth.sql` si la table `admin_users` existait déjà.
+3. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → OAuth 2.0 Client :
+   - **Authorized redirect URI** (exact) :  
+     `https://admin.ynukalabs.com/api/api.php?action=google_callback`
+4. Configurer sur le serveur (cPanel → Variables d'environnement) **ou** décommenter dans `config.php` :
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_REDIRECT_URI` (identique à Google Console)
+   - `PANEL_URL` = `https://admin.ynukalabs.com`
+   - `ALLOWED_GOOGLE_EMAILS` = votre email Gmail **ou** `*` pour tout compte vérifié
+
+### Comportement
+
+| Cas | Résultat |
+|-----|----------|
+| Email déjà dans `admin_users` | Connexion OK (mise à jour `google_id`) |
+| Nouvel email + dans `ALLOWED_GOOGLE_EMAILS` | Création auto du compte admin |
+| Nouvel email + liste vide | Erreur `not_authorized` |
+
+### Test
+
+```
+https://admin.ynukalabs.com/api/api.php?action=ping
+```
+
+Vérifier : `"google_oauth_set": true`, `"curl_enabled": true`, `"admin_users_table": true`.
+
 ## Endpoints
 
 | Action | Méthode | Auth | Description |
 |---|---|---|---|
 | `?action=ping` | GET | non | Diagnostic : DB, tables, config |
 | `?action=login` | POST | non | `{email, password}` → `{token}` |
+| `?action=google_auth_url` | GET | non | URL de redirection Google |
+| `?action=google_callback` | GET | non | Callback Google (navigateur) |
 | `?action=me` | GET | oui | Utilisateur courant |
 | `?action=list&resource=T&page=1&limit=25&search=...` | GET | oui | Liste paginée |
 | `?action=get&resource=T&id=X` | GET | oui | Détail |

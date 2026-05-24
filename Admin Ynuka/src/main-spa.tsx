@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from '@tanstack/react-router';
 import { getRouter } from './router';
 import './styles.css';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Toaster } from '@/components/ui/sonner';
 
 const router = getRouter();
 
@@ -12,7 +14,8 @@ if (!rootElement) {
 }
 
 createRoot(rootElement).render(
-  <React.StrictMode>
+  <ErrorBoundary>
     <RouterProvider router={router} />
-  </React.StrictMode>
+    <Toaster richColors position="top-right" />
+  </ErrorBoundary>
 );

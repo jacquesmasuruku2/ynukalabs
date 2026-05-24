@@ -1,6 +1,10 @@
 // API client for the PHP backend hosted on Interserver.
 // Configure the base URL via localStorage key "ynuka_api_url" or VITE_API_URL.
 
+import { API_CANDIDATES, discoverApiUrl, probeApiUrl } from "@/lib/api-endpoints";
+
+export { API_CANDIDATES, discoverApiUrl, probeApiUrl };
+
 export const RESOURCES = [
   "users",
   "user_roles",
@@ -37,47 +41,136 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
 
 const DEFAULT_URL =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
-  "https://ynukalabs.com/api.php";
+  "https://admin.ynukalabs.com/api/api.php";
+
+function normalizeApiBase(url: string): string {
+  if (!url) throw new Error("URL de l'API invalide.");
+  return new URL(url, typeof window !== "undefined" ? window.location.origin : "http://localhost").toString();
+}
+
+function resolveApiBase(): string {
+  const stored =
+    typeof window !== "undefined" ? localStorage.getItem("ynuka_api_url")?.trim() : "";
+  if (stored) {
+    try {
+      return normalizeApiBase(stored);
+    } catch {
+      return DEFAULT_URL;
+    }
+  }
+
+  if (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) {
+    try {
+      return normalizeApiBase(((import.meta as any).env.VITE_API_URL as string).trim());
+    } catch {
+      return DEFAULT_URL;
+    }
+  }
+
+  return DEFAULT_URL;
+}
 
 export function getApiUrl(): string {
-  if (typeof window === "undefined") return DEFAULT_URL;
-  return localStorage.getItem("ynuka_api_url") || DEFAULT_URL;
+  return resolveApiBase();
 }
+
 export function setApiUrl(url: string) {
-  localStorage.setItem("ynuka_api_url", url);
+  const trimmed = url.trim();
+  if (trimmed) {
+    try {
+      normalizeApiBase(trimmed);
+      localStorage.setItem("ynuka_api_url", trimmed);
+      return;
+    } catch {
+      throw new Error("URL de l'API invalide.");
+    }
+  }
+  localStorage.removeItem("ynuka_api_url");
 }
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("ynuka_token");
 }
+
 export function setToken(t: string | null) {
   if (t) localStorage.setItem("ynuka_token", t);
   else localStorage.removeItem("ynuka_token");
 }
 
-async function request<T>(params: Record<string, string>, body?: unknown): Promise<T> {
-  const url = new URL(getApiUrl());
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const token = getToken();
-  const res = await fetch(url.toString(), {
-    method: body ? "POST" : "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
+function parseApiError(text: string, status: number): string {
+  const trimmed = text.trim();
+  if (!trimmed) return `Erreur HTTP ${status}`;
+  try {
+    const data = JSON.parse(trimmed) as { error?: string; message?: string };
+    if (data.error) return data.error;
+    if (data.message) return data.message;
+  } catch {
+    /* réponse non-JSON (souvent page HTML 404 du panel) */
   }
-  return res.json() as Promise<T>;
+  if (trimmed.startsWith("<!") || trimmed.startsWith("<html")) {
+    return `L'URL API ne renvoie pas du JSON (fichier api.php manquant ou mauvaise URL ?). HTTP ${status}`;
+  }
+  if (trimmed.length > 200) return `Erreur HTTP ${status}`;
+  return trimmed;
+}
+
+function buildUrl(params: Record<string, string>): string {
+  const url = new URL(resolveApiBase());
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  return url.toString();
+}
+
+async function request<T>(params: Record<string, string>, body?: unknown): Promise<T> {
+  const apiBase = resolveApiBase();
+  let url: string;
+  try {
+    url = buildUrl(params);
+  } catch {
+    throw new Error("URL de l'API invalide. Vérifiez la configuration.");
+  }
+
+  const token = getToken();
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: body ? "POST" : "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch {
+    throw new Error(
+      `Impossible de joindre l'API (${apiBase}). Vérifiez que api.php est en ligne, l'URL dans Paramètres, et CORS. Testez : ${apiBase}?action=ping`,
+    );
+  }
+
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(parseApiError(text, res.status));
+  }
+
+  if (!text.trim()) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(
+      `Réponse API invalide (JSON attendu) pour ${apiBase}. Ouvrez ?action=ping dans le navigateur.`,
+    );
+  }
 }
 
 export const api = {
   ping: () => request<any>({ action: "ping" }),
   login: (email: string, password: string) =>
     request<{ token: string; user: any }>({ action: "login" }, { email, password }),
+  googleAuthUrl: () => request<{ url: string; state?: string }>({ action: "google_auth_url" }),
   me: () => request<{ user: any }>({ action: "me" }),
   list: (resource: Resource, page = 1, limit = 25, search = "") =>
     request<{ rows: any[]; total: number; columns: string[] }>({

@@ -8,6 +8,16 @@ define('DB_USER', 'ynukalab_admin-jacques');
 define('DB_PASS', 'Admin-Jacques.ynuka_db');
 define('DB_CHARSET', 'utf8mb4');
 
+// --- Google OAuth2 (décommenter et remplir, OU variables d'environnement sur le serveur) ---
+// define('GOOGLE_CLIENT_ID', 'xxxx.apps.googleusercontent.com');
+// define('GOOGLE_CLIENT_SECRET', 'GOCSPX-xxxx');
+// URI exacte enregistrée dans Google Cloud Console (doit correspondre au fichier api.php déployé) :
+// define('GOOGLE_REDIRECT_URI', 'https://admin.ynukalabs.com/api/api.php?action=google_callback');
+// define('PANEL_URL', 'https://admin.ynukalabs.com');
+// Emails autorisés pour créer un compte admin via Google (séparés par des virgules), ou '*' pour tous :
+// define('ALLOWED_GOOGLE_EMAILS', 'votre@gmail.com');
+// define('ALLOWED_ORIGIN', 'https://admin.ynukalabs.com');
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
