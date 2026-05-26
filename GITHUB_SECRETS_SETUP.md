@@ -92,7 +92,7 @@ Déclenche quand vous modifiez quelque chose dans `Ynuka Site/`
 - Copie les fichiers PHP API
 
 ### Deploy Admin Panel
-Déclenche quand vous modifiez quelque chose dans `Admin Ynuka/`
+Déclenche quand vous modifiez quelque chose dans `Panel Admin/`
 - Build le panel admin
 - Copie `dist/` vers `/home/ynukalab/admin.ynukalabs.com/`
 - Copie les fichiers PHP API
@@ -118,3 +118,4 @@ GitHub Actions déclenche:
 ```
 
 Une fois les secrets configurés, vous n'avez plus besoin de déployer manuellement. Chaque push fait le déploiement automatiquement.
+

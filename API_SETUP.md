@@ -137,7 +137,7 @@ console.log('Posts:', rows);
 ├── setup.sql            ← Database initialization (phpMyAdmin import)
 └── database.php         ← Legacy (deprecated, kept for reference)
 
-/Admin Ynuka/php-api/
+/Panel Admin/php-api/
 ├── api.php              ← Copy of unified API
 └── config.php           ← Same database config
 ```
@@ -151,3 +151,4 @@ console.log('Posts:', rows);
 5. ✅ Public site can read data
 
 Your site is now fully connected!
+
