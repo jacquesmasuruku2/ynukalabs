@@ -1,6 +1,6 @@
 # Admin Panel Deployment - Next Steps
 
-Admin Ynuka a été converti en **SPA React** pour fonctionner sur Interserver (shared hosting).
+Panel Admin a été converti en **SPA React** pour fonctionner sur Interserver (shared hosting).
 
 ## ✅ Complété Localement
 
@@ -14,8 +14,8 @@ Admin Ynuka a été converti en **SPA React** pour fonctionner sur Interserver (
 
 ### 1. Upload des fichiers
 ```
-Admin Ynuka/dist/* → /home/ynukalab/admin.ynukalabs.com/
-Admin Ynuka/.htaccess-spa → /home/ynukalab/admin.ynukalabs.com/.htaccess
+Panel Admin/dist/* → /home/ynukalab/admin.ynukalabs.com/
+Panel Admin/.htaccess-spa → /home/ynukalab/admin.ynukalabs.com/.htaccess
 ```
 
 ### 2. Renommer le fichier d'entrée
@@ -47,7 +47,7 @@ https://admin.ynukalabs.com/dashboard    # Devrait fonctionner avec le .htaccess
 ## 🤖 GitHub Actions
 
 Le workflow est maintenant configuré pour:
-1. Détecter les changements dans `Admin Ynuka/**`
+1. Détecter les changements dans `Panel Admin/**`
 2. Lancer `npm run build:spa`
 3. SCP les fichiers via SSH
 4. Vérifier le déploiement
@@ -61,7 +61,7 @@ git push origin main
 ## 📝 Architecture SPA
 
 ```
-Admin Ynuka/
+Panel Admin/
 ├── index.html (original, SSR)
 ├── index-spa.html (nouveau, SPA)
 ├── src/
@@ -91,7 +91,7 @@ Admin Ynuka/
 
 ### API non accessible
 - Vérifier `https://ynukalabs.com/api.php?action=ping`
-- Vérifier la config API dans Admin Ynuka `src/lib/api.ts`
+- Vérifier la config API dans Panel Admin `src/lib/api.ts`
 
 ## 📚 Documentation
 
@@ -106,3 +106,4 @@ Admin Ynuka/
 - Admin Panel accès: `https://admin.ynukalabs.com`
 - Peut créer/modifier/supprimer données via l'API
 - Site public peut lire les données
+

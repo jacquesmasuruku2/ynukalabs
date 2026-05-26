@@ -1,9 +1,10 @@
 {
-  "buildCommand": "cd 'Admin Ynuka' && npm run build",
-  "installCommand": "cd 'Admin Ynuka' && npm install",
-  "outputDirectory": "Admin Ynuka/dist",
+  "buildCommand": "cd 'Panel Admin' && npm run build",
+  "installCommand": "cd 'Panel Admin' && npm install",
+  "outputDirectory": "Panel Admin/dist",
   "framework": "other",
   "env": [
     "VITE_API_URL"
   ]
 }
+

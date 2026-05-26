@@ -1,0 +1,62 @@
+name: Deploy Admin Panel to Interserver
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Panel Admin/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: cd "Panel Admin" && npm install
+
+      - name: Build admin panel (SPA)
+        run: cd "Panel Admin" && npm run build:spa
+
+      - name: Deploy dist to Interserver
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "Panel Admin/dist/*"
+          target: "/home/ynukalab/admin.ynukalabs.com/"
+          strip_components: 2
+          overwrite: true
+
+      - name: Deploy PHP API files
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: |
+            Panel Admin/php-api/api.php
+            Panel Admin/php-api/config.php
+          target: "/home/ynukalab/admin.ynukalabs.com/api/"
+          strip_components: 2
+          overwrite: true
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "✓ Admin panel deployment complete"
+            ls -la /home/ynukalab/admin.ynukalabs.com/index.html
+
+

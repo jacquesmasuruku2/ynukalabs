@@ -1,10 +1,10 @@
-name: Deploy Admin Ynuka SPA
+name: Deploy Panel Admin SPA
 
 on:
   push:
     branches: [main]
     paths:
-      - 'Admin Ynuka/**'
+      - 'Panel Admin/**'
       - '.github/workflows/deploy-admin.yml'
 
 jobs:
@@ -20,25 +20,25 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: cd "Admin Ynuka" && npm install
+        run: cd "Panel Admin" && npm install
 
       - name: Build SPA
-        run: cd "Admin Ynuka" && npm run build:spa
+        run: cd "Panel Admin" && npm run build:spa
 
       - name: Verify build output
         run: |
-          echo "Checking Admin Ynuka/dist contents:"
-          ls -la "Admin Ynuka/dist/" || exit 1
+          echo "Checking Panel Admin/dist contents:"
+          ls -la "Panel Admin/dist/" || exit 1
           echo "Checking .htaccess-spa:"
-          ls -la "Admin Ynuka/.htaccess-spa" || exit 1
+          ls -la "Panel Admin/.htaccess-spa" || exit 1
 
       - name: Prepare deployment files
         run: |
           mkdir -p deploy_admin
           echo "Copying dist files..."
-          cp -r "Admin Ynuka/dist"/* deploy_admin/
+          cp -r "Panel Admin/dist"/* deploy_admin/
           echo "Copying .htaccess-spa..."
-          cp "Admin Ynuka/.htaccess-spa" deploy_admin/
+          cp "Panel Admin/.htaccess-spa" deploy_admin/
           echo "Files ready for deployment:"
           ls -la deploy_admin/
           echo "Checking .htaccess-spa presence:"
@@ -90,3 +90,4 @@ jobs:
             echo "✓ .htaccess configuration:"
             head -5 "$ADMIN_DIR/.htaccess"
             echo "✓ Admin SPA deployed successfully to $ADMIN_DIR"
+
