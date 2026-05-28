@@ -19,6 +19,8 @@ import {
   LogOut,
   Settings,
   Activity,
+  CircleHelp,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,7 +42,11 @@ import {
 } from "@/components/ui/tooltip";
 import { RESOURCE_LABELS, setToken } from "@/lib/api";
 
-const items: { url: string; label: string; icon: any }[] = [
+const FALLBACK_ICON: LucideIcon = CircleHelp;
+
+type SidebarItem = { url: string; label: string; icon?: LucideIcon };
+
+const items: SidebarItem[] = [
   { url: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { url: "/admin/users", label: RESOURCE_LABELS.users, icon: Users },
   { url: "/admin/roles", label: "Gestion des rôles", icon: Shield },
@@ -97,13 +103,16 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((it) => (
+                {items.map((it) => {
+                  const IconComponent =
+                    typeof it.icon === "function" ? it.icon : FALLBACK_ICON;
+                  return (
                   <SidebarMenuItem key={it.url}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <SidebarMenuButton asChild isActive={isActive(it.url)}>
                           <Link to={it.url} className="flex items-center gap-2">
-                            <it.icon className="h-4 w-4 flex-shrink-0" />
+                            <IconComponent className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate">{it.label}</span>
                           </Link>
                         </SidebarMenuButton>
@@ -113,7 +122,8 @@ export function AppSidebar() {
                       </TooltipContent>
                     </Tooltip>
                   </SidebarMenuItem>
-                ))}
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
