@@ -1,17 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
 import {
   Outlet,
   Link,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { useDarkMode } from "@/hooks/useDarkMode";
-
-import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
@@ -57,45 +52,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ynuka Labs — Admin" },
-      { name: "description", content: "Panel d'administration Ynuka Labs" },
-      { property: "og:title", content: "Ynuka Labs — Admin" },
-      { name: "twitter:title", content: "Ynuka Labs — Admin" },
-      { property: "og:description", content: "Panel d'administration Ynuka Labs" },
-      { name: "twitter:description", content: "Panel d'administration Ynuka Labs" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/afe3f0f8-9817-4d52-b47a-b78f3f531304/id-preview-d91b7650--5b7d58cf-f2e2-4e91-8541-8e566528e125.lovable.app-1779639602815.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/afe3f0f8-9817-4d52-b47a-b78f3f531304/id-preview-d91b7650--5b7d58cf-f2e2-4e91-8541-8e566528e125.lovable.app-1779639602815.png" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:type", content: "website" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="fr">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();

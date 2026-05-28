@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { phpApi } from "@/lib/php-api";
-import { Users, HeartHandshake, ClipboardList, Mail, Send } from "lucide-react";
+import { Users, Handshake, ClipboardList, Mail, Send, type LucideIcon } from "lucide-react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -21,13 +21,28 @@ export const Route = createFileRoute("/admin/")({
 
 type Period = 7 | 30 | 90;
 
+const CHART_GRID = "#e5e7eb";
+const CHART_AXIS = "#6b7280";
+const CHART_TOOLTIP_BG = "#ffffff";
+const CHART_TOOLTIP_BORDER = "#e5e7eb";
+const FALLBACK_ICON: LucideIcon = Users;
+
+function resolveIcon(icon: unknown): LucideIcon {
+  return typeof icon === "function" ? (icon as LucideIcon) : FALLBACK_ICON;
+}
+
 const SOURCES = [
-  { key: "users", label: "Utilisateurs", icon: Users, color: "var(--primary)" },
-  { key: "donations", label: "Dons", icon: HeartHandshake, color: "#10b981" },
+  { key: "users", label: "Utilisateurs", icon: Users, color: "#2563eb" }, 
+  { key: "donations", label: "Dons", icon: Handshake, color: "#10b981" },
   { key: "event_registrations", label: "Inscriptions", icon: ClipboardList, color: "#f59e0b" },
   { key: "contact_messages", label: "Messages", icon: Mail, color: "#ef4444" },
   { key: "newsletter_subscribers", label: "Newsletter", icon: Send, color: "#8b5cf6" },
-] as const;
+] as const satisfies ReadonlyArray<{
+  key: string;
+  label: string;
+  icon?: LucideIcon;
+  color: string;
+}>;
 
 function Dashboard() {
   const [period, setPeriod] = useState<Period>(30);
@@ -41,9 +56,8 @@ function Dashboard() {
       setLoading(true);
       try {
         const since = new Date(Date.now() - period * 24 * 3600 * 1000);
-        const sinceIso = since.toISOString();
-
-        // Fetch totals from API for each resource
+        
+        // Récupération des totaux via API
         const totalEntries = await Promise.all(
           SOURCES.map(async (s) => {
             try {
@@ -55,7 +69,7 @@ function Dashboard() {
           }),
         );
 
-        // Generate days and bucket for chart data
+        // Génération des jours pour le graphique
         const days: string[] = [];
         for (let i = period - 1; i >= 0; i--) {
           const d = new Date(Date.now() - i * 24 * 3600 * 1000);
@@ -65,7 +79,7 @@ function Dashboard() {
           days.map((d) => [d, { date: d.slice(5) }]),
         );
 
-        // Fetch data from API and bucket by day
+        // Remplissage des données par jour
         await Promise.all(
           SOURCES.map(async (s) => {
             try {
@@ -78,9 +92,8 @@ function Dashboard() {
                 }
               });
             } catch (e) {
-              // Silently fail for this resource
+              // Échec silencieux
             }
-            // Ensure 0 baseline
             days.forEach((d) => {
               if (bucket[d][s.key] === undefined) bucket[d][s.key] = 0;
             });
@@ -130,22 +143,25 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {SOURCES.map((s) => (
-          <Card key={s.key} className="p-5">
-            <div className="flex items-center justify-between">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                {s.label}
+        {SOURCES.map((s) => {
+          const IconComponent = resolveIcon(s.icon);
+          return (
+            <Card key={s.key} className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                  {s.label}
+                </div>
+                <IconComponent className="h-4 w-4 text-muted-foreground" />
               </div>
-              <s.icon className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="mt-2 text-3xl font-semibold">
-              {loading ? "…" : totals[s.key] ?? 0}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Nouveaux sur {period} j
-            </div>
-          </Card>
-        ))}
+              <div className="mt-2 text-3xl font-semibold">
+                {loading ? "…" : totals[s.key] ?? 0}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Nouveaux sur {period} j
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       <Card className="p-5">
@@ -166,13 +182,13 @@ function Dashboard() {
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke={CHART_AXIS} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke={CHART_AXIS} />
               <Tooltip
                 contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
+                  background: CHART_TOOLTIP_BG,
+                  border: `1px solid ${CHART_TOOLTIP_BORDER}`,
                   borderRadius: 8,
                   fontSize: 12,
                 }}

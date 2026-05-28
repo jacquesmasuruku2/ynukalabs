@@ -90,6 +90,15 @@ ${colorConfig
   );
 };
 
+function safeIcon(icon: unknown): React.ComponentType | null {
+  return typeof icon === "function" ? (icon as React.ComponentType) : null;
+}
+
+function renderSafeIcon(icon: unknown): React.ReactNode {
+  const Icon = safeIcon(icon);
+  return Icon ? <Icon /> : null;
+}
+
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
 const ChartTooltipContent = React.forwardRef<
@@ -184,8 +193,8 @@ const ChartTooltipContent = React.forwardRef<
                     formatter(item.value, item.name, item, index, item.payload)
                   ) : (
                     <>
-                      {itemConfig?.icon ? (
-                        <itemConfig.icon />
+                      {safeIcon(itemConfig?.icon) ? (
+                        renderSafeIcon(itemConfig?.icon)
                       ) : (
                         !hideIndicator && (
                           <div
@@ -276,8 +285,8 @@ const ChartLegendContent = React.forwardRef<
                 "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
               )}
             >
-              {itemConfig?.icon && !hideIcon ? (
-                <itemConfig.icon />
+              {safeIcon(itemConfig?.icon) && !hideIcon ? (
+                renderSafeIcon(itemConfig?.icon)
               ) : (
                 <div
                   className="h-2 w-2 shrink-0 rounded-[2px]"
