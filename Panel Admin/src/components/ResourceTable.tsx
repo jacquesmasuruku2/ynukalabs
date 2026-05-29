@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { ContentCard, ContentCardFooter } from "@/components/ContentCard";
 import {
   Table,
   TableBody,
@@ -18,8 +17,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FormField } from "@/components/ui/form-field";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
+import { PageSearch, PageToolbar } from "@/components/PageToolbar";
+import { TableRowActions } from "@/components/TableRowActions";
 import { toast } from "sonner";
 import { api, type Resource, RESOURCE_LABELS } from "@/lib/api";
 
@@ -71,43 +75,39 @@ export function ResourceTable({ resource }: { resource: Resource }) {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {RESOURCE_LABELS[resource]}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {total} enregistrement{total > 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setPage(1);
-              load();
-            }}
-            className="relative"
-          >
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
+    <PageShell>
+      <PageHeader
+        title={RESOURCE_LABELS[resource]}
+        description={`${total} enregistrement${total > 1 ? "s" : ""}`}
+        actions={
+          <PageToolbar>
+            <PageSearch
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher…"
-              className="pl-8 w-64"
+              onChange={setSearch}
+              onSubmit={() => {
+                setPage(1);
+                load();
+              }}
             />
-          </form>
-          <Button variant="outline" size="icon" onClick={load} disabled={loading}>
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Ajouter
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0 border-slate-200 bg-white shadow-sm"
+              onClick={load}
+              disabled={loading}
+              aria-label="Actualiser"
+            >
+              <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button onClick={() => setCreating(true)} className="h-10 shadow-sm">
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
+          </PageToolbar>
+        }
+      />
 
-      <Card className="overflow-hidden">
+      <ContentCard>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -121,14 +121,14 @@ export function ResourceTable({ resource }: { resource: Resource }) {
             <TableBody>
               {loading && rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={columns.length + 1} className="table-empty">
                     Chargement…
                   </TableCell>
                 </TableRow>
               )}
               {!loading && rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={columns.length + 1} className="table-empty">
                     Aucun enregistrement
                   </TableCell>
                 </TableRow>
@@ -136,36 +136,30 @@ export function ResourceTable({ resource }: { resource: Resource }) {
               {rows.map((row, i) => (
                 <TableRow key={row[idKey] ?? i}>
                   {columns.slice(0, 6).map((c) => (
-                    <TableCell key={c} className="max-w-[260px] truncate">
+                    <TableCell key={c} className="max-w-[260px] truncate text-slate-600">
                       {formatCell(row[c])}
                     </TableCell>
                   ))}
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(row)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(row[idKey])}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <TableRowActions
+                      onEdit={() => setEditing(row)}
+                      onDelete={() => onDelete(row[idKey])}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/40">
-          <span className="text-sm text-muted-foreground">
+        <ContentCardFooter>
+          <span className="text-sm font-medium text-slate-500">
             Page {page} / {totalPages}
           </span>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
+              className="border-slate-200 bg-white"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
@@ -174,14 +168,15 @@ export function ResourceTable({ resource }: { resource: Resource }) {
             <Button
               size="sm"
               variant="outline"
+              className="border-slate-200 bg-white"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
               Suivant
             </Button>
           </div>
-        </div>
-      </Card>
+        </ContentCardFooter>
+      </ContentCard>
 
       <RowDialog
         open={creating || !!editing}
@@ -209,7 +204,7 @@ export function ResourceTable({ resource }: { resource: Resource }) {
           }
         }}
       />
-    </div>
+    </PageShell>
   );
 }
 
@@ -251,28 +246,27 @@ function RowDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-xl sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{row ? "Modifier" : "Ajouter"}</DialogTitle>
+          <DialogTitle>{row ? "Modifier l'enregistrement" : "Nouvel enregistrement"}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-2">
+        <div className="form-stack">
           {editable.length === 0 && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Chargez d'abord la liste pour détecter les colonnes.
             </p>
           )}
           {editable.map((c) => {
             const v = form[c];
             const long = typeof v === "string" && v.length > 80;
+            const label = c.replace(/_/g, " ");
             return (
-              <div key={c} className="grid gap-1.5">
-                <Label htmlFor={c}>{c}</Label>
+              <FormField key={c} label={label} htmlFor={c}>
                 {long ? (
                   <Textarea
                     id={c}
                     value={v ?? ""}
                     onChange={(e) => setForm({ ...form, [c]: e.target.value })}
-                    rows={4}
                   />
                 ) : (
                   <Input
@@ -281,7 +275,7 @@ function RowDialog({
                     onChange={(e) => setForm({ ...form, [c]: e.target.value })}
                   />
                 )}
-              </div>
+              </FormField>
             );
           })}
         </div>

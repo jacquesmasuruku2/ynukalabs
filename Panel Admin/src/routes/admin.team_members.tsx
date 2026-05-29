@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ResourceTable } from "@/components/ResourceTable";
+import { TeamMemberForm } from "@/components/TeamMemberForm";
 
 export const Route = createFileRoute("/admin/team_members")({
-  component: () => <ResourceTable resource="team_members" />,
+  component: () => <TeamMemberForm />,
 });

@@ -3,6 +3,7 @@
 
 import { phpApi } from "./php-api";
 import { phpAuth } from "./php-auth";
+import { fetchWithFallback } from "./php-fetch";
 
 export const RESOURCES = [
   "users",
@@ -72,7 +73,7 @@ export function setToken(t: string | null) {
 }
 
 export function getApiUrl(): string {
-  return import.meta.env.VITE_API_URL || "https://admin.ynukalabs.com/api.php";
+  return import.meta.env.VITE_API_URL || "https://admin.ynukalabs.com/api/api.php";
 }
 
 export function setApiUrl(_url: string) {
@@ -195,16 +196,32 @@ export const api = {
   },
 
   googleAuthUrl: async () => {
-    throw new Error("Google auth not configured - contact administrator");
+    const response = await fetchWithFallback("?action=google_auth_url");
+    return response.json() as Promise<{ url: string; state?: string }>;
   },
 
   uploadImage: async (file: File): Promise<{ url: string; filename: string }> => {
-    const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
-    // For now, just return a placeholder
-    // In production, implement file upload to the server
-    return { 
-      url: `/uploads/${filename}`, 
-      filename 
-    };
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetchWithFallback('?action=upload_image', {
+        method: 'POST',
+        headers: phpAuth.getAuthHeader(),
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      return { 
+        url: result.url || `/uploads/${result.filename}`, 
+        filename: result.filename 
+      };
+    } catch (e: any) {
+      throw new Error(e.message || 'Image upload failed');
+    }
   },
 };

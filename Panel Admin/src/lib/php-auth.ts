@@ -1,56 +1,11 @@
 /**
  * PHP API Authentication Service
- * Replaces Supabase auth with direct MySQL + JWT-based PHP API
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost/api.php';
+import { fetchWithFallback } from "./php-fetch";
+import { clearOAuthHashFromUrl, parseOAuthHash } from "./oauth-hash";
 
-function apiCandidates(base: string): string[] {
-  const seen = new Set<string>();
-  const add = (u: string) => seen.add(u) && u;
-  const norm = (s: string) => s.replace(/\/+$/, '');
-  const b = norm(base);
-  add(b);
-  if (b.endsWith('/api.php')) {
-    add(b.replace(/\/api.php$/, '/api/api.php'));
-    add(b.replace(/\/api.php$/, '/api/api..php')); // deliberate double-dot variant
-  } else if (b.endsWith('/api/api.php')) {
-    add(b.replace(/\/api\/api.php$/, '/api.php'));
-    add(b.replace(/\/api\/api.php$/, '/api/api..php'));
-  } else {
-    add(b + '/api.php');
-    add(b + '/api/api.php');
-    add(b + '/api/api..php');
-  }
-  return Array.from(seen);
-}
-
-async function fetchWithFallback(path: string, init?: RequestInit) {
-  const candidates = apiCandidates(API_BASE_URL);
-  let lastError: any = null;
-  let lastResp: Response | null = null;
-  for (const cand of candidates) {
-    try {
-      const url = cand + (path.startsWith('?') ? path : path.startsWith('/') ? path : path);
-      const resp = await fetch(url, init);
-      lastResp = resp;
-      if (resp.ok) return resp;
-      // record error but try next candidate
-      lastError = resp;
-    } catch (e) {
-      lastError = e;
-    }
-  }
-  if (lastResp) {
-    try {
-      const json = await lastResp.json();
-      throw new Error(json.error || JSON.stringify(json));
-    } catch (e) {
-      throw new Error('Request failed to all API endpoints');
-    }
-  }
-  throw lastError || new Error('Request failed to all API endpoints');
-}
+const STORAGE_KEY = "php_auth_token";
 
 export interface AuthUser {
   id: string | number;
@@ -63,49 +18,75 @@ export interface AuthSession {
   user: AuthUser;
 }
 
+function decodeJwtPayload(token: string): AuthUser | null {
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const padded = part.replace(/-/g, "+").replace(/_/g, "/");
+    const json = JSON.parse(atob(padded)) as {
+      sub?: string | number;
+      id?: string | number;
+      email?: string;
+      name?: string;
+    };
+    const id = json.sub ?? json.id;
+    if (id == null || !json.email) return null;
+    return {
+      id,
+      email: json.email,
+      name: json.name ?? json.email,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeUser(raw: Record<string, unknown>): AuthUser {
+  return {
+    id: (raw.id ?? raw.sub) as string | number,
+    email: String(raw.email ?? ""),
+    name: String(raw.name ?? raw.email ?? ""),
+  };
+}
+
 class PhpAuthService {
   private token: string | null = null;
 
   constructor() {
-    // Load token from localStorage on init
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('php_auth_token');
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem(STORAGE_KEY);
     }
   }
 
-  /**
-   * Sign in with email and password
-   */
+  private persistToken(token: string): void {
+    this.token = token;
+    localStorage.setItem(STORAGE_KEY, token);
+  }
+
   async signInWithPassword(email: string, password: string): Promise<AuthSession> {
     const response = await fetchWithFallback(`?action=login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
-    this.token = data.token;
-    localStorage.setItem('php_auth_token', data.token);
-    return {
-      token: data.token,
-      user: data.user,
-    };
+    this.persistToken(data.token);
+    return { token: data.token, user: data.user };
   }
 
-  /**
-   * Sign up with email, password, and name
-   */
   async signUp(email: string, password: string, name: string): Promise<AuthSession> {
-    // PHP API doesn't have a signup endpoint - it requires manual creation
-    // For now, throw an error directing the user to contact admin
-    throw new Error(
-      'L\'inscription directe n\'est pas activée. Veuillez contacter un administrateur.'
-    );
+    const response = await fetchWithFallback(`?action=register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, name }),
+    });
+
+    const data = await response.json();
+    this.persistToken(data.token);
+    return { token: data.token, user: data.user };
   }
 
-  /**
-   * Get current session
-   */
   async getSession(): Promise<{ session: AuthSession | null }> {
     if (!this.token) {
       return { session: null };
@@ -120,35 +101,97 @@ class PhpAuthService {
       return {
         session: {
           token: this.token,
-          user: data.user,
+          user: normalizeUser(data.user ?? {}),
         },
       };
     } catch {
+      const fromJwt = decodeJwtPayload(this.token);
+      if (fromJwt) {
+        return { session: { token: this.token, user: fromJwt } };
+      }
       return { session: null };
     }
   }
 
-  /**
-   * Sign out
-   */
   async signOut(): Promise<void> {
     this.token = null;
-    localStorage.removeItem('php_auth_token');
+    localStorage.removeItem(STORAGE_KEY);
   }
 
-  /**
-   * Get authorization header
-   */
   getAuthHeader(): Record<string, string> {
     if (!this.token) return {};
     return { Authorization: `Bearer ${this.token}` };
   }
 
-  /**
-   * Get current token
-   */
   getToken(): string | null {
     return this.token;
+  }
+
+  /** @deprecated Préférer parseOAuthHash(location.hash) dans le loader /login */
+  consumeOAuthHash(): { token?: string; error?: string } {
+    if (typeof window === "undefined") return {};
+    const parsed = parseOAuthHash(window.location.hash);
+    if (parsed.token || parsed.error) {
+      clearOAuthHashFromUrl();
+    }
+    return parsed;
+  }
+
+  /**
+   * Traite le hash OAuth (appelé au chargement de /login).
+   * Retourne une erreur à afficher, ou redirige via redirectTo si succès.
+   */
+  async handleOAuthCallbackFromHash(
+    hash: string,
+  ): Promise<{ oauthError?: string; redirectTo?: "/admin" }> {
+    const { token, error } = parseOAuthHash(hash);
+    if (error) {
+      clearOAuthHashFromUrl();
+      return { oauthError: error };
+    }
+    if (!token) {
+      return {};
+    }
+
+    clearOAuthHashFromUrl();
+    try {
+      await this.applyTokenFromOAuth(token);
+      return { redirectTo: "/admin" };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "invalid_token";
+      return {
+        oauthError: msg.includes("Invalid") ? "invalid_token" : msg,
+      };
+    }
+  }
+
+  async applyTokenFromOAuth(token: string): Promise<AuthSession> {
+    this.persistToken(token);
+
+    const { session } = await this.getSession();
+    if (session) {
+      return session;
+    }
+
+    const fromJwt = decodeJwtPayload(token);
+    if (fromJwt) {
+      return { token, user: fromJwt };
+    }
+
+    this.token = null;
+    localStorage.removeItem(STORAGE_KEY);
+    throw new Error("Invalid token");
+  }
+
+  async startGoogleSignIn(): Promise<void> {
+    const response = await fetchWithFallback("?action=google_auth_url", {
+      credentials: "include",
+    });
+    const data = (await response.json()) as { url?: string };
+    if (!data.url) {
+      throw new Error("Google OAuth not configured on the server");
+    }
+    window.location.assign(data.url);
   }
 }
 

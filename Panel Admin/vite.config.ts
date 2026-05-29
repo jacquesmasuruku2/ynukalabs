@@ -6,6 +6,7 @@ import path from 'path'
 
 // SPA configuration for Panel Adm - deployed on Interserver with PHP API
 export default defineConfig({
+  base: '/',
   plugins: [
     tailwindcss(),
     TanStackRouterVite(),

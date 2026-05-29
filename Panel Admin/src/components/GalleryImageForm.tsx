@@ -27,6 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -98,43 +100,40 @@ export function GalleryImageForm() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Galerie d'images
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {total} image{total > 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setPage(1);
-              loadImages();
-            }}
-            className="relative"
-          >
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher…"
-              className="pl-8 w-64"
-            />
-          </form>
-          <Button variant="outline" size="icon" onClick={loadImages} disabled={loading}>
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Ajouter une image
-          </Button>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Galerie d'images"
+        description={`${total} image${total > 1 ? "s" : ""}`}
+        actions={
+          <>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setPage(1);
+                loadImages();
+              }}
+              className="relative"
+            >
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher…"
+                className="w-64 pl-10"
+              />
+            </form>
+            <Button variant="outline" size="icon" onClick={loadImages} disabled={loading} aria-label="Actualiser">
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
+          </>
+        }
+      />
 
-      <Card className="overflow-hidden">
+      <Card className="panel-surface">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -205,7 +204,7 @@ export function GalleryImageForm() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/40">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-muted/30 px-6 py-4">
           <span className="text-sm text-muted-foreground">
             Page {page} / {totalPages}
           </span>
@@ -255,7 +254,7 @@ export function GalleryImageForm() {
           }
         }}
       />
-    </div>
+    </PageShell>
   );
 }
 
@@ -362,9 +361,9 @@ function GalleryImageDialog({
             {image ? "Modifier l'image" : "Ajouter une nouvelle image"}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="form-stack py-2">
           {/* Événement */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="event_id" className="font-semibold">
               Événement *
             </Label>
@@ -389,7 +388,7 @@ function GalleryImageDialog({
           </div>
 
           {/* Upload d'image */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label className="font-semibold">Téléverser l'image *</Label>
             <p className="text-sm text-muted-foreground mb-2">
               Glissez-déposez une image ou cliquez pour sélectionner (max 10 MB)
@@ -448,7 +447,7 @@ function GalleryImageDialog({
           </div>
 
           {/* Ou URL manuelle */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="image_url" className="font-semibold">
               Ou entrer l'URL directement
             </Label>
@@ -468,7 +467,7 @@ function GalleryImageDialog({
           </div>
 
           {/* Texte alternatif */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="alt" className="font-semibold">
               Texte alternatif (ALT)
             </Label>
@@ -485,7 +484,7 @@ function GalleryImageDialog({
           </div>
 
           {/* Position */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="position" className="font-semibold">
               Position (ordre d'affichage)
             </Label>

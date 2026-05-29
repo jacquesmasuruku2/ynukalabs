@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Pencil, Trash2, Search, RefreshCcw, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Plus, RefreshCcw, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { ContentCard, ContentCardFooter } from "@/components/ContentCard";
 import {
   Table,
   TableBody,
@@ -18,7 +18,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -27,6 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
+import { PageSearch, PageToolbar } from "@/components/PageToolbar";
+import { TableRowActions } from "@/components/TableRowActions";
+import { FormField } from "@/components/ui/form-field";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -97,85 +101,49 @@ export function GalleryImageFormRefactored() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="space-y-6 p-6">
-      {/* En-tête avec titre et actions */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-primary/10">
-            <ImageIcon className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">
-              Galerie d'images
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Gérez les images de vos événements
-            </p>
-          </div>
-        </div>
-
-        {/* Compteur */}
-        <div className="px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
-          <p className="text-sm font-semibold text-primary">
-            {total} image{total > 1 ? "s" : ""}
-          </p>
-        </div>
-      </div>
-
-      {/* Barre d'outils */}
-      <div className="flex items-center gap-3 flex-wrap">
-        {/* Recherche */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setPage(1);
-            loadImages();
-          }}
-          className="flex-1 min-w-64"
-        >
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
+    <PageShell>
+      <PageHeader
+        title="Galerie d'images"
+        description={`${total} image${total > 1 ? "s" : ""} · Gérez les visuels de vos événements`}
+        actions={
+          <PageToolbar>
+            <PageSearch
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher une image…"
-              className="pl-10 h-10 rounded-full bg-muted/40 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+              onChange={setSearch}
+              onSubmit={() => {
+                setPage(1);
+                loadImages();
+              }}
             />
-          </div>
-        </form>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0 border-slate-200 bg-white shadow-sm"
+              onClick={loadImages}
+              disabled={loading}
+              aria-label="Actualiser"
+            >
+              <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button onClick={() => setCreating(true)} className="h-10 shadow-sm">
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
+          </PageToolbar>
+        }
+      />
 
-        {/* Boutons d'action */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={loadImages}
-            disabled={loading}
-            className="rounded-full hover:bg-primary/10 hover:text-primary"
-          >
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => setCreating(true)}
-            className="rounded-full bg-primary hover:bg-primary/90 text-white font-medium h-10 px-6"
-          >
-            <Plus className="h-4 w-4 mr-2" /> Ajouter une image
-          </Button>
-        </div>
-      </div>
-
-      {/* Tableau des images */}
-      <Card className="overflow-hidden border-0 shadow-sm rounded-2xl bg-white">
+      <ContentCard>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-primary/10 hover:bg-transparent">
-                <TableHead className="font-semibold text-foreground">Événement</TableHead>
-                <TableHead className="font-semibold text-foreground">Image</TableHead>
-                <TableHead className="font-semibold text-foreground">Alt</TableHead>
-                <TableHead className="font-semibold text-foreground">Position</TableHead>
-                <TableHead className="font-semibold text-foreground">Date</TableHead>
-                <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
+              <TableRow>
+                <TableHead>Événement</TableHead>
+                <TableHead>Image</TableHead>
+                <TableHead>Alt</TableHead>
+                <TableHead>Position</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -203,8 +171,8 @@ export function GalleryImageFormRefactored() {
               {images.map((image) => {
                 const event = events.find((e) => e.id === image.event_id);
                 return (
-                  <TableRow key={image.id} className="hover:bg-primary/5 transition-colors border-b border-primary/5">
-                    <TableCell className="font-medium text-foreground">
+                  <TableRow key={image.id}>
+                    <TableCell className="font-semibold text-slate-900">
                       {event?.title || image.event_id}
                     </TableCell>
                     <TableCell>
@@ -232,24 +200,10 @@ export function GalleryImageFormRefactored() {
                       })}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditing(image)}
-                          className="rounded-lg hover:bg-primary/10 hover:text-primary text-muted-foreground"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(image.id)}
-                          className="rounded-lg hover:bg-red-500/10 hover:text-red-500 text-muted-foreground"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <TableRowActions
+                        onEdit={() => setEditing(image)}
+                        onDelete={() => onDelete(image.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -260,33 +214,33 @@ export function GalleryImageFormRefactored() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-primary/10 bg-primary/5">
-            <span className="text-sm font-medium text-foreground">
+          <ContentCardFooter>
+            <span className="text-sm font-medium text-slate-500">
               Page {page} / {totalPages}
             </span>
             <div className="flex gap-2">
               <Button
                 size="sm"
                 variant="outline"
+                className="border-slate-200 bg-white"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="rounded-lg hover:bg-primary/10 hover:text-primary"
               >
                 Précédent
               </Button>
               <Button
                 size="sm"
                 variant="outline"
+                className="border-slate-200 bg-white"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-lg hover:bg-primary/10 hover:text-primary"
               >
                 Suivant
               </Button>
             </div>
-          </div>
+          </ContentCardFooter>
         )}
-      </Card>
+      </ContentCard>
 
       {/* Dialog d'ajout/modification */}
       <GalleryImageDialogRefactored
@@ -314,7 +268,7 @@ export function GalleryImageFormRefactored() {
           }
         }}
       />
-    </div>
+    </PageShell>
   );
 }
 
@@ -415,26 +369,17 @@ function GalleryImageDialogRefactored({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
+      <DialogContent className="max-w-xl sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground">
-            {image ? "Modifier l'image" : "Ajouter une nouvelle image"}
-          </DialogTitle>
+          <DialogTitle>{image ? "Modifier l'image" : "Ajouter une image"}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-6 py-6">
-          {/* Événement */}
-          <div className="grid gap-3">
-            <Label htmlFor="event_id" className="font-bold text-foreground">
-              Événement *
-            </Label>
+        <div className="form-stack">
+          <FormField label="Événement" htmlFor="event_id">
             <Select
               value={form.event_id || ""}
               onValueChange={(value) => setForm({ ...form, event_id: value })}
             >
-              <SelectTrigger
-                id="event_id"
-                className="rounded-full h-11 bg-muted/40 border-0 focus:ring-2 focus:ring-primary"
-              >
+              <SelectTrigger id="event_id">
                 <SelectValue placeholder="Choisir un événement" />
               </SelectTrigger>
               <SelectContent>
@@ -445,33 +390,27 @@ function GalleryImageDialogRefactored({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          {/* Upload d'image */}
-          <div className="grid gap-3">
-            <Label className="font-bold text-foreground">Téléverser l'image *</Label>
-            <p className="text-xs text-muted-foreground">
-              Glissez-déposez une image ou cliquez pour sélectionner (max 10 MB)
-            </p>
-
+          <FormField label="Téléverser l'image" hint="Glissez-déposez ou cliquez (max 10 Mo)">
             {preview ? (
               <div className="relative group">
                 <img
                   src={preview}
                   alt="Aperçu"
-                  className="max-h-56 rounded-2xl object-cover w-full border-2 border-primary/20"
+                  className="w-full h-48 rounded-lg object-cover border border-slate-200"
                 />
                 <Button
                   type="button"
                   variant="destructive"
                   size="sm"
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => {
                     setPreview(null);
                     setForm({ ...form, image_url: "" });
                   }}
                 >
-                  <X className="h-4 w-4" />
+                  Supprimer
                 </Button>
               </div>
             ) : (
@@ -480,18 +419,18 @@ function GalleryImageDialogRefactored({
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center cursor-pointer transition-all ${
                   dragActive
-                    ? "border-primary bg-primary/10"
-                    : "border-primary/30 hover:border-primary/50 hover:bg-primary/5"
+                    ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/10"
+                    : "border-slate-300 hover:border-blue-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-900/30"
                 }`}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="h-10 w-10 mx-auto mb-3 text-primary/60" />
-                <p className="text-sm font-semibold text-foreground">
+                <Upload className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {uploading ? "Téléversement en cours…" : "Glissez une image ici"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">ou cliquez pour parcourir</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ou cliquez pour parcourir</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -502,13 +441,9 @@ function GalleryImageDialogRefactored({
                 />
               </div>
             )}
-          </div>
+          </FormField>
 
-          {/* Ou URL manuelle */}
-          <div className="grid gap-3">
-            <Label htmlFor="image_url" className="font-bold text-foreground">
-              Ou entrer l'URL directement
-            </Label>
+          <FormField label="Ou URL directe" htmlFor="image_url">
             <Input
               id="image_url"
               type="url"
@@ -518,57 +453,34 @@ function GalleryImageDialogRefactored({
                 setForm({ ...form, image_url: e.target.value });
                 setPreview(e.target.value);
               }}
-              className="rounded-full h-11 bg-muted/40 border-0 focus-visible:ring-2 focus-visible:ring-primary"
             />
-          </div>
+          </FormField>
 
-          {/* Texte alternatif */}
-          <div className="grid gap-3">
-            <Label htmlFor="alt" className="font-bold text-foreground">
-              Texte alternatif (ALT)
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              Description courte pour l'accessibilité et l'SEO
-            </p>
+          <FormField label="Texte alternatif (ALT)" htmlFor="alt" hint="Accessibilité et SEO">
             <Textarea
               id="alt"
-              placeholder="Ex: Groupe de participants à l'atelier de 2026"
+              placeholder="Ex: Participants à l'atelier 2026"
               value={form.alt || ""}
               onChange={(e) => setForm({ ...form, alt: e.target.value })}
-              rows={3}
-              className="rounded-2xl bg-muted/40 border-0 focus-visible:ring-2 focus-visible:ring-primary resize-none"
             />
-          </div>
+          </FormField>
 
-          {/* Position */}
-          <div className="grid gap-3">
-            <Label htmlFor="position" className="font-bold text-foreground">
-              Position (ordre d'affichage)
-            </Label>
+          <FormField label="Position" htmlFor="position" hint="Ordre d'affichage dans la galerie">
             <Input
               id="position"
               type="number"
               min="0"
               value={form.position ?? 0}
               onChange={(e) => setForm({ ...form, position: parseInt(e.target.value) || 0 })}
-              className="rounded-full h-11 bg-muted/40 border-0 focus-visible:ring-2 focus-visible:ring-primary"
             />
-          </div>
+          </FormField>
         </div>
-        <DialogFooter className="gap-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="rounded-full border-primary/20 hover:bg-primary/10 hover:text-primary"
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={uploading}
-            className="rounded-full bg-primary hover:bg-primary/90 text-white font-medium"
-          >
-            {image ? "Mettre à jour" : "Ajouter l'image"}
+          <Button onClick={handleSave} disabled={uploading}>
+            {image ? "Mettre à jour" : "Ajouter"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -4,54 +4,7 @@
  */
 
 import { phpAuth } from "./php-auth";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost/api.php';
-
-function apiCandidates(base: string): string[] {
-  const seen = new Set<string>();
-  const add = (u: string) => seen.add(u) && u;
-  const norm = (s: string) => s.replace(/\/+$/, '');
-  const b = norm(base);
-  add(b);
-  if (b.endsWith('/api.php')) {
-    add(b.replace(/\/api.php$/, '/api/api.php'));
-    add(b.replace(/\/api.php$/, '/api/api..php'));
-  } else if (b.endsWith('/api/api.php')) {
-    add(b.replace(/\/api\/api.php$/, '/api.php'));
-    add(b.replace(/\/api\/api.php$/, '/api/api..php'));
-  } else {
-    add(b + '/api.php');
-    add(b + '/api/api.php');
-    add(b + '/api/api..php');
-  }
-  return Array.from(seen);
-}
-
-async function fetchWithFallback(path: string, init?: RequestInit) {
-  const candidates = apiCandidates(API_BASE_URL);
-  let lastError: any = null;
-  let lastResp: Response | null = null;
-  for (const cand of candidates) {
-    try {
-      const url = cand + (path.startsWith('?') ? path : path.startsWith('/') ? path : path);
-      const resp = await fetch(url, init);
-      lastResp = resp;
-      if (resp.ok) return resp;
-      lastError = resp;
-    } catch (e) {
-      lastError = e;
-    }
-  }
-  if (lastResp) {
-    try {
-      const json = await lastResp.json();
-      throw new Error(json.error || JSON.stringify(json));
-    } catch (e) {
-      throw new Error('Request failed to all API endpoints');
-    }
-  }
-  throw lastError || new Error('Request failed to all API endpoints');
-}
+import { fetchWithFallback } from "./php-fetch";
 
 export interface ListResponse {
   rows: any[];

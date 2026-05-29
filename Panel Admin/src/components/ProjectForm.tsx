@@ -1,7 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import * as React from "react";
-import { Plus, RefreshCcw, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, RefreshCcw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,47 +29,41 @@ import { FormField } from "@/components/ui/form-field";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
-export const Route = createFileRoute("/admin/blog_posts")({
-  component: BlogPostsAdmin,
-});
-
-type Post = {
+interface Project {
   id: string;
   title: string;
-  slug: string | null;
-  excerpt: string | null;
-  content: string | null;
-  cover_url: string | null;
+  description?: string;
+  status?: string;
+  image_url?: string;
   published: boolean;
-  author_id: string | null;
   created_at: string;
-};
+  updated_at: string;
+}
 
-const empty = {
+const empty: any = {
   title: "",
-  slug: "",
-  excerpt: "",
-  content: "",
-  cover_url: "",
+  description: "",
+  status: "active",
+  image_url: "",
   published: false,
 };
 
-function BlogPostsAdmin() {
-  const [rows, setRows] = useState<Post[]>([]);
+export function ProjectForm() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Post | null>(null);
+  const [editing, setEditing] = useState<Project | null>(null);
   const [form, setForm] = useState<any>(empty);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.list("blog_posts", page, limit, search);
-      setRows((res.rows ?? []) as any);
+      const res = await api.list("projects", page, limit, search);
+      setProjects((res.rows ?? []) as any);
       setTotal(res.total ?? 0);
     } catch (e: any) {
       toast.error(e.message);
@@ -91,14 +83,13 @@ function BlogPostsAdmin() {
     setOpen(true);
   };
 
-  const openEdit = (p: Post) => {
+  const openEdit = (p: Project) => {
     setEditing(p);
     setForm({
       title: p.title ?? "",
-      slug: p.slug ?? "",
-      excerpt: p.excerpt ?? "",
-      content: p.content ?? "",
-      cover_url: p.cover_url ?? "",
+      description: p.description ?? "",
+      status: p.status ?? "active",
+      image_url: p.image_url ?? "",
       published: !!p.published,
     });
     setOpen(true);
@@ -113,19 +104,18 @@ function BlogPostsAdmin() {
     try {
       const payload: any = {
         title: form.title,
-        slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-        excerpt: form.excerpt || null,
-        content: form.content || null,
-        cover_url: form.cover_url || null,
+        description: form.description || null,
+        status: form.status || "active",
+        image_url: form.image_url || null,
         published: form.published ? 1 : 0,
       };
 
       if (editing) {
-        await api.update("blog_posts", editing.id, payload);
-        toast.success("Article mis à jour");
+        await api.update("projects", editing.id, payload);
+        toast.success("Projet mis à jour");
       } else {
-        await api.create("blog_posts", payload);
-        toast.success("Article créé");
+        await api.create("projects", payload);
+        toast.success("Projet créé");
       }
       setOpen(false);
       load();
@@ -135,10 +125,10 @@ function BlogPostsAdmin() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Supprimer cet article ?")) return;
+    if (!confirm("Supprimer ce projet ?")) return;
     try {
-      await api.remove("blog_posts", id);
-      toast.success("Article supprimé");
+      await api.remove("projects", id);
+      toast.success("Projet supprimé");
       load();
     } catch (e: any) {
       toast.error(e.message);
@@ -150,8 +140,8 @@ function BlogPostsAdmin() {
   return (
     <PageShell>
       <PageHeader
-        title="Articles de Blog"
-        description={`${total} article${total > 1 ? "s" : ""}`}
+        title="Projets"
+        description={`${total} projet${total > 1 ? "s" : ""}`}
         actions={
           <PageToolbar>
             <PageSearch
@@ -186,45 +176,47 @@ function BlogPostsAdmin() {
             <TableHeader>
               <TableRow>
                 <TableHead>Titre</TableHead>
-                <TableHead>Slug</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Publié</TableHead>
                 <TableHead>Créé</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && rows.length === 0 && (
+              {loading && projects.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="table-empty">
                     Chargement…
                   </TableCell>
                 </TableRow>
               )}
-              {!loading && rows.length === 0 && (
+              {!loading && projects.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="table-empty">
-                    Aucun article
+                    Aucun projet
                   </TableCell>
                 </TableRow>
               )}
-              {rows.map((post) => (
-                <TableRow key={post.id}>
+              {projects.map((project) => (
+                <TableRow key={project.id}>
                   <TableCell className="max-w-[200px] truncate font-semibold">
-                    {post.title}
+                    {project.title}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{post.slug}</TableCell>
                   <TableCell>
-                    <Badge variant={post.published ? "default" : "secondary"}>
-                      {post.published ? "Publié" : "Brouillon"}
+                    <Badge variant="outline">{project.status || "active"}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={project.published ? "default" : "secondary"}>
+                      {project.published ? "Oui" : "Non"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {new Date(post.created_at).toLocaleDateString("fr-FR")}
+                    {new Date(project.created_at).toLocaleDateString("fr-FR")}
                   </TableCell>
                   <TableCell className="text-right">
                     <TableRowActions
-                      onEdit={() => openEdit(post)}
-                      onDelete={() => remove(post.id)}
+                      onEdit={() => openEdit(project)}
+                      onDelete={() => remove(project.id)}
                     />
                   </TableCell>
                 </TableRow>
@@ -262,9 +254,9 @@ function BlogPostsAdmin() {
         )}
       </ContentCard>
 
-      <BlogPostDialog
+      <ProjectDialog
         open={open}
-        post={editing}
+        project={editing}
         onClose={() => {
           setEditing(null);
           setOpen(false);
@@ -277,29 +269,29 @@ function BlogPostsAdmin() {
   );
 }
 
-function BlogPostDialog({
+function ProjectDialog({
   open,
-  post,
+  project,
   onClose,
   onSave,
   form,
   setForm,
 }: {
   open: boolean;
-  post: Post | null;
+  project: Project | null;
   onClose: () => void;
   onSave: () => void;
   form: any;
   setForm: (f: any) => void;
 }) {
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadImage = async (file: File) => {
     setUploading(true);
     try {
       const result = await api.uploadImage(file);
-      setForm({ ...form, cover_url: result.url });
+      setForm({ ...form, image_url: result.url });
       toast.success("Image uploadée");
     } catch (e: any) {
       toast.error(e.message);
@@ -310,65 +302,54 @@ function BlogPostDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-w-xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {post ? "Modifier l'article" : "Créer un nouvel article"}
+            {project ? "Modifier le projet" : "Créer un nouveau projet"}
           </DialogTitle>
         </DialogHeader>
-        <div className="form-stack py-2">
+        <div className="form-stack">
           <FormField label="Titre *" htmlFor="title">
             <Input
               id="title"
-              placeholder="Titre de l'article"
+              placeholder="Titre du projet"
               value={form.title || ""}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
           </FormField>
 
-          <FormField label="Slug" htmlFor="slug">
+          <FormField label="Description" htmlFor="description">
+            <Textarea
+              id="description"
+              placeholder="Description du projet"
+              value={form.description || ""}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </FormField>
+
+          <FormField label="Statut" htmlFor="status">
             <Input
-              id="slug"
-              placeholder="url-amical (auto-généré si vide)"
-              value={form.slug || ""}
-              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              id="status"
+              placeholder="active, completed, archived"
+              value={form.status || ""}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
             />
           </FormField>
 
-          <FormField label="Extrait" htmlFor="excerpt">
-            <Textarea
-              id="excerpt"
-              placeholder="Résumé court de l'article"
-              value={form.excerpt || ""}
-              onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-              rows={3}
-            />
-          </FormField>
-
-          <FormField label="Contenu" htmlFor="content">
-            <Textarea
-              id="content"
-              placeholder="Contenu complet de l'article"
-              value={form.content || ""}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={6}
-            />
-          </FormField>
-
-          <FormField label="Image de couverture" htmlFor="cover_url">
+          <FormField label="Image" htmlFor="image_url">
             <div className="space-y-2">
-              {form.cover_url && (
-                <div className="relative">
+              {form.image_url && (
+                <div className="relative group">
                   <img
-                    src={form.cover_url}
-                    alt="Cover"
-                    className="max-h-48 rounded border border-slate-200"
+                    src={form.image_url}
+                    alt="Project"
+                    className="w-full h-48 rounded-lg object-cover border border-slate-200"
                   />
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="absolute top-2 right-2"
-                    onClick={() => setForm({ ...form, cover_url: "" })}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setForm({ ...form, image_url: "" })}
                   >
                     Supprimer
                   </Button>
@@ -377,6 +358,7 @@ function BlogPostDialog({
               <Button
                 type="button"
                 variant="outline"
+                className="w-full"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -394,18 +376,15 @@ function BlogPostDialog({
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                Ou entrer une URL directement
-              </p>
               <Input
-                placeholder="URL de l'image (optionnel)"
-                value={form.cover_url || ""}
-                onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
+                placeholder="Ou URL directe de l'image"
+                value={form.image_url || ""}
+                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
               />
             </div>
           </FormField>
 
-          <FormField label="Publié" htmlFor="published">
+          <FormField label="Publié">
             <div className="flex items-center gap-3">
               <Switch
                 id="published"
@@ -415,7 +394,7 @@ function BlogPostDialog({
                 }
               />
               <span className="text-sm">
-                {form.published ? "Publié" : "Brouillon"}
+                {form.published ? "Oui, publié" : "Non, brouillon"}
               </span>
             </div>
           </FormField>
@@ -426,7 +405,7 @@ function BlogPostDialog({
             Annuler
           </Button>
           <Button onClick={onSave}>
-            {post ? "Mettre à jour" : "Créer"}
+            {project ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogFooter>
       </DialogContent>
