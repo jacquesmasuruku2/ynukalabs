@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { phpAuth } from "@/lib/php-auth";
 import { toast } from "sonner";
-import { translateAuthError } from "@/lib/auth-errors";
+import { translateAuthError, translateGoogleOAuthError } from "@/lib/auth-errors";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,6 +13,16 @@ import { cn } from "@/lib/utils";
  * This ensures strict typing across the dynamic application routes.
  */
 export const Route = createFileRoute("/login")({
+  loader: async ({ location }) => {
+    const hash =
+      location.hash ||
+      (typeof window !== "undefined" ? window.location.hash : "");
+    const result = await phpAuth.handleOAuthCallbackFromHash(hash);
+    if (result.redirectTo) {
+      throw redirect({ to: result.redirectTo });
+    }
+    return { oauthError: result.oauthError ?? null };
+  },
   component: LoginPage,
 });
 
@@ -236,7 +246,9 @@ function MobileBrandHeader() {
 
 function LoginPage() {
   const navigate = useNavigate();
-  
+  const { oauthError } = Route.useLoaderData();
+  const oauthHandled = useRef(false);
+
   // React UI Form Reactive States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -245,18 +257,55 @@ function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [showPassword, setShowPassword] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  /**
-   * Passive listener verifying if user state contains an active PHP authentication token.
-   * Redirects automatically to security dashboards to block layout flashing.
-   */
+  /** Secours si le hash n'est pas encore visible dans le loader (certaines navigations SPA) */
+  useLayoutEffect(() => {
+    if (oauthHandled.current) return;
+    const hash = window.location.hash;
+    if (!hash.includes("token=") && !hash.includes("error=")) return;
+
+    oauthHandled.current = true;
+    setLoading(true);
+    void phpAuth.handleOAuthCallbackFromHash(hash).then((result) => {
+      if (result.redirectTo) {
+        toast.success("Connexion Google réussie !");
+        navigate({ to: result.redirectTo });
+        return;
+      }
+      if (result.oauthError) {
+        toast.error(translateGoogleOAuthError(result.oauthError));
+      }
+      setLoading(false);
+    });
+  }, [navigate]);
+
   useEffect(() => {
+    if (oauthError) {
+      toast.error(translateGoogleOAuthError(oauthError));
+    }
+  }, [oauthError]);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("token=") || hash.includes("error=")) return;
+
     phpAuth.getSession().then(({ session }) => {
       if (session) {
         navigate({ to: "/admin" });
       }
     });
   }, [navigate]);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await phpAuth.startGoogleSignIn();
+    } catch (err: unknown) {
+      toast.error(translateAuthError(err));
+      setGoogleLoading(false);
+    }
+  };
 
   /**
    * Resets secondary dynamic error boundaries whenever authorization view toggles
@@ -359,13 +408,13 @@ function LoginPage() {
 
             {/* DYNAMIC WELCOME TYPOGRAPHY */}
             <h3 className="mb-4 text-3xl font-bold tracking-tight text-white">
-              {isSignup ? "Bon retour !" : "Bienvenue !"}
+              {isSignup ? "Bienvenue !" : "Bon retour !"}
             </h3>
 
             <p className="max-w-[260px] text-sm leading-relaxed text-blue-100/90">
               {isSignup
-                ? "Connectez-vous pour accéder à votre espace d'administration."
-                : "Créez votre compte pour rejoindre le panel Ynuka Labs."}
+                ? "Créez votre compte pour rejoindre le panel Ynuka Labs."
+                : "Connectez-vous pour accéder à votre espace d'administration."}
             </p>
           </div>
 
@@ -405,7 +454,11 @@ function LoginPage() {
               </div>
 
             <div className="mb-7 flex items-center justify-center gap-6 md:mb-6 md:gap-4">
-              <SocialCircleButton label="Connexion avec Google" onClick={() => toast.info("Connexion Google : configuration OAuth requise sur le serveur.")}>
+              <SocialCircleButton
+                label="Connexion avec Google"
+                disabled={loading || googleLoading}
+                onClick={handleGoogleSignIn}
+              >
                 <GoogleIcon className="h-4 w-4 text-slate-600 transition-colors" />
               </SocialCircleButton>
               <SocialCircleButton label="Connexion avec LinkedIn" onClick={() => toast.info("Connexion LinkedIn : non configurée pour le moment.")}>
@@ -525,15 +578,27 @@ function LoginPage() {
 /**
  * Isolated Functional SocialCircleButton component to encapsulate hover logic and accessibility attributes
  */
-function SocialCircleButton({ children, label, onClick }: { children: React.ReactNode; label: string; onClick: () => void }) {
+function SocialCircleButton({
+  children,
+  label,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
       className={cn(
         "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm touch-manipulation sm:h-10 sm:w-10",
-        "transition-all duration-200 hover:border-[#2a5298]/40 hover:bg-slate-50/50 hover:text-[#2a5298] hover:scale-105"
+        "transition-all duration-200 hover:border-[#2a5298]/40 hover:bg-slate-50/50 hover:text-[#2a5298] hover:scale-105",
+        "disabled:pointer-events-none disabled:opacity-50",
       )}
     >
       {children}

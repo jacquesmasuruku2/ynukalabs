@@ -85,7 +85,7 @@ Le bouton **Google** du formulaire `/login` appelle `?action=google_auth_url` â†
    - Application type : **Web application**
    - **Authorized redirect URIs** : ajoutez **exactement** :
      ```
-     https://votre-domaine.com/api.php?action=google_callback
+     https://admin.ynukalabs.com/api/api.php?action=google_callback
      ```
    - Copiez le **Client ID** et le **Client secret**.
 

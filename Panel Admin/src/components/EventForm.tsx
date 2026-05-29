@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { ContentCard, ContentCardFooter } from "@/components/ContentCard";
 import {
   Table,
   TableBody,
@@ -28,6 +28,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
+import { PageSearch, PageToolbar } from "@/components/PageToolbar";
+import { TableRowActions } from "@/components/TableRowActions";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -48,8 +52,8 @@ interface Event {
 }
 
 const EVENT_TYPES = [
-  { value: "Workshop", label: "Atelier" },
-  { value: "Seminar", label: "Séminaire" },
+  { value: "Workshop", label: "Atelie Web3r" },
+  { value: "Seminar", label: "Hackathon" },
   { value: "Conference", label: "Conférence" },
 ];
 
@@ -95,43 +99,39 @@ export function EventForm() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Événements
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {total} événement{total > 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setPage(1);
-              loadEvents();
-            }}
-            className="relative"
-          >
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
+    <PageShell>
+      <PageHeader
+        title="Événements"
+        description={`${total} événement${total > 1 ? "s" : ""}`}
+        actions={
+          <PageToolbar>
+            <PageSearch
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher…"
-              className="pl-8 w-64"
+              onChange={setSearch}
+              onSubmit={() => {
+                setPage(1);
+                loadEvents();
+              }}
             />
-          </form>
-          <Button variant="outline" size="icon" onClick={loadEvents} disabled={loading}>
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Ajouter un événement
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0 border-slate-200 bg-white shadow-sm"
+              onClick={loadEvents}
+              disabled={loading}
+              aria-label="Actualiser"
+            >
+              <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button onClick={() => setCreating(true)} className="h-10 shadow-sm">
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
+          </PageToolbar>
+        }
+      />
 
-      <Card className="overflow-hidden">
+      <ContentCard>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -149,14 +149,14 @@ export function EventForm() {
             <TableBody>
               {loading && events.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={8} className="table-empty">
                     Chargement…
                   </TableCell>
                 </TableRow>
               )}
               {!loading && events.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={8} className="table-empty">
                     Aucun événement
                   </TableCell>
                 </TableRow>
@@ -191,17 +191,10 @@ export function EventForm() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{createdDate}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => setEditing(event)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(event.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <TableRowActions
+                        onEdit={() => setEditing(event)}
+                        onDelete={() => onDelete(event.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -209,14 +202,15 @@ export function EventForm() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/40">
-          <span className="text-sm text-muted-foreground">
+        <ContentCardFooter>
+          <span className="text-sm font-medium text-slate-500">
             Page {page} / {totalPages}
           </span>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
+              className="border-slate-200 bg-white"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
@@ -225,14 +219,15 @@ export function EventForm() {
             <Button
               size="sm"
               variant="outline"
+              className="border-slate-200 bg-white"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
               Suivant
             </Button>
           </div>
-        </div>
-      </Card>
+        </ContentCardFooter>
+      </ContentCard>
 
       <EventDialog
         open={creating || !!editing}
@@ -258,7 +253,7 @@ export function EventForm() {
           }
         }}
       />
-    </div>
+    </PageShell>
   );
 }
 
@@ -308,21 +303,18 @@ function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {event ? "Modifier l'événement" : "Créer un nouvel événement"}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="form-stack">
           {/* Titre Français */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="title_fr" className="font-semibold">
               Titre en français *
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Le titre principal de l'événement
-            </p>
             <Input
               id="title_fr"
               placeholder="Ex: Atelier de photographie créative"
@@ -332,13 +324,10 @@ function EventDialog({
           </div>
 
           {/* Titre English */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="title" className="font-semibold">
               Titre en anglais
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Version anglaise du titre
-            </p>
             <Input
               id="title"
               placeholder="Ex: Creative Photography Workshop"
@@ -348,63 +337,74 @@ function EventDialog({
           </div>
 
           {/* Description Français */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="description_fr" className="font-semibold">
               Description en français
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Détails complets sur l'événement
-            </p>
             <Textarea
               id="description_fr"
               placeholder="Décrivez l'événement en détail..."
               value={form.description_fr || ""}
               onChange={(e) => setForm({ ...form, description_fr: e.target.value })}
-              rows={4}
             />
           </div>
 
           {/* Description English */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="description" className="font-semibold">
               Description en anglais
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Version anglaise de la description
-            </p>
             <Textarea
               id="description"
               placeholder="Describe the event in English..."
               value={form.description || ""}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={4}
             />
           </div>
 
-          {/* Date */}
-          <div className="grid gap-2">
-            <Label htmlFor="date" className="font-semibold">
-              Date et heure *
-            </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Quand l'événement aura-t-il lieu ?
-            </p>
-            <Input
-              id="date"
-              type="datetime-local"
-              value={form.date || ""}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-            />
+          {/* Two column grid for date and location */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Date */}
+            <div className="form-field">
+              <Label htmlFor="date" className="font-semibold">
+                Date et heure *
+              </Label>
+              <Input
+                id="date"
+                type="datetime-local"
+                value={form.date || ""}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              />
+            </div>
+
+            {/* Type */}
+            <div className="form-field">
+              <Label htmlFor="type" className="font-semibold">
+                Type d'événement
+              </Label>
+              <Select
+                value={form.type || "Workshop"}
+                onValueChange={(value) => setForm({ ...form, type: value })}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Location */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="location" className="font-semibold">
               Localisation
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Où se déroulera l'événement ?
-            </p>
             <Input
               id="location"
               placeholder="Ex: Studio YnukaHub, Rue de la Paix, Dakar"
@@ -413,39 +413,11 @@ function EventDialog({
             />
           </div>
 
-          {/* Type */}
-          <div className="grid gap-2">
-            <Label htmlFor="type" className="font-semibold">
-              Type d'événement
-            </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Catégorie de l'événement
-            </p>
-            <Select
-              value={form.type || "Workshop"}
-              onValueChange={(value) => setForm({ ...form, type: value })}
-            >
-              <SelectTrigger id="type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {EVENT_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Image URL */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="image_url" className="font-semibold">
-              Image
+              Image promotionnelle
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              URL de l'image promotionnelle de l'événement
-            </p>
             <Input
               id="image_url"
               type="url"
@@ -455,21 +427,23 @@ function EventDialog({
             />
           </div>
 
-          {/* Upcoming */}
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id="upcoming"
-              checked={form.upcoming || false}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, upcoming: checked })
-              }
-            />
-            <Label htmlFor="upcoming" className="font-semibold cursor-pointer">
-              Événement à venir
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              (Cochez si l'événement n'a pas encore eu lieu)
-            </p>
+          {/* Upcoming checkbox */}
+          <div className="form-toggle-row">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="upcoming"
+                checked={form.upcoming || false}
+                onCheckedChange={(checked) =>
+                  setForm({ ...form, upcoming: checked })
+                }
+              />
+              <Label htmlFor="upcoming" className="font-semibold cursor-pointer">
+                Événement à venir
+              </Label>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              (Cochez si pas encore eu lieu)
+            </span>
           </div>
         </div>
         <DialogFooter>

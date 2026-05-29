@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { ContentCard, ContentCardFooter } from "@/components/ContentCard";
 import {
   Table,
   TableBody,
@@ -27,6 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
+import { PageSearch, PageToolbar } from "@/components/PageToolbar";
+import { TableRowActions } from "@/components/TableRowActions";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -103,43 +107,39 @@ export function ResourceItemForm() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Ressources
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {total} ressource{total > 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setPage(1);
-              loadItems();
-            }}
-            className="relative"
-          >
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
+    <PageShell>
+      <PageHeader
+        title="Ressources"
+        description={`${total} ressource${total > 1 ? "s" : ""}`}
+        actions={
+          <PageToolbar>
+            <PageSearch
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher…"
-              className="pl-8 w-64"
+              onChange={setSearch}
+              onSubmit={() => {
+                setPage(1);
+                loadItems();
+              }}
             />
-          </form>
-          <Button variant="outline" size="icon" onClick={loadItems} disabled={loading}>
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Ajouter une ressource
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0 border-slate-200 bg-white shadow-sm"
+              onClick={loadItems}
+              disabled={loading}
+              aria-label="Actualiser"
+            >
+              <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button onClick={() => setCreating(true)} className="h-10 shadow-sm">
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
+          </PageToolbar>
+        }
+      />
 
-      <Card className="overflow-hidden">
+      <ContentCard>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -155,14 +155,14 @@ export function ResourceItemForm() {
             <TableBody>
               {loading && items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={6} className="table-empty">
                     Chargement…
                   </TableCell>
                 </TableRow>
               )}
               {!loading && items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={6} className="table-empty">
                     Aucune ressource
                   </TableCell>
                 </TableRow>
@@ -197,17 +197,10 @@ export function ResourceItemForm() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{createdDate}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => setEditing(item)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(item.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <TableRowActions
+                        onEdit={() => setEditing(item)}
+                        onDelete={() => onDelete(item.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -215,14 +208,15 @@ export function ResourceItemForm() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/40">
-          <span className="text-sm text-muted-foreground">
+        <ContentCardFooter>
+          <span className="text-sm font-medium text-slate-500">
             Page {page} / {totalPages}
           </span>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
+              className="border-slate-200 bg-white"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
@@ -231,14 +225,15 @@ export function ResourceItemForm() {
             <Button
               size="sm"
               variant="outline"
+              className="border-slate-200 bg-white"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
               Suivant
             </Button>
           </div>
-        </div>
-      </Card>
+        </ContentCardFooter>
+      </ContentCard>
 
       <ResourceItemDialog
         open={creating || !!editing}
@@ -265,7 +260,7 @@ export function ResourceItemForm() {
           }
         }}
       />
-    </div>
+    </PageShell>
   );
 }
 
@@ -311,22 +306,19 @@ function ResourceItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {item ? "Modifier la ressource" : "Créer une nouvelle ressource"}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="form-stack">
           {/* Section */}
           {sections.length > 0 && (
-            <div className="grid gap-2">
+            <div className="form-field">
               <Label htmlFor="section_id" className="font-semibold">
                 Section
               </Label>
-              <p className="text-sm text-muted-foreground mb-2">
-                La section à laquelle cette ressource appartient
-              </p>
               <Select
                 value={form.section_id || ""}
                 onValueChange={(value) => setForm({ ...form, section_id: value || null })}
@@ -347,13 +339,10 @@ function ResourceItemDialog({
           )}
 
           {/* Titre Français */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="title_fr" className="font-semibold">
               Titre en français *
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Le titre principal de la ressource
-            </p>
             <Input
               id="title_fr"
               placeholder="Ex: Guide complet du design"
@@ -363,13 +352,10 @@ function ResourceItemDialog({
           </div>
 
           {/* Titre English */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="title" className="font-semibold">
               Titre en anglais
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Version anglaise du titre
-            </p>
             <Input
               id="title"
               placeholder="Ex: Complete Design Guide"
@@ -379,47 +365,36 @@ function ResourceItemDialog({
           </div>
 
           {/* Description Français */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="description_fr" className="font-semibold">
               Description en français
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Détails complets sur la ressource
-            </p>
             <Textarea
               id="description_fr"
               placeholder="Décrivez la ressource en détail..."
               value={form.description_fr || ""}
               onChange={(e) => setForm({ ...form, description_fr: e.target.value })}
-              rows={4}
             />
           </div>
 
           {/* Description English */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="description" className="font-semibold">
               Description en anglais
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Version anglaise de la description
-            </p>
             <Textarea
               id="description"
               placeholder="Describe the resource in English..."
               value={form.description || ""}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={4}
             />
           </div>
 
           {/* URL */}
-          <div className="grid gap-2">
+          <div className="form-field">
             <Label htmlFor="url" className="font-semibold">
               URL de la ressource *
             </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              L'adresse complète de la ressource (https://...)
-            </p>
             <Input
               id="url"
               type="url"

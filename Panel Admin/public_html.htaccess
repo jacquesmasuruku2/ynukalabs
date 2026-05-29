@@ -1,0 +1,25 @@
+# Ynuka Labs — Panel Admin (racine public_html)
+# À copier vers : domains/admin.ynukalabs.com/public_html/.htaccess
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1) Laisser intact tout le backend PHP sous /api/ (api.php, .htaccess, etc.)
+  RewriteRule ^api(/|$) - [L,NC]
+
+  # 2) Ne pas réécrire les fichiers et dossiers qui existent réellement
+  #    (assets/, index.html, favicon, images, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3) Routes virtuelles React (/login, /admin, …) → SPA
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Page d'accueil par défaut
+DirectoryIndex index.html
+
+# Pas de listing de répertoires
+Options -Indexes

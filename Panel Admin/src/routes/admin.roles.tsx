@@ -14,6 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, Shield, ShieldOff, User as UserIcon } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
 import { toast } from "sonner";
 import { phpApi } from "@/lib/php-api";
 
@@ -97,26 +99,24 @@ function RolesPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Gestion des rôles</h1>
-          <p className="text-sm text-muted-foreground">
-            Attribuez ou retirez les rôles des utilisateurs
-          </p>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par email ou nom…"
-            className="pl-8 w-72"
-          />
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Gestion des rôles"
+        description="Attribuez ou retirez les rôles des utilisateurs"
+        actions={
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par email ou nom…"
+              className="w-72 pl-10"
+            />
+          </div>
+        }
+      />
 
-      <Card className="overflow-hidden">
+      <Card className="panel-surface">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -199,6 +199,6 @@ function RolesPage() {
           </Table>
         </div>
       </Card>
-    </div>
+    </PageShell>
   );
 }

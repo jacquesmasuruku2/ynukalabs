@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
 import { api, getApiUrl } from "@/lib/api";
 import { CheckCircle2, XCircle, AlertCircle, RefreshCw } from "lucide-react";
 
@@ -33,43 +35,43 @@ function Diagnostic() {
   }, []);
 
   const Row = ({ ok, label, value }: { ok: boolean; label: string; value?: React.ReactNode }) => (
-    <div className="flex items-center justify-between py-2 border-b last:border-0">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-4 border-b border-border/40 py-3 last:border-0">
+      <div className="flex items-center gap-2 min-w-0">
         {ok ? (
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
         ) : (
-          <XCircle className="h-4 w-4 text-destructive" />
+          <XCircle className="h-4 w-4 shrink-0 text-destructive" />
         )}
         <span className="text-sm">{label}</span>
       </div>
-      {value && <span className="text-xs text-muted-foreground font-mono">{value}</span>}
+      {value ? (
+        <span className="text-xs text-muted-foreground font-mono text-right shrink-0">{value}</span>
+      ) : null}
     </div>
   );
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Diagnostic backend</h1>
-          <p className="text-sm text-muted-foreground">
-            État de l'API PHP et de la base de données
-          </p>
-        </div>
-        <Button onClick={run} disabled={loading} variant="outline" size="sm">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Rafraîchir
-        </Button>
-      </div>
+    <PageShell className="max-w-3xl">
+      <PageHeader
+        title="Diagnostic backend"
+        description="État de l'API PHP et de la base de données"
+        actions={
+          <Button onClick={run} disabled={loading} variant="outline" size="sm">
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Rafraîchir
+          </Button>
+        }
+      />
 
-      <Card className="p-5">
-        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+      <Card className="panel-surface p-6">
+        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
           URL de l'API
         </div>
-        <code className="text-sm">{getApiUrl()}</code>
+        <code className="text-sm break-all">{getApiUrl()}</code>
       </Card>
 
       {error && (
-        <Card className="p-5 border-destructive/50 bg-destructive/5">
+        <Card className="panel-surface border-destructive/50 bg-destructive/5 p-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div className="space-y-2 text-sm">
@@ -88,7 +90,7 @@ function Diagnostic() {
 
       {data && (
         <>
-          <Card className="p-5">
+          <Card className="panel-surface p-6">
             <h2 className="font-semibold mb-3">Configuration PHP</h2>
             <Row ok label="API joignable" value={`PHP ${data.php_version}`} />
             <Row
@@ -103,7 +105,7 @@ function Diagnostic() {
             />
           </Card>
 
-          <Card className="p-5">
+          <Card className="panel-surface p-6">
             <h2 className="font-semibold mb-3">Base de données</h2>
             <Row
               ok={data.db === "ok"}
@@ -131,30 +133,34 @@ function Diagnostic() {
           </Card>
 
           {data.tables_missing?.length > 0 && (
-            <Card className="p-5 border-amber-500/50 bg-amber-500/5">
+            <Card className="panel-surface border-amber-500/50 bg-amber-500/5 p-6">
               <h2 className="font-semibold mb-2 text-amber-900 dark:text-amber-200">
                 Tables manquantes
               </h2>
               <div className="flex flex-wrap gap-2">
                 {data.tables_missing.map((t: string) => (
-                  <Badge key={t} variant="outline">{t}</Badge>
+                  <Badge key={t} variant="outline">
+                    {t}
+                  </Badge>
                 ))}
               </div>
             </Card>
           )}
 
           {data.tables_found?.length > 0 && (
-            <Card className="p-5">
+            <Card className="panel-surface p-6">
               <h2 className="font-semibold mb-2">Tables détectées dans la base</h2>
               <div className="flex flex-wrap gap-2">
                 {data.tables_found.map((t: string) => (
-                  <Badge key={t} variant="secondary">{t}</Badge>
+                  <Badge key={t} variant="secondary">
+                    {t}
+                  </Badge>
                 ))}
               </div>
             </Card>
           )}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

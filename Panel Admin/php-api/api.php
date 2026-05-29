@@ -1,4 +1,22 @@
 <?php
+// ============ SESSION (OAuth state — avant toute sortie) ============
+$ynukaHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || ((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
+
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.cookie_domain', '.ynukalabs.com');
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_secure', $ynukaHttps ? '1' : '0');
+ini_set('session.cookie_httponly', '1');
+ini_set('session.cookie_samesite', 'Lax');
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_name('YNUKA_ADMIN');
+    session_start();
+}
+
 /**
  * Ynuka Labs — Admin API (single-file PHP backend)
  *
@@ -22,16 +40,19 @@ define('ALLOWED_ORIGIN', '*'); // for production, set to your panel URL
 // ---- Google OAuth2 (set these to enable the "Sign in with Google" button) ----
 // 1) Google Cloud Console → APIs & Services → Credentials → Create OAuth client ID (Web application)
 // 2) Authorized redirect URI = exactly the value of GOOGLE_REDIRECT_URI below
-//    (must be https://admin.ynukalabs.com/api.php?action=google_callback)
+//    (must match where api.php is deployed, e.g. .../api/api.php?action=google_callback)
 // 3) After login, the API redirects the browser back to PANEL_URL/login#token=...
-define('GOOGLE_CLIENT_ID',     getenv('GOOGLE_CLIENT_ID')     ?: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com');
-define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: 'YOUR_GOOGLE_CLIENT_SECRET');
-define('GOOGLE_REDIRECT_URI',  getenv('GOOGLE_REDIRECT_URI')  ?: 'https://admin.ynukalabs.com/api.php?action=google_callback');
-define('PANEL_URL',            getenv('PANEL_URL')            ?: 'https://admin.ynukalabs.com'); // where to send user after login
+define('GOOGLE_CLIENT_ID',     getenv('GOOGLE_CLIENT_ID')     ?: '1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com');
+define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: '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');
+define('GOOGLE_REDIRECT_URI',  getenv('GOOGLE_REDIRECT_URI')  ?: 'https://admin.ynukalabs.com/api/api.php?action=google_callback');
+// ALLOW_REGISTRATION=true → inscription par formulaire ouverte à tous (même si des admins existent).
+define('ALLOW_REGISTRATION',   filter_var(getenv('ALLOW_REGISTRATION') ?: 'false', FILTER_VALIDATE_BOOLEAN));
+// GOOGLE_OPEN_ACCESS=true (défaut) → tout compte Google vérifié peut se connecter et est créé automatiquement.
+// Mettre à false pour n'autoriser que les emails dans admin_allowed_emails (ou ALLOWED_GOOGLE_EMAILS).
+define('GOOGLE_OPEN_ACCESS',   filter_var(getenv('GOOGLE_OPEN_ACCESS') ?: 'true', FILTER_VALIDATE_BOOLEAN));
+define('PANEL_URL',            getenv('PANEL_URL')            ?: 'https://admin.ynukalabs.com');
 
-// Comma-separated allowlist of Google emails that may auto-provision an admin account on first sign-in.
-// Use "*" to allow ANY verified Google account (DANGEROUS — only for private/dev setups).
-// Examples: 'me@gmail.com,partner@gmail.com'  or  '*'
+// Liste optionnelle (virgules) en complément de la table admin_allowed_emails. Utiliser * pour tout autoriser.
 define('ALLOWED_GOOGLE_EMAILS', getenv('ALLOWED_GOOGLE_EMAILS') ?: '');
 
 
@@ -54,6 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // ============ HELPERS ============
 function json_out($data, int $code = 200) { http_response_code($code); echo json_encode($data); exit; }
 function err(string $msg, int $code = 400, array $extra = []) { json_out(['error' => $msg] + $extra, $code); }
+
+/** Redirection vers le panel React (/login + fragment hash). */
+function panel_login_redirect(string $fragment): void {
+    header('Location: ' . rtrim(PANEL_URL, '/') . '/login#' . ltrim($fragment, '#'));
+    exit;
+}
 
 function db(): PDO {
     static $pdo = null;
@@ -107,6 +134,115 @@ function table_exists(string $t): bool {
         $s->execute([DB_NAME, $t]);
         return (bool) $s->fetchColumn();
     } catch (Throwable $e) { return false; }
+}
+
+function normalize_email(string $email): string {
+    return strtolower(trim($email));
+}
+
+/** Crée la table des emails autorisés (inscription formulaire ou Google restreint). */
+function ensure_admin_allowed_emails_table(): void {
+    if (table_exists('admin_allowed_emails')) {
+        return;
+    }
+    db()->exec("CREATE TABLE IF NOT EXISTS `admin_allowed_emails` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `email` VARCHAR(255) NOT NULL UNIQUE,
+        `note` VARCHAR(255) NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+/** Emails supplémentaires via variable d'environnement (virgules, * = tous). */
+function allowed_emails_from_env(): array {
+    $raw = ALLOWED_GOOGLE_EMAILS;
+    return array_values(array_filter(array_map('trim', explode(',', strtolower($raw)))));
+}
+
+/** Email présent dans admin_allowed_emails ou dans ALLOWED_GOOGLE_EMAILS (ou *). */
+function is_email_on_allowlist(string $email): bool {
+    $email = normalize_email($email);
+    if ($email === '') {
+        return false;
+    }
+    $env = allowed_emails_from_env();
+    if (in_array('*', $env, true) || in_array($email, $env, true)) {
+        return true;
+    }
+    try {
+        ensure_admin_allowed_emails_table();
+        $stmt = db()->prepare('SELECT 1 FROM admin_allowed_emails WHERE email = ? LIMIT 1');
+        $stmt->execute([$email]);
+        return (bool) $stmt->fetchColumn();
+    } catch (Throwable $e) {
+        error_log('is_email_on_allowlist: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/** Inscription par email/mot de passe : premier compte, ALLOW_REGISTRATION, ou allowlist. */
+function can_register_email(string $email): bool {
+    if (!table_exists('admin_users')) {
+        return false;
+    }
+    $count = (int) db()->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
+    if ($count === 0) {
+        return true;
+    }
+    if (ALLOW_REGISTRATION) {
+        return true;
+    }
+    return is_email_on_allowlist($email);
+}
+
+/** Première connexion Google : accès ouvert ou email sur allowlist. */
+function can_google_auto_provision(string $email): bool {
+    if (GOOGLE_OPEN_ACCESS) {
+        return true;
+    }
+    return is_email_on_allowlist($email);
+}
+
+/** Insère ou met à jour un admin à partir du profil Google. */
+function upsert_admin_from_google(string $googleId, string $email, string $name, string $picture): array {
+    $stmt = db()->prepare('SELECT id, email, name, avatar_url FROM admin_users WHERE google_id = ? OR email = ? LIMIT 1');
+    $stmt->execute([$googleId, $email]);
+    $u = $stmt->fetch();
+
+    if (!$u) {
+        $cols = table_columns('admin_users');
+        $row = ['email' => $email];
+        if (in_array('name', $cols, true)) {
+            $row['name'] = $name ?: $email;
+        }
+        if (in_array('avatar_url', $cols, true)) {
+            $row['avatar_url'] = $picture;
+        }
+        if (in_array('google_id', $cols, true)) {
+            $row['google_id'] = $googleId;
+        }
+        if (in_array('password_hash', $cols, true)) {
+            $row['password_hash'] = null;
+        }
+        $fields = array_keys($row);
+        $place = implode(',', array_fill(0, count($fields), '?'));
+        $ins = db()->prepare('INSERT INTO admin_users (`' . implode('`,`', $fields) . '`) VALUES (' . $place . ')');
+        $ins->execute(array_values($row));
+        $newId = (int) db()->lastInsertId();
+        $u = [
+            'id' => $newId,
+            'email' => $email,
+            'name' => $row['name'] ?? $name,
+            'avatar_url' => $picture,
+        ];
+        provision_app_user($email, $name, $picture, 'admin');
+    } else {
+        $upd = db()->prepare('UPDATE admin_users SET google_id = ?, avatar_url = COALESCE(NULLIF(?, ""), avatar_url) WHERE id = ?');
+        $upd->execute([$googleId, $picture, $u['id']]);
+        provision_app_user($email, $name, $picture, 'admin');
+    }
+
+    return $u;
 }
 
 /**
@@ -212,8 +348,20 @@ try {
                     'google_oauth_set' => GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
                         && GOOGLE_CLIENT_SECRET !== 'YOUR_GOOGLE_CLIENT_SECRET',
                     'google_redirect_uri' => GOOGLE_REDIRECT_URI,
+                    'allow_registration' => ALLOW_REGISTRATION,
+                    'google_open_access' => GOOGLE_OPEN_ACCESS,
                 ],
             ];
+            try {
+                ensure_admin_allowed_emails_table();
+                if (table_exists('admin_allowed_emails')) {
+                    $out['config']['allowed_emails_count'] = (int) db()->query(
+                        'SELECT COUNT(*) FROM admin_allowed_emails'
+                    )->fetchColumn();
+                }
+            } catch (Throwable $e) {
+                // optional table
+            }
             try {
                 $tables = array_map(fn($r) => array_values($r)[0],
                     db()->query("SHOW TABLES")->fetchAll());
@@ -247,6 +395,34 @@ try {
             json_out(['token' => $token, 'user' => ['id' => $u['id'], 'email' => $u['email'], 'name' => $u['name']]]);
         }
 
+        case 'register': {
+            $email = normalize_email($body['email'] ?? '');
+            $pass  = $body['password'] ?? '';
+            $name  = trim($body['name'] ?? '');
+            if (!$email || !$pass) err('Missing credentials');
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) err('Invalid email');
+            if (strlen($pass) < 6) err('Password must be at least 6 characters');
+            if (!table_exists('admin_users')) err('admin_users table missing — run setup.sql', 500);
+
+            if (!can_register_email($email)) {
+                err('Registration is closed. Contact an administrator or ask to be added to the allowlist.', 403);
+            }
+
+            $stmt = db()->prepare('SELECT id FROM admin_users WHERE email = ? LIMIT 1');
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) err('User already registered', 409);
+
+            $hash = password_hash($pass, PASSWORD_BCRYPT);
+            $stmt = db()->prepare('INSERT INTO admin_users (email, password_hash, name) VALUES (?, ?, ?)');
+            $stmt->execute([$email, $hash, $name !== '' ? $name : null]);
+            $id = (int) db()->lastInsertId();
+            $token = jwt_encode([
+                'sub' => $id, 'email' => $email, 'name' => $name,
+                'iat' => time(), 'exp' => time() + 60 * 60 * 24 * 7,
+            ]);
+            json_out(['token' => $token, 'user' => ['id' => $id, 'email' => $email, 'name' => $name]]);
+        }
+
         // ---- GOOGLE OAUTH2 ----
         // Step 1: panel calls this to get the URL to redirect the browser to.
         case 'google_auth_url': {
@@ -254,6 +430,8 @@ try {
                 err('Google OAuth not configured on the server', 500);
             }
             $state = bin2hex(random_bytes(16));
+            $_SESSION['oauth_state'] = $state;
+            session_write_close();
             $params = http_build_query([
                 'client_id'     => GOOGLE_CLIENT_ID,
                 'redirect_uri'  => GOOGLE_REDIRECT_URI,
@@ -270,8 +448,20 @@ try {
         // We exchange the code, look up the admin, then 302 back to the panel
         // with #token=... in the URL hash so the frontend can store it.
         case 'google_callback': {
+            if (!empty($_GET['error'])) {
+                $errCode = preg_replace('/[^a-z0-9_]/', '', strtolower($_GET['error'])) ?: 'access_denied';
+                panel_login_redirect('error=' . $errCode);
+            }
+
+            $state = $_GET['state'] ?? '';
+            $expected = $_SESSION['oauth_state'] ?? '';
+            unset($_SESSION['oauth_state']);
+            if (!$expected || !$state || !hash_equals($expected, $state)) {
+                panel_login_redirect('error=invalid_state');
+            }
+
             $code = $_GET['code'] ?? '';
-            if (!$code) { header('Location: ' . PANEL_URL . '/login#error=missing_code'); exit; }
+            if (!$code) { panel_login_redirect('error=missing_code'); }
 
             $ch = curl_init('https://oauth2.googleapis.com/token');
             curl_setopt_array($ch, [
@@ -289,10 +479,10 @@ try {
             $tokenResp = curl_exec($ch);
             $tokenHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            if ($tokenHttp !== 200) { header('Location: ' . PANEL_URL . '/login#error=token_exchange_failed'); exit; }
+            if ($tokenHttp !== 200) { panel_login_redirect('error=token_exchange_failed'); }
             $tokenData = json_decode($tokenResp, true) ?: [];
             $accessToken = $tokenData['access_token'] ?? '';
-            if (!$accessToken) { header('Location: ' . PANEL_URL . '/login#error=no_access_token'); exit; }
+            if (!$accessToken) { panel_login_redirect('error=no_access_token'); }
 
             $ch = curl_init('https://www.googleapis.com/oauth2/v3/userinfo');
             curl_setopt_array($ch, [
@@ -308,43 +498,15 @@ try {
             $picture  = $profile['picture']        ?? '';
             $verified = $profile['email_verified'] ?? false;
             if (!$googleId || !$email || !$verified) {
-                header('Location: ' . PANEL_URL . '/login#error=invalid_profile'); exit;
+                panel_login_redirect('error=invalid_profile');
             }
 
-            // 1) Find the admin row by google_id or email.
-            $stmt = db()->prepare('SELECT id, email, name, avatar_url FROM admin_users WHERE google_id = ? OR email = ? LIMIT 1');
+            $stmt = db()->prepare('SELECT id FROM admin_users WHERE google_id = ? OR email = ? LIMIT 1');
             $stmt->execute([$googleId, $email]);
-            $u = $stmt->fetch();
-
-            // 2) If no admin row, auto-provision (only if email is allowlisted).
-            if (!$u) {
-                $allow = array_filter(array_map('trim', explode(',', strtolower(ALLOWED_GOOGLE_EMAILS))));
-                $isAllowed = in_array('*', $allow, true) || in_array($email, $allow, true);
-                if (!$isAllowed) {
-                    header('Location: ' . PANEL_URL . '/login#error=not_authorized'); exit;
-                }
-                $cols = table_columns('admin_users');
-                $row = ['email' => $email];
-                if (in_array('name', $cols, true))          $row['name'] = $name ?: $email;
-                if (in_array('avatar_url', $cols, true))    $row['avatar_url'] = $picture;
-                if (in_array('google_id', $cols, true))     $row['google_id'] = $googleId;
-                if (in_array('password_hash', $cols, true)) $row['password_hash'] = null; // Google-only account
-                $fields = array_keys($row);
-                $place  = implode(',', array_fill(0, count($fields), '?'));
-                $ins = db()->prepare("INSERT INTO admin_users (`" . implode('`,`', $fields) . "`) VALUES ($place)");
-                $ins->execute(array_values($row));
-                $newId = (int) db()->lastInsertId();
-                $u = ['id' => $newId, 'email' => $email, 'name' => $row['name'] ?? $name, 'avatar_url' => $picture];
-
-                // 3) Also provision the matching row in `users` + `user_roles` (best-effort).
-                provision_app_user($email, $name, $picture, 'admin');
-            } else {
-                // Existing admin: refresh google_id + avatar.
-                $upd = db()->prepare('UPDATE admin_users SET google_id = ?, avatar_url = COALESCE(NULLIF(?, ""), avatar_url) WHERE id = ?');
-                $upd->execute([$googleId, $picture, $u['id']]);
-                // Make sure they also have a row in users + the admin role.
-                provision_app_user($email, $name, $picture, 'admin');
+            if (!$stmt->fetch() && !can_google_auto_provision($email)) {
+                panel_login_redirect('error=not_authorized');
             }
+            $u = upsert_admin_from_google($googleId, $email, $name, $picture);
 
             $token = jwt_encode([
                 'sub'     => $u['id'],
@@ -353,8 +515,7 @@ try {
                 'picture' => $picture ?: ($u['avatar_url'] ?? ''),
                 'iat' => time(), 'exp' => time() + 60 * 60 * 24 * 7,
             ]);
-            header('Location: ' . PANEL_URL . '/login#token=' . urlencode($token));
-            exit;
+            panel_login_redirect('token=' . urlencode($token));
         }
 
 
@@ -362,6 +523,39 @@ try {
         case 'me': {
             $u = require_auth();
             json_out(['user' => $u]);
+        }
+
+        // ---- Allowlist (emails autorisés à s'inscrire si ALLOW_REGISTRATION=false) ----
+        case 'allowed_emails_list': {
+            require_auth();
+            ensure_admin_allowed_emails_table();
+            $rows = db()->query('SELECT id, email, note, created_at FROM admin_allowed_emails ORDER BY email')->fetchAll();
+            json_out(['rows' => $rows]);
+        }
+
+        case 'allowed_emails_add': {
+            require_auth();
+            $email = normalize_email($body['email'] ?? '');
+            $note  = trim($body['note'] ?? '');
+            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                err('Invalid email');
+            }
+            ensure_admin_allowed_emails_table();
+            $stmt = db()->prepare('INSERT INTO admin_allowed_emails (email, note) VALUES (?, ?) ON DUPLICATE KEY UPDATE note = VALUES(note)');
+            $stmt->execute([$email, $note !== '' ? $note : null]);
+            json_out(['ok' => true, 'email' => $email]);
+        }
+
+        case 'allowed_emails_remove': {
+            require_auth();
+            $email = normalize_email($body['email'] ?? $_GET['email'] ?? '');
+            if (!$email) {
+                err('Missing email');
+            }
+            ensure_admin_allowed_emails_table();
+            $stmt = db()->prepare('DELETE FROM admin_allowed_emails WHERE email = ?');
+            $stmt->execute([$email]);
+            json_out(['ok' => true, 'deleted' => $stmt->rowCount()]);
         }
 
         case 'list': {
