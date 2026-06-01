@@ -11,6 +11,7 @@ export interface AuthUser {
   id: string | number;
   email: string;
   name: string;
+  avatar_url?: string;
 }
 
 export interface AuthSession {
@@ -28,6 +29,7 @@ function decodeJwtPayload(token: string): AuthUser | null {
       id?: string | number;
       email?: string;
       name?: string;
+      avatar_url?: string;
     };
     const id = json.sub ?? json.id;
     if (id == null || !json.email) return null;
@@ -35,6 +37,7 @@ function decodeJwtPayload(token: string): AuthUser | null {
       id,
       email: json.email,
       name: json.name ?? json.email,
+      avatar_url: json.avatar_url,
     };
   } catch {
     return null;
@@ -46,6 +49,7 @@ function normalizeUser(raw: Record<string, unknown>): AuthUser {
     id: (raw.id ?? raw.sub) as string | number,
     email: String(raw.email ?? ""),
     name: String(raw.name ?? raw.email ?? ""),
+    avatar_url: raw.avatar_url ? String(raw.avatar_url) : undefined,
   };
 }
 
