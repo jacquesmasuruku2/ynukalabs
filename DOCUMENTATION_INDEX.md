@@ -16,15 +16,7 @@
    - **Usage**: Lire en premier pour comprendre la configuration
 
 ### 2. **DEPLOYMENT_GUIDE_INTERSERVER.md** ✅
-   - **Contenu**: Guide pas-à-pas du déploiement
-   - **Sections**:
-     - Génération clé JWT sécurisée
-     - Upload via FTP/DirectAdmin
-     - Création tables via phpMyAdmin
-     - Tests endpoints (ping, login, list)
-     - Configuration Google OAuth
-     - Troubleshooting
-   - **Usage**: Suivre étape par étape pour mettre en production
+   - **Toutes les étapes sont déjà faites**✅
 
 ### 3. **SUMMARY_INTERSERVER_SETUP.md** ✅
    - **Contenu**: Résumé technique du setup complet
@@ -32,9 +24,8 @@
      - Vue d'ensemble architecture
      - Vérification configuration actuelle
      - Flux d'une requête CRUD complète
-     - Explication sécurité JWT
-     - Points critiques avant production
-   - **Usage**: Pour comprendre comment tout fonctionne ensemble
+     - Points critiques avant production 
+   - **Usage**: Pour comprendre comment tout fonctionne ensemble j'ai d'abord fait des tests plus nombreux
 
 ### 4. **DATA_FLOW_DIAGRAM.md** ✅
    - **Contenu**: Schéma détaillé du flux de données
