@@ -269,9 +269,9 @@ Tables: users, blog_posts, etc.
 
 **Après déploiement**:
 - Test: https://admin.ynukalabs.com/api.php?action=ping
-- Doit retourner: `{"db": "ok", "tables": [...], ...}`
+- Retourner bien le Json: `{"db": "ok", "tables": [...], ...}`
 
 ---
 
-**Statut**: ✅ Votre application est correctement configurée pour utiliser votre base de données Interserver.
+**Statut**: ✅ L'application est correctement configurée pour utiliser votre base de données Interserver.
 
