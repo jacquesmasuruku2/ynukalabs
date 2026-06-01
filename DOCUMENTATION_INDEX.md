@@ -50,7 +50,7 @@
    - **Fonction**: Teste automatiquement:
      - Existence des fichiers .env
      - Configuration API PHP
-     - Absence de références Supabase
+     - Références supabase mises à jour
      - Présence imports phpAuth
    - **Usage**: `.\test-config.ps1` pour vérifier localement
 
@@ -276,5 +276,5 @@ Si vous devez expliquer à quelqu'un:
 
 **Créé**: 2026-05-25
 **Version**: 3.0
-**Prêt pour déploiement**: ✅ OUI
+**Version déployée par Jacques M.**: ✅ OUI
 
