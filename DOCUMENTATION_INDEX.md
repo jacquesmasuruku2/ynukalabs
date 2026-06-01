@@ -158,7 +158,7 @@ Panel Adm/php-api/api.php:
   - src/routes/ → Pages admin
 
 ### Panel Admin (ynuka-hub-main)
-- **Statut**: ✅ Prêt à déployer
+- **Statut**: ✅ Déployé par moi ce 30/05/2026
 - **API URL**: https://admin.ynukalabs.com/api/api.php
 - **Fallbacks**: /api.php, /api/api..php
 - **Différence**: Route différente pour le même api.php
@@ -250,7 +250,7 @@ DONNÉES PERSISTANTES
 Si vous devez expliquer à quelqu'un:
 
 **Court (1 minute)**:
-> "Nous avons migré la panel admin de Supabase vers une API PHP custom qui utilise votre base de données MySQL chez Interserver. Tout les données vont directement dans ynukalab_database_website."
+> "Nous avons migré la panel admin de Supabase vers une API PHP personnalisable custom qui utilise votre base de données MySQL chez Interserver. Tout les données vont directement dans ynukalab_database_website."
 
 **Moyen (5 minutes)**:
 > Voir: **SUMMARY_INTERSERVER_SETUP.md**
@@ -275,6 +275,6 @@ Si vous devez expliquer à quelqu'un:
 ---
 
 **Créé**: 2026-05-25
-**Version**: 1.0
+**Version**: 3.0
 **Prêt pour déploiement**: ✅ OUI
 
