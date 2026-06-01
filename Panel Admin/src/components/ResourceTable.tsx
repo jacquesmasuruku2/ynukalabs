@@ -26,6 +26,35 @@ import { PageSearch, PageToolbar } from "@/components/PageToolbar";
 import { TableRowActions } from "@/components/TableRowActions";
 import { toast } from "sonner";
 import { api, type Resource, RESOURCE_LABELS } from "@/lib/api";
+import { notifications } from "@/lib/notifications";
+
+// Fonction helper pour envoyer des notifications lors de la création de ressources
+async function sendNotificationForResource(resource: Resource, data: Record<string, any>) {
+  try {
+    switch (resource) {
+      case "newsletter_subscribers":
+        await notifications.newsletter(data.email || "Nouvel abonné");
+        break;
+      case "contact_messages":
+        await notifications.contactMessage(data.name || "Contact", data.subject || "Nouveau message");
+        break;
+      case "blog_comments":
+        await notifications.blogComment(data.author_name || "Anonyme");
+        break;
+      case "donations":
+        await notifications.donation(data.donor_name || "Donateur", data.amount || "0");
+        break;
+      case "event_registrations":
+        await notifications.eventRegistration(data.name || "Participant");
+        break;
+      default:
+        // Pas de notification pour les autres ressources
+        break;
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de la notification:", error);
+  }
+}
 
 export function ResourceTable({ resource }: { resource: Resource }) {
   const [rows, setRows] = useState<any[]>([]);
@@ -193,8 +222,11 @@ export function ResourceTable({ resource }: { resource: Resource }) {
               await api.update(resource, editing[idKey], data);
               toast.success("Mis à jour");
             } else {
-              await api.create(resource, data);
+              const result = await api.create(resource, data);
               toast.success("Créé");
+
+              // Envoyer une notification pour les ressources spécifiques
+              await sendNotificationForResource(resource, data);
             }
             setEditing(null);
             setCreating(false);

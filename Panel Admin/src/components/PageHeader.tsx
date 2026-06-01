@@ -1,13 +1,15 @@
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type PageHeaderProps = {
   title: string;
   description?: string;
   actions?: React.ReactNode;
   className?: string;
+  showNotification?: boolean;
 };
 
-export function PageHeader({ title, description, actions, className }: PageHeaderProps) {
+export function PageHeader({ title, description, actions, className, showNotification = true }: PageHeaderProps) {
   return (
     <header
       className={cn(
@@ -25,11 +27,10 @@ export function PageHeader({ title, description, actions, className }: PageHeade
           </p>
         ) : null}
       </div>
-      {actions ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-2.5 sm:justify-end">
-          {actions}
-        </div>
-      ) : null}
+      <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-2.5 sm:justify-end">
+        {showNotification && <NotificationBell />}
+        {actions}
+      </div>
     </header>
   );
 }

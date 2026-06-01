@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AdminUserMenu } from "@/components/AdminUserMenu";
+import { NotificationPanel } from "@/components/NotificationPanel";
 import { phpAuth } from "@/lib/php-auth";
 
 export const Route = createFileRoute("/admin")({
@@ -13,6 +14,7 @@ function AdminLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -44,18 +46,21 @@ function AdminLayout() {
   return (
     <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full bg-white !dark:bg-slate-950">
-        <AppSidebar />
+        <AppSidebar
+          onNotificationsToggle={setShowNotifications}
+          showNotifications={showNotifications}
+        />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-10 flex h-[3.75rem] items-center gap-4 border-b border-sidebar-border/30 bg-sidebar text-sidebar-foreground shadow-sm backdrop-blur px-5 md:px-6">
             <SidebarTrigger className="rounded-lg text-sidebar-foreground transition-colors hover:bg-sidebar-primary/20" />
-            
+
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60 sm:inline">
                 Admin
               </span>
               <span className="truncate font-mono text-sm text-sidebar-foreground/85">{path}</span>
             </div>
-            
+
             <div className="flex items-center gap-3 ml-auto">
               <AdminUserMenu />
             </div>
@@ -65,6 +70,10 @@ function AdminLayout() {
           </main>
         </div>
       </div>
+      <NotificationPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </SidebarProvider>
   );
 }

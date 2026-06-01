@@ -7,6 +7,7 @@ import { phpAuth } from "@/lib/php-auth";
 import { toast } from "sonner";
 import { translateAuthError, translateGoogleOAuthError } from "@/lib/auth-errors";
 import { cn } from "@/lib/utils";
+import { notifications } from "@/lib/notifications";
 
 /**
  * Route definition required by TanStack Router infrastructure.
@@ -267,9 +268,16 @@ function LoginPage() {
 
     oauthHandled.current = true;
     setLoading(true);
-    void phpAuth.handleOAuthCallbackFromHash(hash).then((result) => {
+    void phpAuth.handleOAuthCallbackFromHash(hash).then(async (result) => {
       if (result.redirectTo) {
         toast.success("Connexion Google réussie !");
+        // Envoyer une notification de connexion
+        try {
+          await notifications.login("Utilisateur Google");
+          console.log("Notification de connexion Google envoyée avec succès");
+        } catch (notifError) {
+          console.error("Erreur lors de l'envoi de la notification de connexion Google:", notifError);
+        }
         navigate({ to: result.redirectTo });
         return;
       }
@@ -323,12 +331,19 @@ function LoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       if (mode === "signin") {
         // Sign-In execution stream
         await phpAuth.signInWithPassword(email, password);
         toast.success("Connexion réussie avec succès !");
+        // Envoyer une notification de connexion
+        try {
+          await notifications.login(email);
+          console.log("Notification de connexion envoyée avec succès");
+        } catch (notifError) {
+          console.error("Erreur lors de l'envoi de la notification de connexion:", notifError);
+        }
       } else {
         // Sign-Up registration criteria validations
         if (!name.trim() || !email.trim() || !password.trim()) {
@@ -338,8 +353,15 @@ function LoginPage() {
         }
         await phpAuth.signUp(email, password, name);
         toast.success("Votre compte Ynuka Labs a été créé !");
+        // Envoyer une notification d'inscription
+        try {
+          await notifications.register(email);
+          console.log("Notification d'inscription envoyée avec succès");
+        } catch (notifError) {
+          console.error("Erreur lors de l'envoi de la notification d'inscription:", notifError);
+        }
       }
-      
+
       // Post authentication state transition logic
       navigate({ to: "/admin" });
     } catch (err: unknown) {

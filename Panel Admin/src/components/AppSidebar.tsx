@@ -18,6 +18,7 @@ import {
   LogOut,
   Settings,
   Activity,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -58,7 +59,12 @@ const footerItems: SidebarItem[] = [
   { url: "/admin/settings", label: "Paramètres", icon: Settings },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  onNotificationsToggle?: (show: boolean) => void;
+  showNotifications?: boolean;
+}
+
+export function AppSidebar({ onNotificationsToggle, showNotifications }: AppSidebarProps) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
@@ -68,6 +74,11 @@ export function AppSidebar() {
   const logout = () => {
     setToken(null);
     navigate({ to: "/login" });
+  };
+
+  const toggleNotifications = () => {
+    const newState = !showNotifications;
+    onNotificationsToggle?.(newState);
   };
 
   return (
@@ -111,6 +122,16 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border/60 p-4">
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={toggleNotifications}
+              tooltip="Notifications"
+              className={showNotifications ? "bg-sidebar-accent" : ""}
+            >
+              <Bell className="size-4 shrink-0" strokeWidth={2} />
+              <span>Notifications</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           {footerItems.map((it) => {
             const Icon = it.icon;
             return (
