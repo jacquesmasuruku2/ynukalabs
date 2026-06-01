@@ -268,8 +268,7 @@ Si vous devez expliquer à quelqu'un:
 | **Fichiers .env** | ✅ Créé | Panel Adm & Panel Admin |
 | **Code Frontend** | ✅ Migré | phpAuth/phpApi |
 | **Code Backend** | ✅ Prêt | api.php fonctionnel |
-| **Sécurité** | ⚠️ Partiel | JWT_SECRET à générer |
-| **Déploiement** | ⏳ Attente | Prêt pour mise en prod |
+| **Déploiement** |  ✅ Fait | Déjà disponible sur le serveur |
 | **Documentation** | ✅ Complète | 5 fichiers guides |
 
 ---
