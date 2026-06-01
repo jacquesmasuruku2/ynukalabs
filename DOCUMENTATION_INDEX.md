@@ -158,50 +158,18 @@ Panel Adm/php-api/api.php:
   - src/routes/ → Pages admin
 
 ### Panel Admin (ynuka-hub-main)
-- **Statut**: ✅ Déployé par moi ce 30/05/2026
+- **Statut**: ✅ Déployé par Jacques ce 25/05/2026
 - **API URL**: https://admin.ynukalabs.com/api/api.php
 - **Fallbacks**: /api.php, /api/api..php
 - **Différence**: Route différente pour le même api.php
 - **Raison**: Support de déploiement alternatif (peut avoir api/ comme dossier)
 
 ### Ynuka Site (Public)
-- **Statut**: ⚠️  Conserve Supabase (non migré)
-- **API**: Supabase (ynukalabs.supabase.co)
-- **Non affecté** par cette migration
+- **API**: Supabase (supabase.co)
+- **Non affecté ou concernée** par cette migration
 
 ---
 
-## ⚠️ Points Importants
-
-### AVANT de mettre en production:
-1. **Générez JWT_SECRET**
-   ```bash
-   openssl rand -base64 32
-   # Copier la clé de 44 caractères
-   # Collez dans api.php ligne 19
-   ```
-
-2. **Uploadez api.php**
-   ```
-   De: Panel Adm/php-api/api.php
-   Vers: https://vda6600.is.cc:2222 → public_html/api.php
-   Permissions: 644
-   ```
-
-3. **Exécutez setup.sql**
-   ```
-   DirectAdmin → phpMyAdmin
-   Base: ynukalab_database_website
-   Collez et exécutez setup.sql
-   ```
-
-4. **Testez l'API**
-   ```bash
-   curl "https://admin.ynukalabs.com/api.php?action=ping"
-   # Doit retourner { "db": "ok", ... }
-   ```
-
----
 
 ## 📊 Architecture Finale
 
