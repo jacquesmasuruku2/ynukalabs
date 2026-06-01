@@ -72,7 +72,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-4">
+      <SidebarHeader className="border-b border-sidebar-border/60 px-6 py-6">
         <div className="flex items-center gap-3 overflow-hidden">
           <img
             src={logo}
@@ -80,15 +80,15 @@ export function AppSidebar() {
             className="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-sidebar-primary/30"
           />
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">Ynuka Labs</p>
-            <p className="truncate text-xs text-sidebar-foreground/60">Panel Admin</p>
+            <p className="truncate text-sm font-semibold text-sidebar-foreground pl-3">Ynuka Labs</p>
+            <p className="truncate text-xs text-sidebar-foreground/60 pl-3">Panel Admin</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-1 py-2">
-        <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
+      <SidebarContent className="px-6 py-6">
+        <SidebarGroup className="p-4">
+          <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70">Administration</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((it) => {
@@ -98,7 +98,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild isActive={isActive(it.url)} tooltip={it.label}>
                       <Link to={it.url}>
                         {Icon ? <Icon className="size-4 shrink-0" strokeWidth={2} /> : null}
-                        <span>{it.label}</span>
+                        <span className="truncate pl-3">{it.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -109,7 +109,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border/60 p-2">
+      <SidebarFooter className="border-t border-sidebar-border/60 p-4">
         <SidebarMenu>
           {footerItems.map((it) => {
             const Icon = it.icon;

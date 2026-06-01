@@ -34,10 +34,60 @@ export async function strapiFetch<T = unknown>(
     const method = (fetchOptions.method || 'GET').toUpperCase();
 
     if (method === 'GET') {
-      // simple select
+      // Convert Strapi filters to PHP API parameters
       const qs = new URLSearchParams(url.search);
-      qs.set('action', 'select');
-      qs.set('table', table);
+      qs.set('action', 'list');
+      qs.set('resource', table);
+
+      // Handle Strapi pagination
+      const pageSize = qs.get('pagination[pageSize]') || qs.get('pagination[limit]');
+      if (pageSize) {
+        qs.set('limit', pageSize);
+        qs.delete('pagination[pageSize]');
+        qs.delete('pagination[limit]');
+      }
+
+      const page = qs.get('pagination[page]');
+      if (page) {
+        qs.set('page', page);
+        qs.delete('pagination[page]');
+      }
+
+      // Handle Strapi filters - convert to simple search
+      const filters = qs.get('filters');
+      if (filters) {
+        try {
+          const filterObj = JSON.parse(filters);
+          // Extract simple equality filters
+          const searchTerms: string[] = [];
+          Object.entries(filterObj).forEach(([key, value]) => {
+            if (typeof value === 'object' && value !== null) {
+              if ('$eq' in value) {
+                searchTerms.push(`${key}=${value.$eq}`);
+              }
+            }
+          });
+          if (searchTerms.length > 0) {
+            qs.set('search', searchTerms.join(' '));
+          }
+        } catch {
+          // If JSON parse fails, ignore filters
+        }
+        qs.delete('filters');
+      }
+
+      // Handle Strapi sort
+      const sort = qs.get('sort');
+      if (sort) {
+        // PHP API doesn't support sort parameter yet, but we can pass it
+        // The PHP API will ignore it for now
+        qs.delete('sort');
+      }
+
+      // Remove other Strapi-specific parameters
+      qs.delete('populate');
+      qs.delete('fields');
+
       const res = await fetch(`${phpApi}?${qs.toString()}`, { method: 'GET' });
       return res.json() as Promise<T>;
     }
@@ -51,17 +101,16 @@ export async function strapiFetch<T = unknown>(
         body = {};
       }
       const data = body.data ?? body;
-      const payload = { table, data };
-      const res = await fetch(`${phpApi}?action=insert`, {
+      const res = await fetch(`${phpApi}?action=create&resource=${table}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(data),
       });
       return res.json() as Promise<T>;
     }
 
     if (method === 'PUT' || method === 'PATCH') {
-      // update - require id in path or in body
+      // update
       let body: any = {};
       try {
         body = (fetchOptions.body && typeof fetchOptions.body === 'string') ? JSON.parse(fetchOptions.body) : fetchOptions.body || {};
@@ -69,26 +118,26 @@ export async function strapiFetch<T = unknown>(
         body = {};
       }
       const data = body.data ?? body;
-      const conditions: any = {};
-      if (id) conditions.id = id;
-      if (body.id) conditions.id = body.id;
-      const payload = { table, data, conditions };
-      const res = await fetch(`${phpApi}?action=update`, {
+      const updateId = id || body.id;
+      if (!updateId) {
+        throw new Error('No ID provided for update');
+      }
+      const res = await fetch(`${phpApi}?action=update&resource=${table}&id=${updateId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(data),
       });
       return res.json() as Promise<T>;
     }
 
     if (method === 'DELETE') {
-      const conditions: any = {};
-      if (id) conditions.id = id;
-      const payload = { table, conditions };
-      const res = await fetch(`${phpApi}?action=delete`, {
+      const deleteId = id;
+      if (!deleteId) {
+        throw new Error('No ID provided for delete');
+      }
+      const res = await fetch(`${phpApi}?action=delete&resource=${table}&id=${deleteId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
       });
       return res.json() as Promise<T>;
     }

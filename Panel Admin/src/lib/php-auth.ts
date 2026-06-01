@@ -193,6 +193,27 @@ class PhpAuthService {
     }
     window.location.assign(data.url);
   }
+
+  /**
+   * Sign in with Google ID token (for Google Sign-In Library integration)
+   * Call this after receiving an ID token from Google Sign-In
+   */
+  async signInWithGoogleToken(idToken: string): Promise<AuthSession> {
+    const response = await fetchWithFallback(`?action=google_oauth_verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token: idToken }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Google authentication failed");
+    }
+
+    const data = await response.json();
+    this.persistToken(data.token);
+    return { token: data.token, user: data.user };
+  }
 }
 
 export const phpAuth = new PhpAuthService();

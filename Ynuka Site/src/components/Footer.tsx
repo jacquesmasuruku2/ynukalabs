@@ -220,14 +220,12 @@ const Footer = () => {
 
                 setSubmitting(true);
                 try {
-                  const apiUrl = `${window.location.origin}/php/api.php?action=insert`;
+                  const apiUrl = `${window.location.origin}/php/api.php?action=create&resource=newsletter_subscribers`;
                   const payload = {
-                    table: "newsletter_subscribers",
-                    data: {
-                      email: newsletterEmail,
-                      active: 1,
-                      subscribed_at: new Date().toISOString(),
-                    },
+                    email: newsletterEmail,
+                    name: newsletterName || "Anonymous",
+                    active: 1,
+                    subscribed_at: new Date().toISOString(),
                   };
 
                   const res = await fetch(apiUrl, {
@@ -242,14 +240,15 @@ const Footer = () => {
                     setNewsletterName("");
                     setNewsletterEmail("");
                   } else {
-                    const msg = (json && json.message) ? String(json.message) : "";
+                    const msg = (json && json.message) ? String(json.message) : (json && json.error) ? String(json.error) : "";
                     if (msg.toLowerCase().includes("duplicate") || msg.includes("1062") || msg.toLowerCase().includes("unique")) {
                       toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
                     } else {
-                      toast({ title: t("admin.error"), variant: "destructive" });
+                      toast({ title: msg || t("admin.error"), variant: "destructive" });
                     }
                   }
                 } catch (err: unknown) {
+                  console.error("Newsletter subscription error:", err);
                   toast({ title: t("admin.error"), variant: "destructive" });
                 } finally {
                   setSubmitting(false);

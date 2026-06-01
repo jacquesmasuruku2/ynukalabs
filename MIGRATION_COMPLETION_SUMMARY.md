@@ -368,7 +368,7 @@ Passwords: Hashed (bcrypt)
 
 5. Configurer Google OAuth (optionnel):
    → Ajouter GOOGLE_CLIENT_ID/SECRET dans api.php
-   → Redirection URI: https://admin.ynukalabs.com/api.php?action=google_callback
+   → Redirection URI: https://admin.ynukalabs.com/api/api.php?action=google_callback
 ```
 
 ---

@@ -89,9 +89,23 @@ Panel Admin/
 - Vérifier les permissions des fichiers (644)
 - Regarder la console du navigateur pour les erreurs
 
-### API non accessible
-- Vérifier `https://ynukalabs.com/api.php?action=ping`
-- Vérifier la config API dans Panel Admin `src/lib/api.ts`
+### Google OAuth
+
+Fichiers source : `Panel Admin/php-api/api.php` et `Panel Admin/php-api/.htaccess`
+
+Après upload, `?action=ping` doit afficher `"google_oauth_set": true`.
+
+Redirect URI dans Google Cloud : `https://admin.ynukalabs.com/api/api.php?action=google_callback`
+
+Voir `Panel Admin/php-api/DEPLOY-SERVEUR.md` pour la liste complète des fichiers.
+
+### API non accessible / « Erreur d'authentification »
+- L'API doit répondre en **JSON**, pas en HTML du panel. Tester dans le navigateur :
+  - `https://admin.ynukalabs.com/api/api.php?action=ping` → doit afficher `{"ok":true,...}`
+  - `https://admin.ynukalabs.com/api.php?action=ping` → renvoie souvent la page React (mauvaise URL)
+- Placer `api.php` dans `public_html/api/api.php` (ou à la racine **et** exclure `api.php` du rewrite SPA dans `.htaccess`)
+- Dans `Panel Admin/.env` : `VITE_API_URL=https://admin.ynukalabs.com/api/api.php` puis rebuild (`npm run build:spa`)
+- Les comptes se créent dans la table `admin_users` (phpMyAdmin / `setup.sql`), pas via « Créer un compte » sur le formulaire
 
 ## 📚 Documentation
 

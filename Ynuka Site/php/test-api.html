@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ynuka Labs - API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #ffb800;
+            padding-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #ffb800;
+            border-radius: 4px;
+        }
+        
+        .test-section h2 {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        button {
+            background: #ffb800;
+            color: #111;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #e6a600;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .response {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .response pre {
+            margin: 0;
+            font-size: 12px;
+            color: #333;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.pending {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #004085;
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Ynuka Labs - API Tester</h1>
+        <p class="subtitle">Testez les endpoints de l'API REST</p>
+        
+        <!-- Health Check -->
+        <div class="test-section">
+            <h2>🔍 Vérification de l'état (Health Check)</h2>
+            <div class="info-box">
+                Vérifiez que l'API répond correctement et que la base de données est accessible.
+            </div>
+            <button onclick="testPing()">Tester PING</button>
+            <div id="pingResponse" class="response" style="display:none;">
+                <pre></pre>
+            </div>
+        </div>
+        
+        <!-- Newsletter -->
+        <div class="test-section">
+            <h2>📧 Abonnement Newsletter</h2>
+            <div class="info-box">
+                Testez l'envoi de données d'abonnement newsletter (PUBLIC - pas d'auth requise).
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="newsletterName">Nom (optionnel)</label>
+                    <input type="text" id="newsletterName" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="newsletterEmail">Email</label>
+                    <input type="email" id="newsletterEmail" placeholder="john@example.com">
+                </div>
+            </div>
+            <button onclick="testNewsletter()">Envoyer</button>
+            <div id="newsletterResponse" class="response" style="display:none;">
+                <pre></pre>
+            </div>
+        </div>
+        
+        <!-- Contact Message -->
+        <div class="test-section">
+            <h2>💬 Message de Contact</h2>
+            <div class="info-box">
+                Testez l'envoi d'un message de contact (PUBLIC - pas d'auth requise).
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="contactName">Nom</label>
+                    <input type="text" id="contactName" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="contactEmail">Email</label>
+                    <input type="email" id="contactEmail" placeholder="john@example.com">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="contactPhone">Téléphone</label>
+                    <input type="tel" id="contactPhone" placeholder="+33 6 12 34 56 78">
+                </div>
+                <div class="form-group">
+                    <label for="contactSubject">Sujet</label>
+                    <input type="text" id="contactSubject" placeholder="Mon sujet">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="contactMessage">Message</label>
+                <textarea id="contactMessage" placeholder="Votre message ici..."></textarea>
+            </div>
+            <button onclick="testContact()">Envoyer</button>
+            <div id="contactResponse" class="response" style="display:none;">
+                <pre></pre>
+            </div>
+        </div>
+        
+        <!-- Event Registration -->
+        <div class="test-section">
+            <h2>📅 Inscription à un Événement</h2>
+            <div class="info-box">
+                Testez l'inscription à un événement (PUBLIC - pas d'auth requise).
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="eventId">ID Événement</label>
+                    <input type="number" id="eventId" placeholder="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="eventName">Nom Complet</label>
+                    <input type="text" id="eventName" placeholder="John Doe">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="eventEmail">Email</label>
+                    <input type="email" id="eventEmail" placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="eventPhone">Téléphone</label>
+                    <input type="tel" id="eventPhone" placeholder="+33 6 12 34 56 78">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="eventOrga">Organisation</label>
+                <input type="text" id="eventOrga" placeholder="Ma Société">
+            </div>
+            <button onclick="testEventReg()">S'inscrire</button>
+            <div id="eventRegResponse" class="response" style="display:none;">
+                <pre></pre>
+            </div>
+        </div>
+        
+        <!-- Read Newsletter Data -->
+        <div class="test-section">
+            <h2>📊 Lire les Abonnements Newsletter</h2>
+            <div class="info-box">
+                Vous devez être authentifié pour lire les données. Entrez votre JWT token.
+            </div>
+            <div class="form-group">
+                <label for="authToken">JWT Token (optionnel)</label>
+                <textarea id="authToken" placeholder="Entrez le JWT token obtenu après login..."></textarea>
+            </div>
+            <button onclick="testListNewsletter()">Charger les Abonnements</button>
+            <div id="listNewsletterResponse" class="response" style="display:none;">
+                <pre></pre>
+            </div>
+        </div>
+        
+        <!-- Login -->
+        <div class="test-section">
+            <h2>🔐 Connexion Admin</h2>
+            <div class="info-box">
+                Connectez-vous avec vos credentials admin pour obtenir un JWT token.
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="loginEmail">Email Admin</label>
+                    <input type="email" id="loginEmail" placeholder="admin@ynukalabs.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Mot de passe</label>
+                    <input type="password" id="loginPassword" placeholder="Votre mot de passe">
+                </div>
+            </div>
+            <button onclick="testLogin()">Se Connecter</button>
+            <div id="loginResponse" class="response" style="display:none;">
+                <pre></pre>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = '/php/api.php';
+        
+        async function makeRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(endpoint, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                const data = await response.json();
+                return {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data,
+                    success: response.ok
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    statusText: 'Network Error',
+                    data: { error: error.message },
+                    success: false
+                };
+            }
+        }
+        
+        function showResponse(elementId, result) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            let statusClass = result.success ? 'success' : 'error';
+            let statusText = result.success ? '✅ Succès' : '❌ Erreur';
+            
+            element.innerHTML = `
+                <div class="status ${statusClass}">${statusText} (${result.status})</div>
+                <pre>${JSON.stringify(result.data, null, 2)}</pre>
+            `;
+        }
+        
+        async function testPing() {
+            const result = await makeRequest(API_URL + '?action=ping');
+            showResponse('pingResponse', result);
+        }
+        
+        async function testNewsletter() {
+            const name = document.getElementById('newsletterName').value;
+            const email = document.getElementById('newsletterEmail').value;
+            
+            if (!email) {
+                alert('Veuillez entrer une email');
+                return;
+            }
+            
+            const result = await makeRequest(
+                API_URL + '?action=create&resource=newsletter_subscribers',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: email,
+                        name: name || 'Anonymous',
+                        active: 1,
+                        subscribed_at: new Date().toISOString()
+                    })
+                }
+            );
+            showResponse('newsletterResponse', result);
+        }
+        
+        async function testContact() {
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const phone = document.getElementById('contactPhone').value;
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            if (!name || !email || !message) {
+                alert('Veuillez remplir les champs obligatoires');
+                return;
+            }
+            
+            const result = await makeRequest(
+                API_URL + '?action=create&resource=contact_messages',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name, email, phone, subject, message
+                    })
+                }
+            );
+            showResponse('contactResponse', result);
+        }
+        
+        async function testEventReg() {
+            const eventId = document.getElementById('eventId').value;
+            const fullName = document.getElementById('eventName').value;
+            const email = document.getElementById('eventEmail').value;
+            const phone = document.getElementById('eventPhone').value;
+            const organization = document.getElementById('eventOrga').value;
+            
+            if (!eventId || !fullName || !email) {
+                alert('Veuillez remplir les champs obligatoires');
+                return;
+            }
+            
+            const result = await makeRequest(
+                API_URL + '?action=create&resource=event_registrations',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        event_id: parseInt(eventId),
+                        full_name: fullName,
+                        email,
+                        phone: phone || null,
+                        organization: organization || null
+                    })
+                }
+            );
+            showResponse('eventRegResponse', result);
+        }
+        
+        async function testListNewsletter() {
+            const token = document.getElementById('authToken').value;
+            
+            const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+            
+            const result = await makeRequest(
+                API_URL + '?action=list&resource=newsletter_subscribers',
+                { headers }
+            );
+            showResponse('listNewsletterResponse', result);
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            const result = await makeRequest(
+                API_URL + '?action=login',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                }
+            );
+            
+            showResponse('loginResponse', result);
+            
+            // Si login réussi, remplir le token
+            if (result.success && result.data.token) {
+                document.getElementById('authToken').value = result.data.token;
+            }
+        }
+    </script>
+</body>
+</html>

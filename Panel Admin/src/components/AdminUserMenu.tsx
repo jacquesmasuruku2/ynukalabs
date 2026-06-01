@@ -17,7 +17,7 @@ type AdminUser = { name: string; email: string; avatar: string };
 
 export function AdminUserMenu() {
   const navigate = useNavigate();
-  const { isDark, toggleDarkMode } = useDarkMode();
+  const { isDark, toggleDarkMode, themeMode, setThemeMode } = useDarkMode();
   const [user, setUser] = useState<AdminUser | null>(null);
 
   useEffect(() => {
@@ -83,7 +83,12 @@ export function AdminUserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => toggleDarkMode()}>
-          {isDark ? (
+          {themeMode === "system" ? (
+            <>
+              <Sun className="h-4 w-4 mr-2" />
+              Forcer clair
+            </>
+          ) : isDark ? (
             <>
               <Sun className="h-4 w-4 mr-2" />
               Mode clair

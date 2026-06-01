@@ -12,7 +12,7 @@ type FormFieldProps = {
 
 export function FormField({ label, htmlFor, hint, children, className }: FormFieldProps) {
   return (
-    <div className={cn("form-field", className)}>
+    <div className={cn("form-field grid gap-2", className)}>
       <Label htmlFor={htmlFor} className="text-sm font-semibold text-slate-900 dark:text-foreground">
         {label}
       </Label>

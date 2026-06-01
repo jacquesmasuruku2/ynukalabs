@@ -178,13 +178,14 @@ Si vous voulez permettre la connexion avec Google:
 
 1. Allez sur https://console.cloud.google.com/
 2. Créez un OAuth client ID (Web application)
-3. Autorisez l'URI: `https://admin.ynukalabs.com/api.php?action=google_callback`
+3. Autorisez l'URI: `https://admin.ynukalabs.com/api/api.php?action=google_callback`
 4. Modifiez `api.php`:
    ```php
-   define('GOOGLE_CLIENT_ID',     'VOTRE_CLIENT_ID.apps.googleusercontent.com');
-   define('GOOGLE_CLIENT_SECRET', 'VOTRE_SECRET');
-   define('GOOGLE_REDIRECT_URI',  'https://admin.ynukalabs.com/api.php?action=google_callback');
-   define('ALLOWED_GOOGLE_EMAILS', 'votre-email@gmail.com');  // ou '*' pour tous
+   define('GOOGLE_CLIENT_ID',     '1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com');
+   define('GOOGLE_CLIENT_SECRET', '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');
+   define('GOOGLE_REDIRECT_URI',  'https://admin.ynukalabs.com/api/api.php?action=google_callback');
+   define('PANEL_URL',            'https://admin.ynukalabs.com');
+   define('ALLOWED_GOOGLE_EMAILS', 'jacquesmasuruku2@gmail.com');
    ```
 5. Uploadez à nouveau `api.php`
 

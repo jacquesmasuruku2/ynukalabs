@@ -1,8 +1,4 @@
-@import "tailwindcss" source(none);
-@source "../src";
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
+@import "tailwindcss";
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -40,55 +36,271 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.985 0.005 250);
-  --foreground: oklch(0.20 0.05 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.05 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.05 260);
-  /* Primary = Ynuka blue */
-  --primary: oklch(0.40 0.18 265);
-  --primary-foreground: oklch(0.99 0.005 250);
-  --secondary: oklch(0.96 0.01 250);
-  --secondary-foreground: oklch(0.25 0.08 265);
-  --muted: oklch(0.96 0.01 250);
-  --muted-foreground: oklch(0.50 0.03 260);
-  /* Accent = Ynuka yellow */
-  --accent: oklch(0.88 0.16 95);
-  --accent-foreground: oklch(0.25 0.10 265);
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.01 250);
-  --input: oklch(0.92 0.01 250);
-  --ring: oklch(0.40 0.18 265);
 
-  /* Sidebar — Ynuka deep blue with yellow primary accent */
-  --sidebar: oklch(0.30 0.14 265);
-  --sidebar-foreground: oklch(0.95 0.02 250);
-  --sidebar-primary: oklch(0.85 0.17 95);
-  --sidebar-primary-foreground: oklch(0.25 0.12 265);
-  --sidebar-accent: oklch(0.36 0.15 265);
+  /* Light mode - SaaS Premium Style */
+  --background: oklch(0.97 0.003 250);
+  --foreground: oklch(0.15 0.02 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 260);
+  --primary: oklch(0.55 0.18 250);
+  --primary-foreground: oklch(0.99 0.002 250);
+  --secondary: oklch(0.94 0.006 250);
+  --secondary-foreground: oklch(0.20 0.03 260);
+  --muted: oklch(0.93 0.01 250);
+  --muted-foreground: oklch(0.50 0.02 260);
+  --accent: oklch(0.90 0.12 95);
+  --accent-foreground: oklch(0.20 0.05 260);
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.88 0.01 250);
+  --input: oklch(0.88 0.01 250);
+  --ring: oklch(0.55 0.18 250);
+  --sidebar: oklch(0.52 0.16 250);
+  --sidebar-foreground: oklch(0.99 0.001 250);
+  --sidebar-primary: oklch(0.65 0.18 250);
+  --sidebar-primary-foreground: oklch(0.99 0.002 250);
+  --sidebar-accent: oklch(0.60 0.15 250);
   --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.38 0.14 265);
-  --sidebar-ring: oklch(0.85 0.17 95);
+  --sidebar-border: oklch(0.45 0.12 250);
+  --sidebar-ring: oklch(0.65 0.18 250);
 }
 
+.dark {
+  /* Dark mode - SaaS Premium Style */
+  --background: oklch(0.14 0.01 255);
+  --foreground: oklch(0.93 0.005 250);
+  --card: oklch(0.18 0.012 255);
+  --card-foreground: oklch(0.93 0.005 250);
+  --popover: oklch(0.18 0.012 255);
+  --popover-foreground: oklch(0.93 0.005 250);
+  --primary: oklch(0.65 0.18 250);
+  --primary-foreground: oklch(0.14 0.01 255);
+  --secondary: oklch(0.22 0.012 255);
+  --secondary-foreground: oklch(0.93 0.005 250);
+  --muted: oklch(0.24 0.015 255);
+  --muted-foreground: oklch(0.60 0.01 250);
+  --accent: oklch(0.75 0.12 95);
+  --accent-foreground: oklch(0.14 0.01 255);
+  --destructive: oklch(0.60 0.18 25);
+  --destructive-foreground: oklch(0.14 0.01 255);
+  --border: oklch(0.28 0.015 255);
+  --input: oklch(0.28 0.015 255);
+  --ring: oklch(0.65 0.18 250);
+  --sidebar: oklch(0.42 0.015 260);
+  --sidebar-foreground: oklch(0.92 0.005 250);
+  --sidebar-primary: oklch(0.70 0.18 250);
+  --sidebar-primary-foreground: oklch(0.14 0.01 255);
+  --sidebar-accent: oklch(0.52 0.015 260);
+  --sidebar-accent-foreground: oklch(0.94 0 0);
+  --sidebar-border: oklch(0.52 0.015 260);
+  --sidebar-ring: oklch(0.70 0.18 250);
+}
 
 @layer base {
-  * { border-color: var(--color-border); }
-  body { background-color: var(--color-background); color: var(--color-foreground); }
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
 @layer components {
   .content-card {
-    @apply rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 dark:bg-card dark:ring-border/40;
+    @apply rounded-xl bg-white shadow-sm border border-slate-100 p-6;
+    transition: all 0.3s ease;
+  }
+
+  .content-card:hover {
+    @apply shadow-md;
   }
 
   .content-card-footer {
-    @apply mt-6 flex items-center justify-between gap-4 border-t border-slate-200/60 pt-5 dark:border-border/40;
+    @apply mt-6 flex items-center justify-between gap-4 border-t border-slate-100 pt-5;
+  }
+
+  .panel-surface {
+    @apply rounded-xl bg-white/50 backdrop-blur-sm border border-slate-100 p-6;
   }
 
   .period-toggle {
-    @apply inline-flex items-center gap-1 rounded-lg bg-slate-100/80 p-1 dark:bg-slate-800/50;
+    @apply inline-flex items-center gap-1 rounded-lg bg-slate-100/80 p-1;
+    transition: all 0.2s ease;
   }
+
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+
+}
+
+/* Dark mode explicit CSS rules (not using @layer to ensure they apply) */
+.dark main {
+  background-color: oklch(0.18 0.012 255) !important;
+}
+
+.dark .content-card {
+  background-color: oklch(0.18 0.012 255) !important;
+  border-color: oklch(0.28 0.012 255) !important;
+  box-shadow: none !important;
+  color: oklch(0.93 0.005 250) !important;
+}
+
+.dark .content-card:hover {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1) !important;
+}
+
+.dark .content-card-footer {
+  border-color: oklch(0.28 0.012 255) !important;
+}
+
+.dark .panel-surface {
+  background-color: oklch(0.18 0.012 255 / 0.5) !important;
+  border-color: oklch(0.28 0.012 255) !important;
+}
+
+.dark [class*="StatCard"] {
+  background-color: oklch(0.18 0.012 255) !important;
+  border-color: oklch(0.28 0.012 255) !important;
+}
+
+.dark .stat-card {
+  background-color: oklch(0.18 0.012 255) !important;
+  border-color: oklch(0.28 0.012 255) !important;
+  box-shadow: none !important;
+}
+
+.page-toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.page-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-search input {
+  width: 100%;
+  padding-left: 3rem;
+  min-height: 2.5rem;
+}
+
+.page-search svg {
+  left: 1rem;
+}
+
+.form-stack {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.form-field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+}
+
+.dark .form-stack {
+  background-color: rgba(15, 23, 42, 0.92);
+  border-color: rgba(71, 85, 105, 0.6);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
+}
+
+.dark .form-field label {
+  color: oklch(0.95 0.002 250) !important;
+}
+
+.dark .form-field input,
+.dark .form-field textarea,
+.dark .form-field select {
+  background-color: oklch(0.12 0.01 255 / 0.94) !important;
+  border-color: oklch(0.34 0.01 255) !important;
+  color: oklch(0.95 0.002 250) !important;
+}
+
+.dark .form-field input::placeholder,
+.dark .form-field textarea::placeholder {
+  color: oklch(0.72 0.01 250) !important;
+}
+
+.dark .form-field input:focus,
+.dark .form-field textarea:focus,
+.dark .form-field select:focus {
+  border-color: oklch(0.45 0.18 250) !important;
+  box-shadow: 0 0 0 3px oklch(0.65 0.18 250 / 0.1) !important;
+}
+
+.dark .page-search input {
+  background-color: oklch(0.12 0.01 255 / 0.94);
+  border-color: oklch(0.34 0.01 255);
+  color: oklch(0.95 0.002 250);
+}
+
+.dark .page-search input::placeholder {
+  color: oklch(0.72 0.01 250);
+}
+
+/* Text styling in dark mode */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: oklch(0.95 0.002 250) !important;
+}
+
+.dark h1 {
+  color: oklch(0.95 0.002 250) !important;
+}
+
+.dark h2 {
+  color: oklch(0.95 0.002 250) !important;
+}
+
+.dark h3 {
+  color: oklch(0.95 0.002 250) !important;
+}
+
+.dark .stat-card:hover {
+  border-color: oklch(0.38 0.015 255) !important;
 }

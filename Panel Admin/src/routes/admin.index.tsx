@@ -25,51 +25,52 @@ export const Route = createFileRoute("/admin/")({
 
 type Period = 7 | 30 | 90;
 
-const CHART_GRID = "#f1f5f9";
+const CHART_GRID = "#334155";
 const CHART_AXIS = "#94a3b8";
-const CHART_TOOLTIP_BG = "#ffffff";
-const CHART_TOOLTIP_BORDER = "#e2e8f0";
+const CHART_TOOLTIP_BG = "#020617";
+const CHART_TOOLTIP_BORDER = "#334155";
+const CHART_TOOLTIP_COLOR = "#e2e8f0";
 
 const SOURCES = [
   {
     key: "users",
     label: "Utilisateurs",
     icon: Users,
-    color: "#2563eb",
-    iconBg: "bg-blue-50 dark:bg-blue-500/15",
-    iconColor: "text-blue-600 dark:text-blue-400",
+    color: "#38bdf8",
+    iconBg: "bg-sky-500/10",
+    iconColor: "text-sky-400",
   },
   {
     key: "donations",
     label: "Dons",
     icon: HeartHandshake,
-    color: "#10b981",
-    iconBg: "bg-emerald-50 dark:bg-emerald-500/15",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    color: "#c084fc",
+    iconBg: "bg-fuchsia-500/10",
+    iconColor: "text-fuchsia-400",
   },
   {
     key: "event_registrations",
     label: "Inscriptions",
     icon: ClipboardList,
-    color: "#f59e0b",
-    iconBg: "bg-amber-50 dark:bg-amber-500/15",
-    iconColor: "text-amber-600 dark:text-amber-400",
+    color: "#34d399",
+    iconBg: "bg-emerald-500/10",
+    iconColor: "text-emerald-400",
   },
   {
     key: "contact_messages",
     label: "Messages",
     icon: Mail,
-    color: "#ef4444",
-    iconBg: "bg-red-50 dark:bg-red-500/15",
-    iconColor: "text-red-600 dark:text-red-400",
+    color: "#818cf8",
+    iconBg: "bg-indigo-500/10",
+    iconColor: "text-indigo-400",
   },
   {
     key: "newsletter_subscribers",
     label: "Newsletter",
     icon: Send,
-    color: "#8b5cf6",
-    iconBg: "bg-violet-50 dark:bg-violet-500/15",
-    iconColor: "text-violet-600 dark:text-violet-400",
+    color: "#fbbf24",
+    iconBg: "bg-amber-500/10",
+    iconColor: "text-amber-400",
   },
 ] as const satisfies ReadonlyArray<{
   key: string;
@@ -162,7 +163,7 @@ function Dashboard() {
         />
 
         {/* Statistics Grid */}
-        <div className="grid gap-3 sm:gap-4 lg:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {SOURCES.map((s) => (
             <StatCard
               key={s.key}
@@ -170,6 +171,7 @@ function Dashboard() {
               icon={s.icon}
               iconBg={s.iconBg}
               iconColor={s.iconColor}
+              valueColor={s.iconColor}
               loading={loading}
               value={totals[s.key] ?? 0}
               hint={`Nouveaux sur ${period} j`}
@@ -178,16 +180,16 @@ function Dashboard() {
         </div>
 
         {/* Chart Section */}
-        <ContentCard className="space-y-6 p-5 sm:p-6 lg:p-8">
+        <ContentCard className="space-y-6 p-6">
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white leading-tight">
               Évolution par jour
             </h2>
-            <p className="text-sm text-slate-500 dark:text-muted-foreground">
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-tight">
               Nombre de nouveaux enregistrements par jour, par catégorie
             </p>
           </div>
-          <div className="h-[min(360px,50vh)] w-full min-h-[280px] -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8">
+          <div className="h-[min(420px,55vh)] w-full min-h-[320px] overflow-hidden rounded-xl border border-slate-100 !dark:border-slate-800/60 bg-white !dark:bg-slate-900 p-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={series} margin={{ top: 12, right: 16, left: 0, bottom: 0 }}>
                 <defs>
@@ -218,6 +220,7 @@ function Dashboard() {
                     borderRadius: 12,
                     fontSize: 12,
                     boxShadow: "0 4px 24px rgba(15,23,42,0.08)",
+                    color: CHART_TOOLTIP_COLOR,
                   }}
                 />
                 <Legend 

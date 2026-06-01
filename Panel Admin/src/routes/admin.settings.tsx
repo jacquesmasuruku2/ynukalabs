@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Monitor } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin/settings")({
 
 function Settings() {
   const [url, setUrl] = useState(getApiUrl());
-  const { isDark, toggleDarkMode } = useDarkMode();
+  const { isDark, toggleDarkMode, themeMode, setThemeMode } = useDarkMode();
 
   return (
     <PageShell className="max-w-3xl">
@@ -32,23 +32,48 @@ function Settings() {
           <p className="text-sm text-muted-foreground">Thème du panel admin</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border/60 bg-muted/20 px-4 py-4">
-          <div className="flex items-center gap-3">
-            {isDark ? (
-              <Moon className="h-5 w-5 text-primary" />
-            ) : (
-              <Sun className="h-5 w-5 text-primary" />
-            )}
-            <div>
-              <p className="font-medium text-foreground">Mode sombre</p>
-              <p className="text-xs text-muted-foreground">
-                {isDark ? "Actuellement activé" : "Actuellement désactivé"}
-              </p>
-            </div>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Choisissez le thème d'affichage du panel
+          </p>
+
+          <div className="grid grid-cols-3 gap-3">
+            <Button
+              onClick={() => setThemeMode("light")}
+              variant={themeMode === "light" ? "default" : "outline"}
+              className="flex flex-col gap-2 h-auto py-4"
+            >
+              <Sun className="h-5 w-5" />
+              <span className="text-xs">Clair</span>
+            </Button>
+
+            <Button
+              onClick={() => setThemeMode("dark")}
+              variant={themeMode === "dark" ? "default" : "outline"}
+              className="flex flex-col gap-2 h-auto py-4"
+            >
+              <Moon className="h-5 w-5" />
+              <span className="text-xs">Sombre</span>
+            </Button>
+
+            <Button
+              onClick={() => setThemeMode("system")}
+              variant={themeMode === "system" ? "default" : "outline"}
+              className="flex flex-col gap-2 h-auto py-4"
+            >
+              <Monitor className="h-5 w-5" />
+              <span className="text-xs">Système</span>
+            </Button>
           </div>
-          <Button onClick={() => toggleDarkMode()} variant={isDark ? "default" : "outline"}>
-            {isDark ? "Désactiver" : "Activer"}
-          </Button>
+
+          {themeMode === "system" && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+              <Monitor className="h-4 w-4" />
+              <span>
+                Le thème suit les préférences de votre système ({isDark ? "sombre" : "clair"})
+              </span>
+            </div>
+          )}
         </div>
       </Card>
 

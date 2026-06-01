@@ -310,13 +310,13 @@ function BlogPostDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-h-[90vh] w-full max-w-full sm:max-w-3xl overflow-y-auto dark:bg-slate-900">
+        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
+          <DialogTitle className="text-xl font-bold dark:text-white">
             {post ? "Modifier l'article" : "Créer un nouvel article"}
           </DialogTitle>
         </DialogHeader>
-        <div className="form-stack py-2">
+        <div className="form-stack mt-6">
           <FormField label="Titre *" htmlFor="title">
             <Input
               id="title"
@@ -356,13 +356,13 @@ function BlogPostDialog({
           </FormField>
 
           <FormField label="Image de couverture" htmlFor="cover_url">
-            <div className="space-y-2">
+            <div className="space-y-3">
               {form.cover_url && (
-                <div className="relative">
+                <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
                   <img
                     src={form.cover_url}
                     alt="Cover"
-                    className="max-h-48 rounded border border-slate-200"
+                    className="max-h-48 w-full object-cover rounded"
                   />
                   <Button
                     size="sm"
@@ -379,6 +379,7 @@ function BlogPostDialog({
                 variant="outline"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
+                className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 {uploading ? "Upload en cours…" : "Télécharger une image"}
@@ -421,11 +422,11 @@ function BlogPostDialog({
           </FormField>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 flex gap-3 justify-end">
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={onSave}>
+          <Button onClick={onSave} className="min-w-[120px]">
             {post ? "Mettre à jour" : "Créer"}
           </Button>
         </DialogFooter>

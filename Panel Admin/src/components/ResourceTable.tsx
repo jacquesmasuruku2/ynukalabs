@@ -246,7 +246,7 @@ function RowDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-xl sm:max-w-2xl">
+      <DialogContent className="w-full max-w-full sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{row ? "Modifier l'enregistrement" : "Nouvel enregistrement"}</DialogTitle>
         </DialogHeader>

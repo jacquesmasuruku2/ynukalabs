@@ -1,0 +1,35 @@
+# ============ REWRITE ENGINE ============
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /api/
+    
+    # Pass Authorization header to PHP
+    RewriteCond %{HTTP:Authorization} ^(.+)$
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+# ============ PROTECT SENSITIVE FILES ============
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "database.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "google-oauth.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "setup.sql">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# ============ PHP SETTINGS ============
+php_value post_max_size 50M
+php_value upload_max_filesize 50M
+php_value max_execution_time 300

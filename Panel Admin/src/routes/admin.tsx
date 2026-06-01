@@ -16,6 +16,14 @@ function AdminLayout() {
 
   useEffect(() => {
     let mounted = true;
+    // Mode développement : permettre l'accès sans authentification
+    const isDevMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (isDevMode) {
+      setChecked(true);
+      return;
+    }
+
     phpAuth.getSession().then(({ session }) => {
       if (!mounted) return;
       if (!session) {
@@ -35,24 +43,24 @@ function AdminLayout() {
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-white !dark:bg-slate-950">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-10 flex h-[3.75rem] items-center gap-4 border-b border-white/10 bg-navbar px-5 text-navbar-foreground shadow-sm md:px-6">
-            <SidebarTrigger className="rounded-lg text-navbar-foreground transition-colors hover:bg-white/10" />
+          <header className="sticky top-0 z-10 flex h-[3.75rem] items-center gap-4 border-b border-sidebar-border/30 bg-sidebar text-sidebar-foreground shadow-sm backdrop-blur px-5 md:px-6">
+            <SidebarTrigger className="rounded-lg text-sidebar-foreground transition-colors hover:bg-sidebar-primary/20" />
             
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-navbar-foreground/50 sm:inline">
+              <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60 sm:inline">
                 Admin
               </span>
-              <span className="truncate font-mono text-sm text-navbar-foreground/85">{path}</span>
+              <span className="truncate font-mono text-sm text-sidebar-foreground/85">{path}</span>
             </div>
             
             <div className="flex items-center gap-3 ml-auto">
               <AdminUserMenu />
             </div>
           </header>
-          <main className="flex-1 overflow-auto bg-slate-50/90 px-5 py-7 md:px-8 md:py-8 lg:px-10 lg:py-9">
+          <main className="flex-1 overflow-auto bg-white !dark:bg-slate-950 px-5 py-7 md:px-8 md:py-8 lg:px-10 lg:py-9">
             <Outlet />
           </main>
         </div>

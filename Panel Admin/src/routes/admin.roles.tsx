@@ -16,6 +16,7 @@ import {
 import { Search, Shield, ShieldOff, User as UserIcon } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
+import { PageSearch, PageToolbar } from "@/components/PageToolbar";
 import { toast } from "sonner";
 import { phpApi } from "@/lib/php-api";
 
@@ -37,6 +38,7 @@ type UserRow = {
 function RolesPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -104,15 +106,17 @@ function RolesPage() {
         title="Gestion des rôles"
         description="Attribuez ou retirez les rôles des utilisateurs"
         actions={
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
+          <PageToolbar>
+            <PageSearch
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={setSearch}
+              onSubmit={() => {
+                setPage(1);
+                load();
+              }}
               placeholder="Rechercher par email ou nom…"
-              className="w-72 pl-10"
             />
-          </div>
+          </PageToolbar>
         }
       />
 
