@@ -223,12 +223,6 @@ function Dashboard() {
                     color: CHART_TOOLTIP_COLOR,
                   }}
                 />
-                <Legend 
-                  wrapperStyle={{ fontSize: 12, paddingTop: 20 }} 
-                  iconType="circle"
-                  verticalAlign="top"
-                  height={30}
-                />
                 {SOURCES.map((s) => (
                   <Area
                     key={s.key}
@@ -242,6 +236,29 @@ function Dashboard() {
                 ))}
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+          
+          {/* Legend */}
+          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {SOURCES.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <div key={s.key} className="flex items-center gap-3">
+                    <div 
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: s.color }}
+                    />
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: s.color }} />
+                      <span className="text-sm text-slate-700 dark:text-slate-300 truncate">
+                        {s.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </ContentCard>
       </div>
