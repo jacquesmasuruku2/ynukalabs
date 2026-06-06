@@ -21,7 +21,8 @@ export async function strapiFetch<T = unknown>(
   if (isLocalApi && typeof window !== "undefined") {
     // Map Strapi-like REST path to PHP API actions
     // Example: POST /api/newsletter-subscribers -> api.php?action=insert table=newsletter_subscribers
-    const phpApi = `${window.location.origin}/php/api.php`;
+    // Use production API for both development and production
+    const phpApi = "https://ynukalabs.com/php/api.php";
 
     // extract resource and optional id
     // path examples: /api/resource, /api/resource/123, /api/resource?query

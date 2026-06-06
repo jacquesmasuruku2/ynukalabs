@@ -129,11 +129,11 @@ export const teamMembers: TeamMember[] = [
 {
   name: "Jonas Makeke",
   role: "Communication Manager",
-  image: "TO_ADD_IMAGE_IMARA_ABEL",
+  image: "/team/Jonas.png",
   social: {
-    x: "TO_ADD_X_IMARA_ABEL",
-    telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
-    linkedin: "TO_ADD_LINKEDIN_IMARA_ABEL",
+    x: "TO_ADD_X_JONAS",
+    telegram: "TO_ADD_TELEGRAM_JONAS",
+    linkedin: "TO_ADD_LINKEDIN_JONAS",
   },
 },
 {

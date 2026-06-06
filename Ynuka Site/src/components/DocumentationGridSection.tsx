@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { BookOpen, FileText, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { strapiFetch } from "@/lib/strapi";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -14,15 +16,54 @@ type DocumentationGridSectionProps = {
   showHeading?: boolean;
 };
 
+type DocItem = {
+  icon: typeof BookOpen | typeof FileText | typeof Code;
+  title: string;
+  desc: string;
+};
+
+const iconMap: Record<string, typeof BookOpen | typeof FileText | typeof Code> = {
+  bookOpen: BookOpen,
+  bookopen: BookOpen,
+  fileText: FileText,
+  filetext: FileText,
+  code: Code,
+};
+
 const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSectionProps) => {
   const { t } = useTranslation();
+  const [docs, setDocs] = useState<DocItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const docs = [
-    { icon: BookOpen, title: t("docs.guide1Title"), desc: t("docs.guide1Desc") },
-    { icon: FileText, title: t("docs.guide2Title"), desc: t("docs.guide2Desc") },
-    { icon: Code, title: t("docs.guide3Title"), desc: t("docs.guide3Desc") },
-    { icon: BookOpen, title: t("docs.guide4Title"), desc: t("docs.guide4Desc") },
-  ];
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await strapiFetch<{ data: unknown[] }>(
+          "/api/resource-items?filters[type][$eq]=documentation&pagination[pageSize]=50"
+        );
+        const items = res.data || [];
+        const mapped: DocItem[] = items
+          .map((item) => {
+            const it = item as { attributes?: Record<string, unknown> };
+            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
+            const title = String(attrs.title_fr ?? attrs.title ?? "");
+            const desc = String(attrs.description_fr ?? attrs.description ?? "");
+            const iconKey = String(attrs.iconKey ?? "bookOpen");
+            const Icon = iconMap[iconKey] ?? BookOpen;
+            if (!title) return null;
+            return { icon: Icon, title, desc };
+          })
+          .filter((x): x is DocItem => x !== null);
+        setDocs(mapped);
+      } catch (error) {
+        console.error("Failed to fetch documentation:", error);
+        // No fallback - only database data will be displayed
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocs();
+  }, []);
 
   return (
     <section id="documentation" className="scroll-mt-24 border-t border-border py-16">
@@ -40,8 +81,15 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
             <p className="mt-3 text-muted-foreground max-w-2xl mx-auto text-lg">{t("docs.subtitle")}</p>
           </motion.div>
         )}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {docs.map((doc, i) => (
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12">Loading...</div>
+        ) : docs.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12">
+            <p>Aucune documentation disponible pour le moment.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {docs.map((doc, i) => (
             <motion.div
               key={i}
               {...fadeUp}
@@ -57,6 +105,7 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
             </motion.div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

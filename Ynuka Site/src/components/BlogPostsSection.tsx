@@ -68,9 +68,10 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
             };
           })
           .filter((p) => p.id && p.created_at);
-        if (mapped.length) setPosts(mapped);
-      } catch {
-        // fallback hardcoded
+        setPosts(mapped);
+      } catch (error) {
+        console.error("Failed to fetch blog posts:", error);
+        // No fallback - only database data will be displayed
       } finally {
         setLoading(false);
       }
@@ -78,16 +79,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
     fetchPosts();
   }, []);
 
-  const hardcodedPosts: BlogPost[] = [
-    { id: "1", title: t("blog.p1Title"), title_fr: null, excerpt: t("blog.p1Excerpt"), excerpt_fr: null, category: "Announcement", created_at: "2026-03-01" },
-    { id: "2", title: t("blog.p2Title"), title_fr: null, excerpt: t("blog.p2Excerpt"), excerpt_fr: null, category: "Event Recap", created_at: "2026-02-20" },
-    { id: "3", title: t("blog.p3Title"), title_fr: null, excerpt: t("blog.p3Excerpt"), excerpt_fr: null, category: "Education", created_at: "2026-02-10" },
-    { id: "4", title: t("blog.p4Title"), title_fr: null, excerpt: t("blog.p4Excerpt"), excerpt_fr: null, category: "Innovation", created_at: "2026-01-28" },
-    { id: "5", title: t("blog.p5Title"), title_fr: null, excerpt: t("blog.p5Excerpt"), excerpt_fr: null, category: "Community", created_at: "2026-01-15" },
-    { id: "6", title: t("blog.p6Title"), title_fr: null, excerpt: t("blog.p6Excerpt"), excerpt_fr: null, category: "Education", created_at: "2026-01-05" },
-  ];
-
-  const displayPosts = posts.length > 0 ? posts : hardcodedPosts;
+  const displayPosts = posts;
 
   const getTitle = (p: BlogPost) => (isFr && p.title_fr ? p.title_fr : p.title);
   const getExcerpt = (p: BlogPost) => (isFr && p.excerpt_fr ? p.excerpt_fr : p.excerpt);
@@ -110,6 +102,10 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
         )}
         {loading ? (
           <div className="text-center text-muted-foreground py-12">Loading...</div>
+        ) : displayPosts.length === 0 ? (
+          <div className="text-center text-muted-foreground py-12">
+            <p>Aucun article de blog disponible pour le moment.</p>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayPosts.map((post, i) => (

@@ -66,6 +66,17 @@ const Events = () => {
           time?: string | null;
           image?: unknown;
         };
+      } & {
+        title?: string;
+        title_fr?: string | null;
+        description?: string | null;
+        description_fr?: string | null;
+        date?: string;
+        location?: string;
+        type?: string;
+        upcoming?: boolean;
+        time?: string | null;
+        image?: unknown;
       };
 
       const res = await strapiFetch<{ data: unknown[] }>(
@@ -75,24 +86,27 @@ const Events = () => {
       const mapped: EventData[] = items
         .map((item) => {
           const it = item as StrapiEventItem;
+          // Handle both flat structure (PHP API) and nested structure (Strapi)
+          const attrs = it.attributes || it;
           return {
             id: String(it.id),
-            title: it.attributes?.title ?? "",
-            title_fr: it.attributes?.title_fr ?? null,
-            description: it.attributes?.description ?? null,
-            description_fr: it.attributes?.description_fr ?? null,
-            date: it.attributes?.date ?? "",
-            location: it.attributes?.location ?? "",
-            type: it.attributes?.type ?? "",
-            upcoming: !!it.attributes?.upcoming,
-              time: (it.attributes?.time as string | null | undefined) ?? null,
-              imageUrl: mediaToUrl(it.attributes?.image) ?? null,
+            title: attrs.title ?? "",
+            title_fr: attrs.title_fr ?? null,
+            description: attrs.description ?? null,
+            description_fr: attrs.description_fr ?? null,
+            date: attrs.date ?? "",
+            location: attrs.location ?? "",
+            type: attrs.type ?? "",
+            upcoming: !!attrs.upcoming,
+              time: (attrs.time as string | null | undefined) ?? null,
+              imageUrl: mediaToUrl(attrs.image) ?? null,
           };
         })
         .filter((e) => e.id && e.date && e.location && e.type);
-      if (mapped.length) setEvents(mapped);
-    } catch {
-      // Fallback: keep using hardcoded events
+      setEvents(mapped);
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+      // No fallback - only database data will be displayed
     } finally {
       setLoading(false);
     }
@@ -153,96 +167,7 @@ const Events = () => {
   const getTitle = (e: EventData) => isFr && e.title_fr ? e.title_fr : e.title;
   const getDesc = (e: EventData) => isFr && e.description_fr ? e.description_fr : e.description;
 
-  const hardcodedEvents: EventData[] = [
-    {
-      id: "1",
-      title: t("events.event1Title"),
-      title_fr: null,
-      description: t("events.event1Desc"),
-      description_fr: null,
-      date: "2026-03-25",
-      location: "Goma Innovation Center",
-      type: "Workshop",
-      upcoming: true,
-      time: "14:00 - 18:00",
-      imageUrl: "https://images.unsplash.com/photo-1639322533843-2b5a3b5b5b5?w=800&h=600&fit=crop",
-    },
-    {
-      id: "2",
-      title: t("events.event2Title"),
-      title_fr: null,
-      description: t("events.event2Desc"),
-      description_fr: null,
-      date: "2026-04-10",
-      location: "Virunga Tech Park",
-      type: "Hackathon",
-      upcoming: true,
-      time: "09:00 - 20:00",
-      imageUrl: "https://images.unsplash.com/photo-1557683316-973673baf926?w=800&h=600&fit=crop",
-    },
-    {
-      id: "3",
-      title: t("events.event3Title"),
-      title_fr: null,
-      description: t("events.event3Desc"),
-      description_fr: null,
-      date: "2026-04-20",
-      location: "Goma Hub HQ",
-      type: "Meetup",
-      upcoming: true,
-      time: "17:00 - 19:00",
-      imageUrl: "https://images.unsplash.com/photo-1611224923853-80b0237ed8b3?w=800&h=600&fit=crop",
-    },
-    {
-      id: "4",
-      title: t("events.event4Title"),
-      title_fr: null,
-      description: t("events.event4Desc"),
-      description_fr: null,
-      date: "2026-05-05",
-      location: "Goma Hub HQ",
-      type: "Workshop",
-      upcoming: true,
-      time: "14:00 - 18:00",
-      imageUrl: "https://images.unsplash.com/photo-1639322533843-2b5a3b5b5b5?w=800&h=600&fit=crop",
-    },
-    {
-      id: "5",
-      title: t("events.event5Title"),
-      title_fr: null,
-      description: t("events.event5Desc"),
-      description_fr: null,
-      date: "2026-02-15",
-      location: "ULPGL University",
-      type: "Meetup",
-      upcoming: false,
-      time: "17:00 - 19:00",
-      imageUrl: "https://images.unsplash.com/photo-1611224923853-80b0237ed8b3?w=800&h=600&fit=crop",
-    },
-    {
-      id: "6",
-      title: t("events.event6Title"),
-      title_fr: null,
-      description: t("events.event6Desc"),
-      description_fr: null,
-      date: "2026-01-20",
-      location: "Goma Arts Center",
-      type: "Workshop",
-      upcoming: false,
-      time: "14:00 - 18:00",
-      imageUrl: "https://images.unsplash.com/photo-1639322533843-2b5a3b5b5b5?w=800&h=600&fit=crop",
-    },
-  ];
-
-  const displayEventsBase =
-    events.length > 0
-      ? filtered
-      : hardcodedEvents.filter((e) => {
-          if (activeFilter === "All") return true;
-          if (activeFilter === "Upcoming") return !isPast(e.date);
-          if (activeFilter === "Past") return isPast(e.date);
-          return e.type === activeFilter;
-        });
+  const displayEventsBase = filtered;
 
   // Quand "All" est actif, on veut toujours afficher d'abord les "upcoming",
   // ensuite les "past" (tri par date ensuite).
@@ -260,14 +185,6 @@ const Events = () => {
           return bd - ad;
         })
       : displayEventsBase;
-
-  /*
-   * Note:
-   * - Pour "Upcoming" et "Past", la liste est déjà filtrée.
-   * - Pour les autres types, l'ordre reste celui de la source.
-   */
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  const _unused = displayEventsBase;
 
   return (
     <div>
@@ -299,6 +216,10 @@ const Events = () => {
 
           {loading ? (
             <div className="text-center text-muted-foreground py-12">{t("admin.loading")}</div>
+          ) : displayEvents.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              <p>Aucun événement disponible pour le moment.</p>
+            </div>
           ) : (
             <div className="grid md:grid-cols-3 gap-6">
               {displayEvents.map((event, i) => {

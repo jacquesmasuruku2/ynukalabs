@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContentCard, ContentCardFooter } from "@/components/ContentCard";
+import { formatShortDate } from "@/lib/dateUtils";
 import {
   Table,
   TableBody,
@@ -52,9 +53,10 @@ interface Event {
 }
 
 const EVENT_TYPES = [
-  { value: "Workshop", label: "Atelie Web3r" },
+  { value: "Workshop", label: "Atelier Web3" },
   { value: "Seminar", label: "Hackathon" },
   { value: "Conference", label: "Conférence" },
+  { value: "Autres", label: "Autres" },
 ];
 
 export function EventForm() {
@@ -163,8 +165,8 @@ export function EventForm() {
               )}
               {events.map((event) => {
                 const typeLabel = EVENT_TYPES.find((t) => t.value === event.type)?.label || event.type;
-                const eventDate = event.date ? new Date(event.date).toLocaleDateString("fr-FR") : "—";
-                const createdDate = new Date(event.created_at).toLocaleDateString("fr-FR");
+                const eventDate = event.date ? formatShortDate(event.date) : "—";
+                const createdDate = formatShortDate(event.created_at);
                 return (
                   <TableRow key={event.id}>
                     <TableCell className="max-w-[150px] truncate font-semibold">
@@ -269,6 +271,9 @@ function EventDialog({
   onSave: (data: Record<string, any>) => void;
 }) {
   const [form, setForm] = useState<Record<string, any>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -283,10 +288,30 @@ function EventDialog({
         image_url: event?.image_url ?? "",
         upcoming: event?.upcoming ?? true,
       });
+      setImagePreview(event?.image_url ?? "");
+      setImageFile(null);
     }
   }, [open, event]);
 
-  const handleSave = () => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setForm({ ...form, image_url: "" });
+  };
+
+  const handleSave = async () => {
     if (!form.title_fr) {
       toast.error("Le titre en français est obligatoire");
       return;
@@ -295,8 +320,28 @@ function EventDialog({
       toast.error("La date est obligatoire");
       return;
     }
+
+    let imageUrl = form.image_url;
+
+    // Upload image if a file is selected
+    if (imageFile) {
+      setUploading(true);
+      try {
+        const { api } = await import("@/lib/api");
+        const uploadResult = await api.uploadImage(imageFile);
+        imageUrl = uploadResult.url;
+        setForm({ ...form, image_url: imageUrl });
+      } catch (e: any) {
+        toast.error(e.message || "Erreur lors de l'upload de l'image");
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
     onSave({
       ...form,
+      image_url: imageUrl,
       upcoming: form.upcoming ? 1 : 0,
     });
   };
@@ -317,7 +362,7 @@ function EventDialog({
             </Label>
             <Input
               id="title_fr"
-              placeholder="Ex: Atelier de photographie créative"
+              placeholder="Ex: Atelier sur comment devenir un Evaluateur Communautaire"
               value={form.title_fr || ""}
               onChange={(e) => setForm({ ...form, title_fr: e.target.value })}
             />
@@ -330,7 +375,7 @@ function EventDialog({
             </Label>
             <Input
               id="title"
-              placeholder="Ex: Creative Photography Workshop"
+              placeholder="Ex: Workshop on How to become et CR"
               value={form.title || ""}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
@@ -407,24 +452,48 @@ function EventDialog({
             </Label>
             <Input
               id="location"
-              placeholder="Ex: Studio YnukaHub, Rue de la Paix, Dakar"
+              placeholder="Ex: Bakanja, Ville de Goma"
               value={form.location || ""}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
             />
           </div>
 
-          {/* Image URL */}
+          {/* Image Upload */}
           <div className="form-field">
-            <Label htmlFor="image_url" className="font-semibold">
-              Image promotionnelle
+            <Label htmlFor="image" className="font-semibold">
+              Image de promotion
             </Label>
-            <Input
-              id="image_url"
-              type="url"
-              placeholder="https://exemple.com/event-image.jpg"
-              value={form.image_url || ""}
-              onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-            />
+            {imagePreview ? (
+              <div className="relative mt-2">
+                <img
+                  src={imagePreview}
+                  alt="Aperçu"
+                  className="w-full h-48 object-cover rounded-lg border border-border"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={handleRemoveImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-2">
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="cursor-pointer"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Formats acceptés: JPG, PNG, GIF, WebP (max 5MB)
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Upcoming checkbox */}
@@ -447,11 +516,20 @@ function EventDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={uploading}>
             Annuler
           </Button>
-          <Button onClick={handleSave}>
-            {event ? "Mettre à jour" : "Créer l'événement"}
+          <Button onClick={handleSave} disabled={uploading}>
+            {uploading ? (
+              <>
+                <Upload className="mr-2 h-4 w-4 animate-spin" />
+                Upload en cours...
+              </>
+            ) : event ? (
+              "Mettre à jour"
+            ) : (
+              "Créer l'événement"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

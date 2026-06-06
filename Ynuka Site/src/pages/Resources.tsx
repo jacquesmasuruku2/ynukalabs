@@ -67,7 +67,7 @@ const Resources = () => {
     },
   ];
 
-  const [sections, setSections] = useState<ResourceSection[]>(hardcodedSections);
+  const [sections, setSections] = useState<ResourceSection[]>([]);
 
   type GalleryImage = { alt: string; imageUrl: string };
   type GalleryEvent = {
@@ -133,9 +133,14 @@ const Resources = () => {
           })
           .filter((e): e is GalleryEvent => e !== null && e.images.length > 0);
 
-        if (mapped.length) setGalleryEvents(mapped);
-      } catch {
-        // fallback already set
+        // Combine hardcoded gallery events with database events
+        if (mapped.length > 0) {
+          setGalleryEvents([...hardcodedGalleryEvents, ...mapped]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch gallery events:", error);
+        // fallback: use hardcoded only
+        setGalleryEvents(hardcodedGalleryEvents);
       }
     };
 
@@ -183,9 +188,10 @@ const Resources = () => {
           })
           .filter((s): s is ResourceSection => s !== null);
 
-        if (mapped.length) setSections(mapped);
-      } catch {
-        // fallback: hardcodedSections
+        setSections(mapped);
+      } catch (error) {
+        console.error("Failed to fetch resource sections:", error);
+        // No fallback - only database data will be displayed
       }
     };
 
@@ -213,6 +219,15 @@ const Resources = () => {
     const cols: FlatGalleryImage[][] = [[], [], [], []];
     galleryImages.forEach((img, i) => {
       cols[i % 4].push(img);
+    });
+    return cols;
+  }, [galleryImages]);
+
+  /** Pour mobile : grille simple 2 colonnes */
+  const mobileGalleryGrid = useMemo(() => {
+    const cols: FlatGalleryImage[][] = [[], []];
+    galleryImages.forEach((img, i) => {
+      cols[i % 2].push(img);
     });
     return cols;
   }, [galleryImages]);
@@ -255,7 +270,12 @@ const Resources = () => {
 
       <section id="catalog" className="scroll-mt-24 border-t border-border py-16">
         <div className="container mx-auto px-4 space-y-16">
-          {sections.map((section, si) => (
+          {sections.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              <p>Aucune ressource disponible pour le moment.</p>
+            </div>
+          ) : (
+            sections.map((section, si) => (
             <div key={si}>
               <div className="flex items-center gap-3 mb-8">
                 <section.icon className="h-6 w-6 text-primary" />
@@ -278,7 +298,7 @@ const Resources = () => {
                 ))}
               </div>
             </div>
-          ))}
+            )))}
         </div>
       </section>
 
@@ -294,32 +314,56 @@ const Resources = () => {
           {galleryImages.length === 0 ? (
             <p className="text-center text-muted-foreground">{t("blog.noContent")}</p>
           ) : (
-            <div className="flex flex-row gap-2 overflow-x-auto pb-4 snap-x snap-mandatory sm:gap-3 md:gap-4 md:overflow-visible md:snap-none">
-              {galleryColumns.map((colImages, colIndex) => (
-                <div
-                  key={colIndex}
-                  className={`flex min-w-[42vw] shrink-0 snap-start flex-col gap-2 sm:min-w-[38vw] sm:gap-3 md:min-w-0 md:flex-1 ${galleryColumnOffset[colIndex]}`}
-                >
-                  {colImages.map((img, imgIndex) => (
-                    <motion.div
-                      key={img.key}
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-40px" }}
-                      transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.05, 0.35) }}
-                      className="overflow-hidden rounded-none border border-border/80 bg-background/40 hover:border-primary/30 transition-colors"
-                    >
-                      <img
-                        src={img.imageUrl}
-                        alt={img.alt}
-                        className="block h-auto w-full rounded-none object-cover"
-                        loading="lazy"
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              ))}
-            </div>
+            <>
+              {/* Mobile : grille simple 2 colonnes */}
+              <div className="grid grid-cols-2 gap-2 md:hidden">
+                {galleryImages.map((img, imgIndex) => (
+                  <motion.div
+                    key={img.key}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.05, 0.35) }}
+                    className="overflow-hidden rounded-lg border border-border/80 bg-background/40 hover:border-primary/30 transition-colors"
+                  >
+                    <img
+                      src={img.imageUrl}
+                      alt={img.alt}
+                      className="block h-auto w-full rounded-lg object-cover aspect-[4/3]"
+                      loading="lazy"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Desktop : masonry 4 colonnes avec décalages */}
+              <div className="hidden md:flex flex-row gap-4 overflow-visible">
+                {galleryColumns.map((colImages, colIndex) => (
+                  <div
+                    key={colIndex}
+                    className={`flex flex-col gap-4 flex-1 ${galleryColumnOffset[colIndex]}`}
+                  >
+                    {colImages.map((img, imgIndex) => (
+                      <motion.div
+                        key={img.key}
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-40px" }}
+                        transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.05, 0.35) }}
+                        className="overflow-hidden rounded-lg border border-border/80 bg-background/40 hover:border-primary/30 transition-colors"
+                      >
+                        <img
+                          src={img.imageUrl}
+                          alt={img.alt}
+                          className="block h-auto w-full rounded-lg object-cover"
+                          loading="lazy"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>
