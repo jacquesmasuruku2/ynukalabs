@@ -60,7 +60,7 @@ define('ALLOWED_GOOGLE_EMAILS', getenv('ALLOWED_GOOGLE_EMAILS') ?: '');
 $ALLOWED_TABLES = [
     'users', 'user_roles', 'blog_posts', 'blog_comments',
     'contact_messages', 'donations', 'events', 'event_registrations',
-    'gallery_images', 'newsletter_subscribers', 'projects',
+    'gallery_blocks', 'gallery_images', 'newsletter_subscribers', 'projects',
     'resource_items', 'team_members',
 ];
 
@@ -138,6 +138,39 @@ function table_exists(string $t): bool {
 
 function normalize_email(string $email): string {
     return strtolower(trim($email));
+}
+
+/** Schéma blocs galerie (titre événement, lien Drive, images liées par block_id). */
+function ensure_gallery_blocks_schema(): void {
+    if (!table_exists('gallery_blocks')) {
+        db()->exec("CREATE TABLE IF NOT EXISTS `gallery_blocks` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `title` VARCHAR(255) NOT NULL,
+            `subtitle` VARCHAR(255) NULL,
+            `description` TEXT NULL,
+            `drive_url` VARCHAR(512) NULL,
+            `position` INT NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+    if (table_exists('gallery_images')) {
+        $cols = table_columns('gallery_images');
+        if (!in_array('block_id', $cols, true)) {
+            db()->exec('ALTER TABLE `gallery_images` ADD COLUMN `block_id` INT NULL');
+            try {
+                db()->exec('ALTER TABLE `gallery_images` ADD INDEX `idx_gallery_images_block_id` (`block_id`)');
+            } catch (Throwable $e) {
+                // index may already exist
+            }
+        }
+        if (in_array('event_id', $cols, true)) {
+            try {
+                db()->exec('ALTER TABLE `gallery_images` MODIFY COLUMN `event_id` VARCHAR(64) NULL');
+            } catch (Throwable $e) {
+                // column type may differ; best effort
+            }
+        }
+    }
 }
 
 /** Crée la table des emails autorisés (inscription formulaire ou Google restreint). */
@@ -558,9 +591,39 @@ try {
             json_out(['ok' => true, 'deleted' => $stmt->rowCount()]);
         }
 
+        // ---- Galerie publique (site web, sans auth) ----
+        case 'gallery_public': {
+            ensure_gallery_blocks_schema();
+            if (!table_exists('gallery_blocks')) {
+                json_out(['blocks' => []]);
+            }
+            $blocks = db()->query(
+                'SELECT id, title, subtitle, description, drive_url, position, created_at
+                 FROM gallery_blocks ORDER BY position ASC, created_at DESC'
+            )->fetchAll();
+            $imgCols = table_exists('gallery_images') ? table_columns('gallery_images') : [];
+            $hasBlockId = in_array('block_id', $imgCols, true);
+            foreach ($blocks as &$block) {
+                $block['images'] = [];
+                if ($hasBlockId) {
+                    $stmt = db()->prepare(
+                        'SELECT id, image_url, alt, position FROM gallery_images
+                         WHERE block_id = ? ORDER BY position ASC, created_at ASC LIMIT 6'
+                    );
+                    $stmt->execute([$block['id']]);
+                    $block['images'] = $stmt->fetchAll();
+                }
+            }
+            unset($block);
+            json_out(['blocks' => $blocks]);
+        }
+
         case 'list': {
             require_auth();
             if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
+            if ($resource === 'gallery_blocks' || $resource === 'gallery_images') {
+                ensure_gallery_blocks_schema();
+            }
             $cols  = table_columns($resource);
             $page  = max(1, (int)($_GET['page']  ?? 1));
             $limit = min(200, max(1, (int)($_GET['limit'] ?? 25)));
@@ -598,6 +661,9 @@ try {
         case 'create': {
             require_auth();
             if (!in_array($resource, $ALLOWED_TABLES, true)) err('Unknown resource');
+            if ($resource === 'gallery_blocks' || $resource === 'gallery_images') {
+                ensure_gallery_blocks_schema();
+            }
             $cols = table_columns($resource);
             $pk = pk_of($resource);
             $data = array_intersect_key($body, array_flip($cols));

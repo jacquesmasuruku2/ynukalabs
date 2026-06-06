@@ -68,9 +68,54 @@ function get_auth_user() {
 $allowed_tables = [
     'users', 'user_roles', 'blog_posts', 'blog_comments',
     'contact_messages', 'donations', 'events', 'event_registrations',
-    'gallery_images', 'newsletter_subscribers', 'projects',
+    'gallery_blocks', 'gallery_images', 'newsletter_subscribers', 'projects',
     'resource_items', 'team_members', 'admin_users',
 ];
+
+function table_exists_pdo(PDO $pdo, string $dbName, string $table): bool {
+    $stmt = $pdo->prepare(
+        'SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ? LIMIT 1'
+    );
+    $stmt->execute([$dbName, $table]);
+    return (bool) $stmt->fetchColumn();
+}
+
+function table_columns_pdo(PDO $pdo, string $table): array {
+    $stmt = $pdo->query("SHOW COLUMNS FROM `$table`");
+    return array_map(fn($r) => $r['Field'], $stmt->fetchAll(PDO::FETCH_ASSOC));
+}
+
+function ensure_gallery_blocks_schema(PDO $pdo): void {
+    if (!table_exists_pdo($pdo, DB_NAME, 'gallery_blocks')) {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `gallery_blocks` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `title` VARCHAR(255) NOT NULL,
+            `subtitle` VARCHAR(255) NULL,
+            `description` TEXT NULL,
+            `drive_url` VARCHAR(512) NULL,
+            `position` INT NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+    if (table_exists_pdo($pdo, DB_NAME, 'gallery_images')) {
+        $cols = table_columns_pdo($pdo, 'gallery_images');
+        if (!in_array('block_id', $cols, true)) {
+            $pdo->exec('ALTER TABLE `gallery_images` ADD COLUMN `block_id` INT NULL');
+            try {
+                $pdo->exec('ALTER TABLE `gallery_images` ADD INDEX `idx_gallery_images_block_id` (`block_id`)');
+            } catch (Exception $e) {
+                // index may already exist
+            }
+        }
+        if (in_array('event_id', $cols, true)) {
+            try {
+                $pdo->exec('ALTER TABLE `gallery_images` MODIFY COLUMN `event_id` VARCHAR(64) NULL');
+            } catch (Exception $e) {
+                // best effort
+            }
+        }
+    }
+}
 
 // ============ ROUTES ============
 $action = $_GET['action'] ?? '';
@@ -134,6 +179,34 @@ try {
         $user = get_auth_user();
         if (!$user) error('Unauthorized', 401);
         json_response(['user' => $user]);
+    }
+
+    // GALLERY PUBLIC (blocs + images, sans auth)
+    if ($action === 'gallery_public') {
+        ensure_gallery_blocks_schema($pdo);
+        if (!table_exists_pdo($pdo, DB_NAME, 'gallery_blocks')) {
+            json_response(['blocks' => []]);
+        }
+        $blocks = $pdo->query(
+            'SELECT id, title, subtitle, description, drive_url, position, created_at
+             FROM gallery_blocks ORDER BY position ASC, created_at DESC'
+        )->fetchAll(PDO::FETCH_ASSOC);
+        $imgCols = table_exists_pdo($pdo, DB_NAME, 'gallery_images')
+            ? table_columns_pdo($pdo, 'gallery_images') : [];
+        $hasBlockId = in_array('block_id', $imgCols, true);
+        foreach ($blocks as &$block) {
+            $block['images'] = [];
+            if ($hasBlockId) {
+                $stmt = $pdo->prepare(
+                    'SELECT id, image_url, alt, position FROM gallery_images
+                     WHERE block_id = ? ORDER BY position ASC, created_at ASC LIMIT 6'
+                );
+                $stmt->execute([$block['id']]);
+                $block['images'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }
+        unset($block);
+        json_response(['blocks' => $blocks]);
     }
 
     // LIST (get all rows with pagination & search)

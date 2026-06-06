@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type ElementType } from "react";
+import { useEffect, useState, type ElementType } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Video, FileText, Download } from "lucide-react";
+import { BookOpen, Video, FileText, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BlogPostsSection from "@/components/BlogPostsSection";
 import DocumentationGridSection from "@/components/DocumentationGridSection";
@@ -73,8 +73,8 @@ const Resources = () => {
   type GalleryEvent = {
     title: string;
     subtitle: string;
-    date: string;
     description: string;
+    driveUrl: string;
     images: GalleryImage[];
   };
 
@@ -82,9 +82,9 @@ const Resources = () => {
     {
       title: "Images Onboarding Program",
       subtitle: "Nos images de l'Onboarding Program",
-      date: "2022-2025",
       description:
         "Voici les images de l'Onboarding Program de Ynuka Labs Web3 qui est un programme de formation sur le Web3 pour les nouveaux membres de la communauté.",
+      driveUrl: "",
       images: Array.from({ length: 6 }).map((_, i) => ({
         alt: `Wada Burkina Faso Hub — photo ${i + 1}`,
         imageUrl: `${RESOURCES_GALLERY_BASE_PATH}/cardano-summit-2022/photo-${i + 1}.jpg`,
@@ -93,9 +93,9 @@ const Resources = () => {
     {
       title: "Hackathons et Evénements",
       subtitle: "Les Hackathons et les événements de Ynuka Labs Web3",
-      date: "2026",
       description:
         "Voici les images des Hackathons et des événements de Ynuka Labs Web3 et les projets Cardano, Ynuka Labs et les autres projets de la communauté a participé à des Hackathons et des événements organisés localement à Goma et à Nairobi, Kenya.",
+      driveUrl: "",
       images: Array.from({ length: 6 }).map((_, i) => ({
         alt: `Inauguration — photo ${i + 1}`,
         imageUrl: `${RESOURCES_GALLERY_BASE_PATH}/cardano-africa-tech-summit/photo-${i + 1}.jpg`,
@@ -107,6 +107,51 @@ const Resources = () => {
 
   useEffect(() => {
     const fetchGallery = async () => {
+      // 1) API PHP — blocs galerie (admin panel)
+      try {
+        const phpApi = `${window.location.origin}/php/api.php?action=gallery_public`;
+        const res = await fetch(phpApi);
+        if (res.ok) {
+          const data = (await res.json()) as {
+            blocks?: Array<{
+              title?: string;
+              subtitle?: string;
+              description?: string;
+              drive_url?: string;
+              images?: Array<{ image_url?: string; alt?: string }>;
+            }>;
+          };
+          const mapped: GalleryEvent[] = (data.blocks ?? [])
+            .map((block) => {
+              const title = String(block.title ?? "").trim();
+              if (!title) return null;
+              const images: GalleryImage[] = (block.images ?? [])
+                .slice(0, 6)
+                .map((img, i) => ({
+                  alt: String(img.alt ?? `${title} — photo ${i + 1}`),
+                  imageUrl: String(img.image_url ?? ""),
+                }))
+                .filter((img) => img.imageUrl.length > 0);
+              if (!images.length) return null;
+              return {
+                title,
+                subtitle: String(block.subtitle ?? ""),
+                description: String(block.description ?? ""),
+                driveUrl: String(block.drive_url ?? ""),
+                images,
+              };
+            })
+            .filter((e): e is GalleryEvent => e !== null);
+          if (mapped.length) {
+            setGalleryEvents(mapped);
+            return;
+          }
+        }
+      } catch {
+        // try Strapi fallback
+      }
+
+      // 2) Strapi legacy
       try {
         const res = await strapiFetch<{ data: unknown[] }>(
           "/api/gallery-events?populate[images]=*&pagination[pageSize]=20"
@@ -120,16 +165,16 @@ const Resources = () => {
             if (!title) return null;
 
             const subtitle = String(attrs.subtitle ?? "");
-            const date = String(attrs.date ?? "");
             const description = String(attrs.description ?? "");
+            const driveUrl = String(attrs.driveUrl ?? attrs.drive_url ?? "");
 
             const urls = mediaArrayToUrls(attrs.images);
-            const images: GalleryImage[] = urls.map((u, i) => ({
+            const images: GalleryImage[] = urls.slice(0, 6).map((u, i) => ({
               alt: `${title} - photo ${i + 1}`,
               imageUrl: u,
             }));
 
-            return { title, subtitle, date, description, images };
+            return { title, subtitle, description, driveUrl, images };
           })
           .filter((e): e is GalleryEvent => e !== null && e.images.length > 0);
 
@@ -191,38 +236,6 @@ const Resources = () => {
 
     fetchResourceSections();
   }, []);
-
-  type FlatGalleryImage = { alt: string; imageUrl: string; key: string };
-
-  const galleryImages: FlatGalleryImage[] = useMemo(() => {
-    const out: FlatGalleryImage[] = [];
-    galleryEvents.forEach((event, eventIndex) => {
-      event.images.forEach((img, imgIndex) => {
-        out.push({
-          alt: img.alt,
-          imageUrl: img.imageUrl,
-          key: `${event.title}-${eventIndex}-${imgIndex}-${img.imageUrl}`,
-        });
-      });
-    });
-    return out;
-  }, [galleryEvents]);
-
-  /** Masonry : répartition en 4 colonnes (effet décalé comme la maquette) */
-  const galleryColumns = useMemo(() => {
-    const cols: FlatGalleryImage[][] = [[], [], [], []];
-    galleryImages.forEach((img, i) => {
-      cols[i % 4].push(img);
-    });
-    return cols;
-  }, [galleryImages]);
-
-  const galleryColumnOffset = [
-    "pt-8 md:pt-14 lg:pt-[3.75rem]",
-    "pt-0",
-    "pt-0 md:pt-2",
-    "pt-10 md:pt-16 lg:pt-[5.5rem]",
-  ] as const;
 
   useEffect(() => {
     const hash = location.hash.replace("#", "").trim();
@@ -290,36 +303,63 @@ const Resources = () => {
           </p>
         </div>
 
-        <div className="container mx-auto max-w-6xl px-4">
-          {galleryImages.length === 0 ? (
+        <div className="container mx-auto max-w-6xl px-4 space-y-16">
+          {galleryEvents.length === 0 ? (
             <p className="text-center text-muted-foreground">{t("blog.noContent")}</p>
           ) : (
-            <div className="flex flex-row gap-2 overflow-x-auto pb-4 snap-x snap-mandatory sm:gap-3 md:gap-4 md:overflow-visible md:snap-none">
-              {galleryColumns.map((colImages, colIndex) => (
-                <div
-                  key={colIndex}
-                  className={`flex min-w-[42vw] shrink-0 snap-start flex-col gap-2 sm:min-w-[38vw] sm:gap-3 md:min-w-0 md:flex-1 ${galleryColumnOffset[colIndex]}`}
-                >
-                  {colImages.map((img, imgIndex) => (
+            galleryEvents.map((event, eventIndex) => (
+              <motion.article
+                key={`${event.title}-${eventIndex}`}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, delay: eventIndex * 0.08 }}
+                className="space-y-6"
+              >
+                <div className="text-center md:text-left">
+                  <h3 className="font-display text-2xl font-bold md:text-3xl">{event.title}</h3>
+                  {event.subtitle && (
+                    <p className="mt-1 text-sm font-medium text-primary">{event.subtitle}</p>
+                  )}
+                  {event.description && (
+                    <p className="mt-3 max-w-3xl text-muted-foreground leading-relaxed">
+                      {event.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4">
+                  {event.images.map((img, imgIndex) => (
                     <motion.div
-                      key={img.key}
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-40px" }}
-                      transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.05, 0.35) }}
-                      className="overflow-hidden rounded-none border border-border/80 bg-background/40 hover:border-primary/30 transition-colors"
+                      key={`${event.title}-img-${imgIndex}`}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: imgIndex * 0.06 }}
+                      className="overflow-hidden border border-border/80 bg-background/40 aspect-[4/3] hover:border-primary/30 transition-colors"
                     >
                       <img
                         src={img.imageUrl}
                         alt={img.alt}
-                        className="block h-auto w-full rounded-none object-cover"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                       />
                     </motion.div>
                   ))}
                 </div>
-              ))}
-            </div>
+
+                {event.driveUrl && (
+                  <div className="flex justify-center md:justify-start">
+                    <Button variant="outline" className="gap-2" asChild>
+                      <a href={event.driveUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                        {t("resources.gallerySeeMore")}
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </motion.article>
+            ))
           )}
         </div>
       </section>

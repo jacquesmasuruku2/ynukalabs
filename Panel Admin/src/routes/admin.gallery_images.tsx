@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GalleryImageFormRefactored } from "@/components/GalleryImageFormRefactored";
+import { GalleryBlockForm } from "@/components/GalleryBlockForm";
 
 export const Route = createFileRoute("/admin/gallery_images")({
-  component: () => <GalleryImageFormRefactored />,
+  component: () => <GalleryBlockForm />,
 });
