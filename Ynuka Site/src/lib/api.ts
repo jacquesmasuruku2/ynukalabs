@@ -1,5 +1,5 @@
 // Direct API calls to PHP backend without Strapi abstraction
-const API_BASE_URL = "https://admin.ynukalabs.com/api/api.php";
+const API_BASE_URL = "https://ynukalabs.com/php/api.php";
 
 export async function fetchFromApi<T = unknown>(
   action: string,

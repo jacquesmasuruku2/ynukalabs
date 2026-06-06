@@ -21,7 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // ============ CONFIG ============
 require_once 'config.php';
-require_once 'google-oauth.php';
+if (file_exists('google-oauth.php')) {
+    require_once 'google-oauth.php';
+}
 
 // ============ CHECK DATABASE CONNECTION ============
 // Si la connexion échoue, retourner une erreur JSON appropriée
@@ -95,8 +97,8 @@ function is_email_allowed($email) {
 $allowed_tables = [
     'users', 'user_roles', 'blog_posts', 'blog_comments',
     'contact_messages', 'donations', 'events', 'event_registrations',
-    'gallery_images', 'newsletter_subscribers', 'projects',
-    'resource_items', 'team_members', 'admin_users',
+    'gallery_images', 'gallery_events', 'newsletter_subscribers', 'projects',
+    'resource_items', 'resource_sections', 'team_members', 'admin_users',
 ];
 
 // ============ ROUTES ============
