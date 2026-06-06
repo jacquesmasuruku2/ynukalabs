@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchEvents as fetchEventsFromApi, registerForEvent } from "@/lib/api";
 import EventVisualCard from "@/components/events/EventVisualCard";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
@@ -48,62 +48,12 @@ const Events = () => {
     { key: "Meetup", label: t("events.meetup") },
   ];
 
-  useEffect(() => { fetchEvents(); }, []);
+  useEffect(() => { loadEvents(); }, []);
 
-  const fetchEvents = async () => {
+  const loadEvents = async () => {
     try {
-      type StrapiEventItem = {
-        id: string | number;
-        attributes?: {
-          title?: string;
-          title_fr?: string | null;
-          description?: string | null;
-          description_fr?: string | null;
-          date?: string;
-          location?: string;
-          type?: string;
-          upcoming?: boolean;
-          time?: string | null;
-          image?: unknown;
-        };
-      } & {
-        title?: string;
-        title_fr?: string | null;
-        description?: string | null;
-        description_fr?: string | null;
-        date?: string;
-        location?: string;
-        type?: string;
-        upcoming?: boolean;
-        time?: string | null;
-        image?: unknown;
-      };
-
-      const res = await strapiFetch<{ data: unknown[] }>(
-        "/api/events?sort=createdAt:desc&populate=image&pagination[pageSize]=100"
-      );
-      const items = res.data || [];
-      const mapped: EventData[] = items
-        .map((item) => {
-          const it = item as StrapiEventItem;
-          // Handle both flat structure (PHP API) and nested structure (Strapi)
-          const attrs = it.attributes || it;
-          return {
-            id: String(it.id),
-            title: attrs.title ?? "",
-            title_fr: attrs.title_fr ?? null,
-            description: attrs.description ?? null,
-            description_fr: attrs.description_fr ?? null,
-            date: attrs.date ?? "",
-            location: attrs.location ?? "",
-            type: attrs.type ?? "",
-            upcoming: !!attrs.upcoming,
-              time: (attrs.time as string | null | undefined) ?? null,
-              imageUrl: mediaToUrl(attrs.image) ?? null,
-          };
-        })
-        .filter((e) => e.id && e.date && e.location && e.type);
-      setEvents(mapped);
+      const events = await fetchEventsFromApi(100);
+      setEvents(events);
     } catch (error) {
       console.error("Failed to fetch events:", error);
       // No fallback - only database data will be displayed
@@ -131,16 +81,11 @@ const Events = () => {
     if (!registerEventId) return;
     setSubmitting(true);
     try {
-      await strapiFetch("/api/event-registrations", {
-        method: "POST",
-        body: JSON.stringify({
-          data: {
-            event: registerEventId,
-            full_name: regForm.full_name,
-            email: regForm.email,
-            phone: regForm.phone || null,
-          },
-        }),
+      await registerForEvent({
+        event: registerEventId,
+        full_name: regForm.full_name,
+        email: regForm.email,
+        phone: regForm.phone || null,
       });
 
       toast({ title: t("events.registerSuccess") });

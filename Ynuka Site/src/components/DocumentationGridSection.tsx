@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { BookOpen, FileText, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { strapiFetch } from "@/lib/strapi";
+import { fetchDocumentation } from "@/lib/api";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -36,24 +36,14 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDocs = async () => {
+    const loadDocs = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/resource-items?filters[type][$eq]=documentation&pagination[pageSize]=50"
-        );
-        const items = res.data || [];
-        const mapped: DocItem[] = items
-          .map((item) => {
-            const it = item as { attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const title = String(attrs.title_fr ?? attrs.title ?? "");
-            const desc = String(attrs.description_fr ?? attrs.description ?? "");
-            const iconKey = String(attrs.iconKey ?? "bookOpen");
-            const Icon = iconMap[iconKey] ?? BookOpen;
-            if (!title) return null;
-            return { icon: Icon, title, desc };
-          })
-          .filter((x): x is DocItem => x !== null);
+        const docs = await fetchDocumentation(50);
+        const mapped: DocItem[] = docs.map((doc) => ({
+          icon: iconMap[doc.iconKey] ?? BookOpen,
+          title: doc.title,
+          desc: doc.description,
+        }));
         setDocs(mapped);
       } catch (error) {
         console.error("Failed to fetch documentation:", error);
@@ -62,7 +52,7 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
         setLoading(false);
       }
     };
-    fetchDocs();
+    loadDocs();
   }, []);
 
   return (

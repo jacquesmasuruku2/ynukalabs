@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { strapiFetch } from "@/lib/strapi";
+import { fetchBlogPosts } from "@/lib/api";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -35,40 +35,10 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
   const isFr = i18n.language === "fr";
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const loadPosts = async () => {
       try {
-        type StrapiBlogPostItem = {
-          id: string | number;
-          attributes?: {
-            title?: string;
-            title_fr?: string | null;
-            excerpt?: string | null;
-            excerpt_fr?: string | null;
-            category?: string;
-            createdAt?: string;
-            created_at?: string;
-          };
-        };
-
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/blog-posts?filters[published][$eq]=true&sort=createdAt:desc&pagination[pageSize]=100"
-        );
-        const items = res.data || [];
-        const mapped: BlogPost[] = items
-          .map((item) => {
-            const it = item as StrapiBlogPostItem;
-            return {
-              id: String(it.id),
-              title: it.attributes?.title ?? "",
-              title_fr: it.attributes?.title_fr ?? null,
-              excerpt: it.attributes?.excerpt ?? null,
-              excerpt_fr: it.attributes?.excerpt_fr ?? null,
-              category: it.attributes?.category ?? "",
-              created_at: it.attributes?.createdAt ?? it.attributes?.created_at ?? "",
-            };
-          })
-          .filter((p) => p.id && p.created_at);
-        setPosts(mapped);
+        const posts = await fetchBlogPosts(100);
+        setPosts(posts);
       } catch (error) {
         console.error("Failed to fetch blog posts:", error);
         // No fallback - only database data will be displayed
@@ -76,7 +46,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
         setLoading(false);
       }
     };
-    fetchPosts();
+    loadPosts();
   }, []);
 
   const displayPosts = posts;

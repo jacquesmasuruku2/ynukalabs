@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import BlogPostsSection from "@/components/BlogPostsSection";
 import DocumentationGridSection from "@/components/DocumentationGridSection";
 import ToolsGridSection from "@/components/ToolsGridSection";
-import { mediaArrayToUrls, strapiFetch } from "@/lib/strapi";
+import { fetchGalleryEvents, fetchResourceSections } from "@/lib/api";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -106,36 +106,12 @@ const Resources = () => {
   const [galleryEvents, setGalleryEvents] = useState<GalleryEvent[]>(hardcodedGalleryEvents);
 
   useEffect(() => {
-    const fetchGallery = async () => {
+    const loadGallery = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/gallery-events?populate[images]=*&pagination[pageSize]=20"
-        );
-        const items = res.data || [];
-        const mapped: GalleryEvent[] = items
-          .map((item) => {
-            const it = item as { attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const title = String(attrs.title ?? "");
-            if (!title) return null;
-
-            const subtitle = String(attrs.subtitle ?? "");
-            const date = String(attrs.date ?? "");
-            const description = String(attrs.description ?? "");
-
-            const urls = mediaArrayToUrls(attrs.images);
-            const images: GalleryImage[] = urls.map((u, i) => ({
-              alt: `${title} - photo ${i + 1}`,
-              imageUrl: u,
-            }));
-
-            return { title, subtitle, date, description, images };
-          })
-          .filter((e): e is GalleryEvent => e !== null && e.images.length > 0);
-
+        const dbEvents = await fetchGalleryEvents(20);
         // Combine hardcoded gallery events with database events
-        if (mapped.length > 0) {
-          setGalleryEvents([...hardcodedGalleryEvents, ...mapped]);
+        if (dbEvents.length > 0) {
+          setGalleryEvents([...hardcodedGalleryEvents, ...dbEvents]);
         }
       } catch (error) {
         console.error("Failed to fetch gallery events:", error);
@@ -144,39 +120,23 @@ const Resources = () => {
       }
     };
 
-    fetchGallery();
+    loadGallery();
   }, []);
 
   useEffect(() => {
-    const fetchResourceSections = async () => {
+    const loadResourceSections = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/resource-sections?populate=items&pagination[pageSize]=50"
-        );
-        const items = res.data || [];
+        const sections = await fetchResourceSections(50);
+        const mapped: ResourceSection[] = sections
+          .map((section) => {
+            const Icon = iconMap[section.iconKey] ?? BookOpen;
+            if (!section.category) return null;
 
-        const mapped: ResourceSection[] = items
-          .map((item) => {
-            const it = item as { attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-
-            const iconKey = String(attrs.iconKey ?? attrs.icon ?? "");
-            const Icon = iconMap[iconKey] ?? BookOpen;
-
-            const category = String(attrs.category_fr ?? attrs.category ?? "");
-            if (!category) return null;
-
-            const rel = attrs.items as unknown;
-            const relItems = (rel as { data?: unknown[] } | undefined)?.data;
-            const rawItems = Array.isArray(relItems) ? relItems : [];
-
-            const mappedItems: ResourceItem[] = rawItems
-              .map((r) => {
-                const rit = r as { attributes?: Record<string, unknown> };
-                const rattrs = (rit.attributes ?? {}) as Record<string, unknown>;
-                const title = String(rattrs.title_fr ?? rattrs.title ?? "");
+            const mappedItems: ResourceItem[] = section.items
+              .map((item: any) => {
+                const title = String(item.title_fr ?? item.title ?? "");
                 const desc = String(
-                  rattrs.description_fr ?? rattrs.desc_fr ?? rattrs.description ?? rattrs.desc ?? ""
+                  item.description_fr ?? item.desc_fr ?? item.description ?? item.desc ?? ""
                 );
                 if (!title && !desc) return null;
                 return { title, desc };
@@ -184,7 +144,7 @@ const Resources = () => {
               .filter((x): x is ResourceItem => x !== null && x.title.length > 0);
 
             if (!mappedItems.length) return null;
-            return { icon: Icon, category, items: mappedItems };
+            return { icon: Icon, category: section.category, items: mappedItems };
           })
           .filter((s): s is ResourceSection => s !== null);
 
@@ -195,7 +155,7 @@ const Resources = () => {
       }
     };
 
-    fetchResourceSections();
+    loadResourceSections();
   }, []);
 
   type FlatGalleryImage = { alt: string; imageUrl: string; key: string };
