@@ -1,5 +1,5 @@
 // Direct API calls to PHP backend without Strapi abstraction
-const API_BASE_URL = "https://ynukalabs.com/php/api.php";
+const API_BASE_URL = "https://admin.ynukalabs.com/api/api.php";
 
 export async function fetchFromApi<T = unknown>(
   action: string,
@@ -27,7 +27,7 @@ export async function fetchEvents(limit = 100) {
     resource: "events",
     limit,
   });
-  
+
   return result.rows.map((item: any) => ({
     id: String(item.id),
     title: item.title || "",
@@ -39,8 +39,31 @@ export async function fetchEvents(limit = 100) {
     type: item.type || "",
     upcoming: !!item.upcoming,
     time: item.time || null,
-    imageUrl: item.image || null,
+    imageUrl: item.image_url || null,
   }));
+}
+
+// Fetch single event
+export async function fetchEvent(id: string) {
+  const result = await fetchFromApi<{ row: unknown }>("get", {
+    resource: "events",
+    id,
+  });
+
+  const item = result.row as any;
+  return {
+    id: String(item.id),
+    title: item.title || "",
+    title_fr: item.title_fr || null,
+    description: item.description || null,
+    description_fr: item.description_fr || null,
+    date: item.date || "",
+    location: item.location || "",
+    type: item.type || "",
+    upcoming: !!item.upcoming,
+    time: item.time || null,
+    imageUrl: item.image_url || null,
+  };
 }
 
 // Blog posts API
@@ -48,18 +71,41 @@ export async function fetchBlogPosts(limit = 100) {
   const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
     resource: "blog_posts",
     limit,
-    search: "published=true",
+    search: "published=1",
   });
-  
+
   return result.rows.map((item: any) => ({
     id: String(item.id),
     title: item.title || "",
     title_fr: item.title_fr || null,
     excerpt: item.excerpt || null,
     excerpt_fr: item.excerpt_fr || null,
-    category: item.category || "",
-    created_at: item.created_at || item.createdAt || "",
+    category: item.category || "Blog",
+    content: item.content || null,
+    cover_url: item.cover_url || null,
+    created_at: item.created_at || "",
   }));
+}
+
+// Fetch single blog post
+export async function fetchBlogPost(id: string) {
+  const result = await fetchFromApi<{ row: unknown }>("get", {
+    resource: "blog_posts",
+    id,
+  });
+
+  const item = result.row as any;
+  return {
+    id: String(item.id),
+    title: item.title || "",
+    title_fr: item.title_fr || null,
+    excerpt: item.excerpt || null,
+    excerpt_fr: item.excerpt_fr || null,
+    category: item.category || "Blog",
+    content: item.content || null,
+    cover_url: item.cover_url || null,
+    created_at: item.created_at || "",
+  };
 }
 
 // Documentation API

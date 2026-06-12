@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchEvent as fetchEventFromApi } from "@/lib/api";
+import { strapiFetch } from "@/lib/strapi";
 
 interface EventData {
   id: string;
@@ -21,7 +22,7 @@ interface EventData {
   location: string;
   type: string;
   upcoming: boolean;
-  image_url: string | null;
+  imageUrl: string | null;
 }
 
 const EventDetail = () => {
@@ -40,38 +41,8 @@ const EventDetail = () => {
     if (!id) return;
     const fetchEvent = async () => {
       try {
-        type StrapiEventDetailItem = {
-          id: string | number;
-          attributes?: {
-            title?: string;
-            title_fr?: string | null;
-            description?: string | null;
-            description_fr?: string | null;
-            date?: string;
-            location?: string;
-            type?: string;
-            upcoming?: boolean;
-            image?: unknown;
-          };
-        };
-
-        const res = await strapiFetch<{ data: unknown }>(`/api/events/${id}?populate=image`);
-        const item = res.data;
-        const detail = item as StrapiEventDetailItem;
-        if (detail?.attributes) {
-          setEvent({
-            id: String(detail.id),
-            title: detail.attributes.title ?? "",
-            title_fr: detail.attributes.title_fr ?? null,
-            description: detail.attributes.description ?? null,
-            description_fr: detail.attributes.description_fr ?? null,
-            date: detail.attributes.date ?? "",
-            location: detail.attributes.location ?? "",
-            type: detail.attributes.type ?? "",
-            upcoming: !!detail.attributes.upcoming,
-            image_url: mediaToUrl(detail.attributes.image),
-          });
-        }
+        const eventData = await fetchEventFromApi(id);
+        setEvent(eventData);
       } catch {
         // keep loading false; UI will show not found
       } finally {
@@ -162,7 +133,7 @@ const EventDetail = () => {
 
       <section className="py-12">
         <div className="container mx-auto px-4 max-w-3xl">
-          {event.image_url && <img src={event.image_url} alt={title} className="w-full rounded-xl mb-8 object-cover max-h-96" />}
+          {event.imageUrl && <img src={event.imageUrl} alt={title} className="w-full rounded-xl mb-8 object-cover max-h-96" />}
 
           <div className={`glass rounded-xl p-6 mb-8 ${eventIsPast ? "border-destructive/30" : ""}`}>
             <div className="grid sm:grid-cols-2 gap-4">

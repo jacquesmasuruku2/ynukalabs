@@ -2,24 +2,24 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Calendar, ArrowLeft, Share2, MessageCircle, Send, Facebook, Twitter, Link as LinkIcon } from "lucide-react";
+import { Calendar, ArrowLeft, Share2, MessageCircle, Send, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchBlogPost } from "@/lib/api";
+import { strapiFetch } from "@/lib/strapi";
 
 interface BlogPostData {
   id: string;
   title: string;
   title_fr: string | null;
   content: string | null;
-  content_fr: string | null;
   excerpt: string | null;
   excerpt_fr: string | null;
   category: string;
   created_at: string;
-  image_url: string | null;
+  cover_url: string | null;
 }
 
 interface Comment {
@@ -44,76 +44,16 @@ const BlogPost = () => {
   useEffect(() => {
     if (!id) return;
     const fetchData = async () => {
-      type StrapiBlogPostItem = {
-        id: string | number;
-        attributes?: {
-          title?: string;
-          title_fr?: string | null;
-          content?: string | null;
-          content_fr?: string | null;
-          excerpt?: string | null;
-          excerpt_fr?: string | null;
-          category?: string;
-          published?: boolean;
-          createdAt?: string;
-          created_at?: string;
-          image?: unknown;
-        };
-      };
-
-      type StrapiBlogCommentItem = {
-        id: string | number;
-        attributes?: {
-          author_name?: string;
-          content?: string;
-          createdAt?: string;
-          created_at?: string;
-        };
-      };
-
-      const [postRes, commentsRes] = await Promise.all([
-        strapiFetch<{ data: unknown }>(`/api/blog-posts/${id}?populate=image`),
-        strapiFetch<{ data: unknown[] }>(
-          `/api/blog-comments?filters[post][id][$eq]=${id}&sort=createdAt:asc&pagination[pageSize]=100`
-        ),
-      ]);
-      const detail = postRes.data as StrapiBlogPostItem | undefined;
-      if (detail?.attributes) {
-        const attrs = detail.attributes;
-        if (attrs.published === true) {
-          setPost({
-            id: String(detail.id),
-            title: attrs.title,
-            title_fr: attrs.title_fr ?? null,
-            content: attrs.content ?? null,
-            content_fr: attrs.content_fr ?? null,
-            excerpt: attrs.excerpt ?? null,
-            excerpt_fr: attrs.excerpt_fr ?? null,
-            category: attrs.category,
-            created_at: attrs.createdAt ?? attrs.created_at ?? "",
-            image_url: mediaToUrl(attrs.image),
-          });
-        } else {
-          setPost(null);
-        }
-      }
-
-      if (commentsRes?.data?.length) {
-        setComments(
-          commentsRes.data.map((c) => {
-            const item = c as StrapiBlogCommentItem;
-            return {
-              id: String(item.id),
-              author_name: item.attributes?.author_name ?? "",
-              content: item.attributes?.content ?? "",
-              created_at: item.attributes?.createdAt ?? item.attributes?.created_at ?? "",
-            };
-          })
-        );
-      } else {
+      try {
+        const postData = await fetchBlogPost(id);
+        setPost(postData);
+        // TODO: Fetch comments when blog_comments table is available
         setComments([]);
+      } catch {
+        setPost(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
   }, [id]);
@@ -184,7 +124,7 @@ const BlogPost = () => {
   );
 
   const title = isFr && post.title_fr ? post.title_fr : post.title;
-  const content = isFr && post.content_fr ? post.content_fr : post.content;
+  const content = post.content;
 
   return (
     <div>
@@ -205,7 +145,7 @@ const BlogPost = () => {
 
       <section className="py-12">
         <div className="container mx-auto px-4 max-w-3xl">
-          {post.image_url && <img src={post.image_url} alt={title} className="w-full rounded-xl mb-8 object-cover max-h-96" />}
+          {post.cover_url && <img src={post.cover_url} alt={title} className="w-full rounded-xl mb-8 object-cover max-h-96" />}
           
           <div className="prose prose-invert max-w-none mb-12 text-foreground leading-relaxed whitespace-pre-wrap">
             {content || t("blog.noContent")}
@@ -215,8 +155,8 @@ const BlogPost = () => {
           <div className="flex items-center gap-3 border-t border-b border-border py-4 mb-12">
             <Share2 className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">{t("blog.share")}:</span>
-            <button onClick={() => shareOn("twitter")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Twitter className="h-4 w-4" /></button>
-            <button onClick={() => shareOn("facebook")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Facebook className="h-4 w-4" /></button>
+            <button onClick={() => shareOn("twitter")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Share2 className="h-4 w-4" /></button>
+            <button onClick={() => shareOn("facebook")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Share2 className="h-4 w-4" /></button>
             <button onClick={() => shareOn("telegram")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Send className="h-4 w-4" /></button>
             <button onClick={copyLink} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><LinkIcon className="h-4 w-4" /></button>
           </div>

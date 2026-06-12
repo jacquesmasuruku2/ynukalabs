@@ -135,9 +135,9 @@ const Footer = () => {
                 ))}
               </div>
               <div className="space-y-2">
-                <a href="mailto:contact@ujiuzilabs.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
+                <a href="mailto:contact@ynukalabs.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
                   <Mail className="h-4 w-4" />
-                  contact@ujiuzilabs.com
+                  contact@ynukalabs.com
                 </a>
                 <a href="tel:+243974973061" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
                   <Phone className="h-4 w-4" />
@@ -220,36 +220,30 @@ const Footer = () => {
 
                 setSubmitting(true);
                 try {
-                  const apiUrl = `${window.location.origin}/php/api.php?action=create&resource=newsletter_subscribers`;
-                  const payload = {
-                    email: newsletterEmail,
-                    name: newsletterName || "Anonymous",
-                    active: 1,
-                    subscribed_at: new Date().toISOString(),
-                  };
-
-                  const res = await fetch(apiUrl, {
+                  await strapiFetch("/api/newsletter-subscribers", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({
+                      data: {
+                        email: newsletterEmail,
+                        name: newsletterName || "Anonymous",
+                        active: 1,
+                        subscribed_at: new Date().toISOString(),
+                      },
+                    }),
                   });
 
-                  const json = await res.json();
-                  if (json && json.success) {
-                    toast({ title: t("home.subscribeSuccess") });
-                    setNewsletterName("");
-                    setNewsletterEmail("");
-                  } else {
-                    const msg = (json && json.message) ? String(json.message) : (json && json.error) ? String(json.error) : "";
-                    if (msg.toLowerCase().includes("duplicate") || msg.includes("1062") || msg.toLowerCase().includes("unique")) {
-                      toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
-                    } else {
-                      toast({ title: msg || t("admin.error"), variant: "destructive" });
-                    }
-                  }
+                  toast({ title: t("home.subscribeSuccess") });
+                  setNewsletterName("");
+                  setNewsletterEmail("");
                 } catch (err: unknown) {
                   console.error("Newsletter subscription error:", err);
-                  toast({ title: t("admin.error"), variant: "destructive" });
+                  const errorMessage = err instanceof Error ? err.message : "Unknown error";
+                  // Check for duplicate error
+                  if (errorMessage.toLowerCase().includes("duplicate") || errorMessage.includes("1062") || errorMessage.toLowerCase().includes("unique")) {
+                    toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
+                  } else {
+                    toast({ title: errorMessage || t("admin.error"), variant: "destructive" });
+                  }
                 } finally {
                   setSubmitting(false);
                 }
