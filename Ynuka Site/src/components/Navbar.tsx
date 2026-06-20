@@ -1,7 +1,30 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, X, ChevronDown, Mail } from "lucide-react";
+import {
+  List,
+  X,
+  CaretDown,
+  EnvelopeSimple,
+  type IconProps,
+  House,
+  Info,
+  Briefcase,
+  Users,
+  Handshake,
+  IdentificationCard,
+  ChartBar,
+  Cube,
+  CheckSquare,
+  CalendarBlank,
+  ClipboardText,
+  Compass,
+  Newspaper,
+  FileText,
+  GearSix,
+  Images,
+  Lightbulb,
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,10 +39,30 @@ interface NavGroup {
 }
 
 type NavEntry = NavGroup | { key: string; path: string };
+type PhosphorIcon = React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+
+const NAV_ICONS: Record<string, PhosphorIcon> = {
+  home: House,
+  presentation: Info,
+  services: Briefcase,
+  team: Users,
+  partners: Handshake,
+  contact: IdentificationCard,
+  projects: ChartBar,
+  blockchains: Cube,
+  validators: CheckSquare,
+  events: CalendarBlank,
+  joinOurCommunity: Compass,
+  opportunities: Briefcase,
+  blog: Newspaper,
+  documentation: FileText,
+  tools: GearSix,
+  gallery: Images,
+};
 
 /** Palette : liens menu en noir (clair) / clair (sombre), jaune charte */
 const GOLD = "#ffb800";
-const EMAIL = "contact@ujiuzilabs.com";
+const EMAIL = "contact@ynukalabs.com";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -52,6 +95,7 @@ const Navbar = () => {
         { key: "validators", path: "/blockchains#validators" },
         { key: "events", path: "/blockchains#events" },
         { key: "joinOurCommunity", path: "/blockchains#community" },
+        { key: "opportunities", path: "/opportunities" },
       ],
     },
     {
@@ -87,6 +131,7 @@ const Navbar = () => {
               { key: "validators", path: "/blockchains#validators" },
               { key: "events", path: "/blockchains#events" },
               { key: "joinOurCommunity", path: "/blockchains#community" },
+              { key: "opportunities", path: "/opportunities" },
             ],
           };
         }
@@ -109,8 +154,8 @@ const Navbar = () => {
         !(
           "items" in entry &&
           (entry.label.toLowerCase().includes("projects") || entry.label.toLowerCase().includes("projets"))
-        )
-    );
+              )
+                        );
     const hasProjectsTopLevel = withoutProjectsGroup.some(
       (entry) => !("items" in entry) && entry.path === "/projects"
     );
@@ -194,8 +239,44 @@ const Navbar = () => {
           ];
           setNavGroups(applyRequestedNavStructure(incoming));
         }
-      } catch {
-        // Fallback déjà présent
+      } catch (error) {
+        console.error("Failed to fetch menus, using fallback:", error);
+        // Fallback statique pour éviter que l'application ne plante
+        const fallbackNav: NavEntry[] = [
+          { key: "home", path: "/" },
+          {
+            label: "nav.about",
+            items: [
+              { key: "about", path: "/about" },
+              { key: "team", path: "/community#team" },
+              { key: "partners", path: "/partners" },
+            ],
+          },
+          {
+            label: "nav.ecosystem",
+            items: [
+              { key: "blockchains", path: "/blockchains" },
+              { key: "validators", path: "/validators" },
+              { key: "events", path: "/events" },
+            ],
+          },
+          {
+            label: "nav.resources",
+            items: [
+              { key: "blog", path: "/resources#blog" },
+              { key: "documentation", path: "/resources#documentation" },
+              { key: "tools", path: "/resources#tools" },
+            ],
+          },
+          {
+            label: "nav.opportunities",
+            items: [
+              { key: "opportunities", path: "/opportunities" },
+            ],
+          },
+          { key: "contact", path: "/contact" },
+        ];
+        setNavGroups(applyRequestedNavStructure(fallbackNav));
       }
     };
 
@@ -302,7 +383,7 @@ const Navbar = () => {
               href={`mailto:${EMAIL}`}
               className="inline-flex min-w-0 max-w-full items-center gap-2 text-xs font-bold text-[#111111] underline-offset-2 hover:underline sm:text-sm md:text-[0.95rem]"
             >
-              <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={2.25} />
+              <EnvelopeSimple className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" weight="duotone" />
               <span className="truncate sm:whitespace-normal sm:break-all">{EMAIL}</span>
             </a>
           </div>
@@ -351,32 +432,86 @@ const Navbar = () => {
                     className={cn(linkBase, "flex items-center gap-1.5", isGroupActive(item) ? linkActive : linkIdle)}
                   >
                     {t(item.label)}
-                    <ChevronDown
+                    <CaretDown
+                      weight="duotone"
+                      size={18}
                       className={`h-4 w-4 shrink-0 md:h-[18px] md:w-[18px] ${openDropdown === item.label ? "rotate-180" : ""} transition-transform`}
                     />
                   </button>
                   {openDropdown === item.label && (
-                    <div className="absolute left-0 top-full z-50 mt-3 min-w-[260px] rounded-2xl border border-border bg-popover py-2 shadow-2xl">
-                      {item.items.map((sub) => {
-                        const isFirstSubmenuAnchor = sub.key === "blockchains" || sub.key === "blog";
+                    (() => {
+                      const dropdownIsGrid = item.items.length > 3;
+                      if (!dropdownIsGrid) {
                         return (
-                          <Link
-                            key={sub.path}
-                            to={sub.path}
-                            className={cn(
-                              "block px-5 py-3.5 text-base font-bold transition-colors whitespace-nowrap",
-                              isActive(sub.path)
-                                ? "bg-[#ffb800]/12 text-[#ffb800]"
-                                : isFirstSubmenuAnchor
-                                  ? "bg-[#F9F9F9] text-muted-foreground hover:bg-[#f0f0f0] hover:text-foreground dark:bg-slate-800/95 dark:hover:bg-slate-700"
-                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                            )}
-                          >
-                            {t(`nav.${sub.key}`)}
-                          </Link>
+                          <div className="absolute left-0 top-full z-50 mt-3 min-w-[260px] rounded-2xl border border-border bg-popover py-2 shadow-2xl">
+                            {item.items.map((sub) => {
+                              const Icon = NAV_ICONS[sub.key] || Lightbulb;
+                              return (
+                                <Link
+                                  key={sub.path}
+                                  to={sub.path}
+                                  className={cn(
+                                    "group flex items-center gap-3 px-5 py-3.5 text-base font-bold transition-colors whitespace-nowrap",
+                                    isActive(sub.path)
+                                      ? "bg-[#ffb800]/12 text-[#ffb800]"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                  )}
+                                >
+                                  <Icon
+                                    weight="duotone"
+                                    size={20}
+                                    className="transition-transform duration-200 group-hover:scale-105 group-hover:text-amber-500"
+                                  />
+                                  {t(`nav.${sub.key}`)}
+                                </Link>
+                              );
+                            })}
+                          </div>
                         );
-                      })}
-                    </div>
+                      }
+
+                      // Grid layout for larger menus: split items into up to 2 columns
+                      const columnsCount = 2; // Changé de 3 à 2
+                      const perCol = Math.ceil(item.items.length / columnsCount);
+                      const cols = Array.from({ length: columnsCount }, (_, i) =>
+                        item.items.slice(i * perCol, (i + 1) * perCol)
+                      ).filter((c) => c.length > 0);
+
+                      return (
+                        <div className="absolute left-0 top-full z-50 mt-3 rounded-2xl border border-border bg-popover shadow-2xl min-w-[480px] px-2 py-4 sm:px-3 sm:py-6">
+                          <div className="grid grid-cols-2 gap-x-0 min-w-0">
+                            {cols.map((col, colIdx) => (
+                              <div key={colIdx} className={cn("min-w-0 w-[170px]", colIdx === 0 ? "pr-1 border-r border-border/30" : "pl-1")}> {/* Ajustement de la bordure */}
+                                <div className="space-y-3 leading-snug"> {/* Réduction de l'espacement vertical et interligne */}
+                                  {col.map((sub) => {
+                                    const Icon = NAV_ICONS[sub.key] || Lightbulb;
+                                    return (
+                                      <Link
+                                        key={sub.path}
+                                        to={sub.path}
+                                        className={cn(
+                                          "group flex items-center gap-3 px-4 py-3 text-base font-semibold transition-colors text-left rounded-lg",
+                                          isActive(sub.path)
+                                            ? "bg-[#ffb800]/12 text-[#ffb800]"
+                                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        )}
+                                      >
+                                        <Icon
+                                          weight="duotone"
+                                          size={20}
+                                          className="transition-transform duration-200 group-hover:scale-105 group-hover:text-amber-500"
+                                        />
+                                        {t(`nav.${sub.key}`)}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()
                   )}
                 </div>
               ) : (
@@ -399,7 +534,7 @@ const Navbar = () => {
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Menu"
             >
-              {mobileOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+              {mobileOpen ? <X weight="duotone" size={28} /> : <List weight="duotone" size={28} />}
             </Button>
           </div>
         </nav>
@@ -421,26 +556,29 @@ const Navbar = () => {
                     )}
                   >
                     {t(item.label)}
-                    <ChevronDown className={`h-5 w-5 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`} />
+                    <CaretDown weight="duotone" size={20} className={`h-5 w-5 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`} />
                   </button>
                   {mobileExpanded === item.label && (
                     <div className="ml-3 flex flex-col gap-1 border-l-2 border-neutral-900/20 pl-4 dark:border-white/25">
                       {item.items.map((sub) => {
-                        const isFirstSubmenuAnchor = sub.key === "blockchains" || sub.key === "blog";
+                        const Icon = NAV_ICONS[sub.key] || Lightbulb;
                         return (
                           <Link
                             key={sub.path}
                             to={sub.path}
                             onClick={() => setMobileOpen(false)}
                             className={cn(
-                              "rounded-lg px-3 py-3 text-base font-bold",
+                              "group flex items-center gap-3 rounded-lg px-3 py-3 text-base font-bold",
                               isActive(sub.path)
                                 ? "text-[#ffb800]"
-                                : isFirstSubmenuAnchor
-                                  ? "bg-[#F9F9F9] text-muted-foreground dark:bg-slate-800/95"
                                   : "text-muted-foreground"
                             )}
                           >
+                            <Icon
+                              weight="duotone"
+                              size={20}
+                              className="transition-transform duration-200 group-hover:scale-105 group-hover:text-amber-500"
+                            />
                             {t(`nav.${sub.key}`)}
                           </Link>
                         );
@@ -470,3 +608,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

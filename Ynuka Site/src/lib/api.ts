@@ -1,9 +1,25 @@
 // Direct API calls to PHP backend without Strapi abstraction
+import { getJwtFromStorage } from "./strapi";
+
 const API_BASE_URL = "https://admin.ynukalabs.com/api/api.php";
+
+// Liste des ressources publiques qui ne nécessitent pas d'authentification
+const PUBLIC_RESOURCES = [
+  "site_menu_groups",
+  "events",
+  "blog_posts",
+  "opportunities",
+  "resource_items",
+  "gallery_events",
+  "team_members",
+  "resource_sections",
+  "partners",
+];
 
 export async function fetchFromApi<T = unknown>(
   action: string,
-  params: Record<string, string | number> = {}
+  params: Record<string, string | number> = {},
+  body?: Record<string, any>
 ): Promise<T> {
   const url = new URL(API_BASE_URL);
   url.searchParams.set("action", action);
@@ -12,13 +28,75 @@ export async function fetchFromApi<T = unknown>(
     url.searchParams.set(key, String(value));
   });
 
-  const response = await fetch(url.toString());
+  const options: RequestInit = {
+    method: body ? "POST" : "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  // N'ajouter l'en-tête Authorization que pour les ressources non publiques
+  const resource = params.resource as string;
+  const isPublicResource = resource && PUBLIC_RESOURCES.includes(resource);
   
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  if (!isPublicResource) {
+    const token = getJwtFromStorage();
+    if (token) {
+      options.headers = {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
   }
 
-  return response.json() as Promise<T>;
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url.toString(), options);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// Newsletter subscription with automatic email
+export async function subscribeToNewsletter(name: string, email: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const result = await fetchFromApi<{ success: boolean; message?: string }>(
+      "subscribe_newsletter",
+      {},
+      { name, email }
+    );
+    return result;
+  } catch (error) {
+    console.error("Newsletter subscription error:", error);
+    throw error;
+  }
+}
+
+// Contact form submission with automatic confirmation email
+export async function submitContactForm(data: {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}): Promise<{ success: boolean; message?: string }> {
+  try {
+    const result = await fetchFromApi<{ success: boolean; message?: string }>(
+      "submit_contact_form",
+      {},
+      data
+    );
+    return result;
+  } catch (error) {
+    console.error("Contact form submission error:", error);
+    throw error;
+  }
 }
 
 // Events API
@@ -40,6 +118,7 @@ export async function fetchEvents(limit = 100) {
     upcoming: !!item.upcoming,
     time: item.time || null,
     imageUrl: item.image_url || null,
+    capacity: item.capacity || null,
   }));
 }
 
@@ -63,6 +142,7 @@ export async function fetchEvent(id: string) {
     upcoming: !!item.upcoming,
     time: item.time || null,
     imageUrl: item.image_url || null,
+    capacity: item.capacity || null,
   };
 }
 
@@ -71,7 +151,7 @@ export async function fetchBlogPosts(limit = 100) {
   const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
     resource: "blog_posts",
     limit,
-    search: "published=1",
+    filter: "published=1",
   });
 
   return result.rows.map((item: any) => ({
@@ -84,6 +164,8 @@ export async function fetchBlogPosts(limit = 100) {
     content: item.content || null,
     cover_url: item.cover_url || null,
     created_at: item.created_at || "",
+    views: item.views || 0,
+    likes: item.likes || 0,
   }));
 }
 
@@ -95,6 +177,12 @@ export async function fetchBlogPost(id: string) {
   });
 
   const item = result.row as any;
+  
+  // Return null if the blog post doesn't exist
+  if (!item) {
+    return null;
+  }
+  
   return {
     id: String(item.id),
     title: item.title || "",
@@ -105,15 +193,119 @@ export async function fetchBlogPost(id: string) {
     content: item.content || null,
     cover_url: item.cover_url || null,
     created_at: item.created_at || "",
+    views: item.views || 0,
+    likes: item.likes || 0,
   };
 }
+
+// Opportunities API
+export async function fetchOpportunities(limit = 100) {
+  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
+    resource: "opportunities",
+    limit,
+    filter: "published=1",
+  });
+
+  return result.rows.map((item: any) => ({
+    id: String(item.id),
+    title: item.title || "",
+    title_fr: item.title_fr || null,
+    slug: item.slug || "",
+    excerpt: item.excerpt || null,
+    excerpt_fr: item.excerpt_fr || null,
+    category: item.category || "General",
+    content: item.content || null,
+    content_fr: item.content_fr || null,
+    cover_url: item.cover_url || null,
+    created_at: item.created_at || "",
+  }));
+}
+
+// Fetch single opportunity
+export async function fetchOpportunity(id: string) {
+  const result = await fetchFromApi<{ row: unknown }>("get", {
+    resource: "opportunities",
+    id,
+  });
+
+  const item = result.row as any;
+  return {
+    id: String(item.id),
+    title: item.title || "",
+    title_fr: item.title_fr || null,
+    slug: item.slug || "",
+    excerpt: item.excerpt || null,
+    excerpt_fr: item.excerpt_fr || null,
+    category: item.category || "General",
+    content: item.content || null,
+    content_fr: item.content_fr || null,
+    cover_url: item.cover_url || null,
+    created_at: item.created_at || "",
+  };
+}
+
+// Apply for opportunity
+export async function applyForOpportunity(data: {
+  opportunity_id: string;
+  user_email: string;
+  user_name?: string;
+  user_avatar?: string;
+}) {
+  const result = await fetchFromApi<{ row: unknown }>("insert", {
+    resource: "opportunity_applications",
+    ...data,
+  });
+  return result.row;
+}
+
+// Upload CV file
+export async function uploadCVFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('cv_file', file);
+
+  const response = await fetch('https://admin.ynukalabs.com/php/upload-cv.php', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json() as { success: boolean; file_url?: string; error?: string };
+  
+  if (!result.success || !result.file_url) {
+    throw new Error(result.error || 'Upload failed');
+  }
+
+  return result.file_url;
+}
+
+// Submit motivation form for opportunity
+export async function submitMotivationForm(data: {
+  opportunity_id: string;
+  user_email: string;
+  user_name?: string;
+  user_avatar?: string;
+  linkedin_url?: string;
+  twitter_url?: string;
+  portfolio_url?: string;
+  message?: string;
+  cv_file_url?: string;
+}) {
+  const result = await fetchFromApi<{ row: unknown }>("insert", {
+    resource: "opportunity_motivation_forms",
+    ...data,
+  });
+  return result.row;
+}
+
 
 // Documentation API
 export async function fetchDocumentation(limit = 50) {
   const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
     resource: "resource_items",
     limit,
-    search: "type=documentation",
   });
   
   return result.rows.map((item: any) => ({
@@ -159,25 +351,29 @@ export async function fetchTeamMembers(limit = 50) {
 
 // Event registration API
 export async function registerForEvent(data: {
-  event: string;
+  event_id: string;
   full_name: string;
   email: string;
   phone?: string | null;
+  organization?: string | null;
+  message?: string | null;
 }) {
-  const formData = new FormData();
-  formData.append("table", "event_registrations");
-  formData.append("data", JSON.stringify(data));
+  const payload = {
+    ...data,
+    event_id: parseInt(data.event_id, 10),
+  };
   
-  const response = await fetch(`${API_BASE_URL}?action=insert`, {
-    method: "POST",
-    body: formData,
+  const result = await fetchFromApi("create", { resource: "event_registrations" }, payload);
+  return result;
+}
+
+// Event registration count API
+export async function fetchEventRegistrationCount(eventId: string) {
+  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
+    resource: "event_registrations",
+    filter: `event_id=${eventId}`,
   });
-  
-  if (!response.ok) {
-    throw new Error(`Registration failed: ${response.status}`);
-  }
-  
-  return response.json();
+  return result.total;
 }
 
 // Resource sections API
@@ -194,3 +390,4 @@ export async function fetchResourceSections(limit = 50) {
     items: item.items ? JSON.parse(item.items) : [],
   }));
 }
+

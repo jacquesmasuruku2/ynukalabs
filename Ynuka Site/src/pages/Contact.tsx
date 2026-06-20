@@ -4,13 +4,13 @@ import { useTranslation } from "react-i18next";
 import { Mail, MapPin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { strapiFetch } from "@/lib/strapi";
+import { submitContactForm } from "@/lib/api";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
 const Contact = () => {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -18,22 +18,24 @@ const Contact = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await strapiFetch("/api/contact-messages", {
-        method: "POST",
-        body: JSON.stringify({
-          data: {
-            name: formData.name,
-            email: formData.email,
-            subject: formData.subject,
-            message: formData.message,
-          },
-        }),
+      await submitContactForm({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
       });
 
       toast({ title: t("contact.sent") });
-      setFormData({ name: "", email: "", subject: "", message: "" });
-    } catch {
-      toast({ title: t("admin.error"), variant: "destructive" });
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    } catch (error) {
+      console.error("Contact form error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast({ 
+        title: t("admin.error"), 
+        description: errorMessage,
+        variant: "destructive" 
+      });
     } finally {
       setSubmitting(false);
     }
@@ -58,6 +60,7 @@ const Contact = () => {
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <input type="text" placeholder={t("contact.name")} required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 <input type="email" placeholder={t("contact.email")} required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <input type="tel" placeholder={t("Phone Number") || "Phone (optional)"} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 <input type="text" placeholder={t("contact.subject")} required value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 <textarea placeholder={t("contact.message")} required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
                 <Button variant="glow" size="lg" type="submit" className="w-full text-sm sm:text-base" disabled={submitting}>
@@ -71,7 +74,7 @@ const Contact = () => {
               <div className="space-y-4 sm:space-y-6">
                 <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-2"><Mail className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" /><h3 className="font-display font-semibold text-sm sm:text-base">{t("contact.emailLabel")}</h3></div>
-                  <p className="text-xs sm:text-sm text-muted-foreground break-all">contact@gomahub.org</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground break-all">contact@ynukalabs.com</p>
                 </div>
                 <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-2"><MapPin className="h-4 sm:h-5 w-4 sm:w-5 text-primary flex-shrink-0" /><h3 className="font-display font-semibold text-sm sm:text-base">{t("contact.locationLabel")}</h3></div>
