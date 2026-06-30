@@ -20,6 +20,10 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminResource_itemsRouteImport } from './routes/admin.resource_items'
 import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
+import { Route as AdminPartner_applicationsRouteImport } from './routes/admin.partner_applications'
+import { Route as AdminOpportunitiesRouteImport } from './routes/admin.opportunities'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminNewslettersRouteImport } from './routes/admin.newsletters'
 import { Route as AdminNewsletter_subscribersRouteImport } from './routes/admin.newsletter_subscribers'
 import { Route as AdminGallery_imagesRouteImport } from './routes/admin.gallery_images'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
@@ -29,6 +33,8 @@ import { Route as AdminDiagnosticRouteImport } from './routes/admin.diagnostic'
 import { Route as AdminContact_messagesRouteImport } from './routes/admin.contact_messages'
 import { Route as AdminBlog_postsRouteImport } from './routes/admin.blog_posts'
 import { Route as AdminBlog_commentsRouteImport } from './routes/admin.blog_comments'
+import { Route as AdminOpportunitiesApplicationsRouteImport } from './routes/admin.opportunities.applications'
+import { Route as AdminEventsRegistrationsRouteImport } from './routes/admin.events.registrations'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -85,6 +91,27 @@ const AdminProjectsRoute = AdminProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPartner_applicationsRoute =
+  AdminPartner_applicationsRouteImport.update({
+    id: '/partner_applications',
+    path: '/partner_applications',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminOpportunitiesRoute = AdminOpportunitiesRouteImport.update({
+  id: '/opportunities',
+  path: '/opportunities',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNewslettersRoute = AdminNewslettersRouteImport.update({
+  id: '/newsletters',
+  path: '/newsletters',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminNewsletter_subscribersRoute =
   AdminNewsletter_subscribersRouteImport.update({
     id: '/newsletter_subscribers',
@@ -132,6 +159,18 @@ const AdminBlog_commentsRoute = AdminBlog_commentsRouteImport.update({
   path: '/blog_comments',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOpportunitiesApplicationsRoute =
+  AdminOpportunitiesApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AdminOpportunitiesRoute,
+  } as any)
+const AdminEventsRegistrationsRoute =
+  AdminEventsRegistrationsRouteImport.update({
+    id: '/registrations',
+    path: '/registrations',
+    getParentRoute: () => AdminEventsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -143,9 +182,13 @@ export interface FileRoutesByFullPath {
   '/admin/diagnostic': typeof AdminDiagnosticRoute
   '/admin/donations': typeof AdminDonationsRoute
   '/admin/event_registrations': typeof AdminEvent_registrationsRoute
-  '/admin/events': typeof AdminEventsRoute
+  '/admin/events': typeof AdminEventsRouteWithChildren
   '/admin/gallery_images': typeof AdminGallery_imagesRoute
   '/admin/newsletter_subscribers': typeof AdminNewsletter_subscribersRoute
+  '/admin/newsletters': typeof AdminNewslettersRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/opportunities': typeof AdminOpportunitiesRouteWithChildren
+  '/admin/partner_applications': typeof AdminPartner_applicationsRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/resource_items': typeof AdminResource_itemsRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -154,6 +197,8 @@ export interface FileRoutesByFullPath {
   '/admin/user_roles': typeof AdminUser_rolesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/events/registrations': typeof AdminEventsRegistrationsRoute
+  '/admin/opportunities/applications': typeof AdminOpportunitiesApplicationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,9 +209,13 @@ export interface FileRoutesByTo {
   '/admin/diagnostic': typeof AdminDiagnosticRoute
   '/admin/donations': typeof AdminDonationsRoute
   '/admin/event_registrations': typeof AdminEvent_registrationsRoute
-  '/admin/events': typeof AdminEventsRoute
+  '/admin/events': typeof AdminEventsRouteWithChildren
   '/admin/gallery_images': typeof AdminGallery_imagesRoute
   '/admin/newsletter_subscribers': typeof AdminNewsletter_subscribersRoute
+  '/admin/newsletters': typeof AdminNewslettersRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/opportunities': typeof AdminOpportunitiesRouteWithChildren
+  '/admin/partner_applications': typeof AdminPartner_applicationsRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/resource_items': typeof AdminResource_itemsRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -175,6 +224,8 @@ export interface FileRoutesByTo {
   '/admin/user_roles': typeof AdminUser_rolesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/events/registrations': typeof AdminEventsRegistrationsRoute
+  '/admin/opportunities/applications': typeof AdminOpportunitiesApplicationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,9 +238,13 @@ export interface FileRoutesById {
   '/admin/diagnostic': typeof AdminDiagnosticRoute
   '/admin/donations': typeof AdminDonationsRoute
   '/admin/event_registrations': typeof AdminEvent_registrationsRoute
-  '/admin/events': typeof AdminEventsRoute
+  '/admin/events': typeof AdminEventsRouteWithChildren
   '/admin/gallery_images': typeof AdminGallery_imagesRoute
   '/admin/newsletter_subscribers': typeof AdminNewsletter_subscribersRoute
+  '/admin/newsletters': typeof AdminNewslettersRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/opportunities': typeof AdminOpportunitiesRouteWithChildren
+  '/admin/partner_applications': typeof AdminPartner_applicationsRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/resource_items': typeof AdminResource_itemsRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -198,6 +253,8 @@ export interface FileRoutesById {
   '/admin/user_roles': typeof AdminUser_rolesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/events/registrations': typeof AdminEventsRegistrationsRoute
+  '/admin/opportunities/applications': typeof AdminOpportunitiesApplicationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -214,6 +271,10 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/gallery_images'
     | '/admin/newsletter_subscribers'
+    | '/admin/newsletters'
+    | '/admin/notifications'
+    | '/admin/opportunities'
+    | '/admin/partner_applications'
     | '/admin/projects'
     | '/admin/resource_items'
     | '/admin/roles'
@@ -222,6 +283,8 @@ export interface FileRouteTypes {
     | '/admin/user_roles'
     | '/admin/users'
     | '/admin/'
+    | '/admin/events/registrations'
+    | '/admin/opportunities/applications'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -235,6 +298,10 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/gallery_images'
     | '/admin/newsletter_subscribers'
+    | '/admin/newsletters'
+    | '/admin/notifications'
+    | '/admin/opportunities'
+    | '/admin/partner_applications'
     | '/admin/projects'
     | '/admin/resource_items'
     | '/admin/roles'
@@ -243,6 +310,8 @@ export interface FileRouteTypes {
     | '/admin/user_roles'
     | '/admin/users'
     | '/admin'
+    | '/admin/events/registrations'
+    | '/admin/opportunities/applications'
   id:
     | '__root__'
     | '/'
@@ -257,6 +326,10 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/gallery_images'
     | '/admin/newsletter_subscribers'
+    | '/admin/newsletters'
+    | '/admin/notifications'
+    | '/admin/opportunities'
+    | '/admin/partner_applications'
     | '/admin/projects'
     | '/admin/resource_items'
     | '/admin/roles'
@@ -265,6 +338,8 @@ export interface FileRouteTypes {
     | '/admin/user_roles'
     | '/admin/users'
     | '/admin/'
+    | '/admin/events/registrations'
+    | '/admin/opportunities/applications'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -352,6 +427,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/partner_applications': {
+      id: '/admin/partner_applications'
+      path: '/partner_applications'
+      fullPath: '/admin/partner_applications'
+      preLoaderRoute: typeof AdminPartner_applicationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/opportunities': {
+      id: '/admin/opportunities'
+      path: '/opportunities'
+      fullPath: '/admin/opportunities'
+      preLoaderRoute: typeof AdminOpportunitiesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/newsletters': {
+      id: '/admin/newsletters'
+      path: '/newsletters'
+      fullPath: '/admin/newsletters'
+      preLoaderRoute: typeof AdminNewslettersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/newsletter_subscribers': {
       id: '/admin/newsletter_subscribers'
       path: '/newsletter_subscribers'
@@ -415,8 +518,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBlog_commentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/opportunities/applications': {
+      id: '/admin/opportunities/applications'
+      path: '/applications'
+      fullPath: '/admin/opportunities/applications'
+      preLoaderRoute: typeof AdminOpportunitiesApplicationsRouteImport
+      parentRoute: typeof AdminOpportunitiesRoute
+    }
+    '/admin/events/registrations': {
+      id: '/admin/events/registrations'
+      path: '/registrations'
+      fullPath: '/admin/events/registrations'
+      preLoaderRoute: typeof AdminEventsRegistrationsRouteImport
+      parentRoute: typeof AdminEventsRoute
+    }
   }
 }
+
+interface AdminEventsRouteChildren {
+  AdminEventsRegistrationsRoute: typeof AdminEventsRegistrationsRoute
+}
+
+const AdminEventsRouteChildren: AdminEventsRouteChildren = {
+  AdminEventsRegistrationsRoute: AdminEventsRegistrationsRoute,
+}
+
+const AdminEventsRouteWithChildren = AdminEventsRoute._addFileChildren(
+  AdminEventsRouteChildren,
+)
+
+interface AdminOpportunitiesRouteChildren {
+  AdminOpportunitiesApplicationsRoute: typeof AdminOpportunitiesApplicationsRoute
+}
+
+const AdminOpportunitiesRouteChildren: AdminOpportunitiesRouteChildren = {
+  AdminOpportunitiesApplicationsRoute: AdminOpportunitiesApplicationsRoute,
+}
+
+const AdminOpportunitiesRouteWithChildren =
+  AdminOpportunitiesRoute._addFileChildren(AdminOpportunitiesRouteChildren)
 
 interface AdminRouteChildren {
   AdminBlog_commentsRoute: typeof AdminBlog_commentsRoute
@@ -425,9 +565,13 @@ interface AdminRouteChildren {
   AdminDiagnosticRoute: typeof AdminDiagnosticRoute
   AdminDonationsRoute: typeof AdminDonationsRoute
   AdminEvent_registrationsRoute: typeof AdminEvent_registrationsRoute
-  AdminEventsRoute: typeof AdminEventsRoute
+  AdminEventsRoute: typeof AdminEventsRouteWithChildren
   AdminGallery_imagesRoute: typeof AdminGallery_imagesRoute
   AdminNewsletter_subscribersRoute: typeof AdminNewsletter_subscribersRoute
+  AdminNewslettersRoute: typeof AdminNewslettersRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminOpportunitiesRoute: typeof AdminOpportunitiesRouteWithChildren
+  AdminPartner_applicationsRoute: typeof AdminPartner_applicationsRoute
   AdminProjectsRoute: typeof AdminProjectsRoute
   AdminResource_itemsRoute: typeof AdminResource_itemsRoute
   AdminRolesRoute: typeof AdminRolesRoute
@@ -445,9 +589,13 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDiagnosticRoute: AdminDiagnosticRoute,
   AdminDonationsRoute: AdminDonationsRoute,
   AdminEvent_registrationsRoute: AdminEvent_registrationsRoute,
-  AdminEventsRoute: AdminEventsRoute,
+  AdminEventsRoute: AdminEventsRouteWithChildren,
   AdminGallery_imagesRoute: AdminGallery_imagesRoute,
   AdminNewsletter_subscribersRoute: AdminNewsletter_subscribersRoute,
+  AdminNewslettersRoute: AdminNewslettersRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminOpportunitiesRoute: AdminOpportunitiesRouteWithChildren,
+  AdminPartner_applicationsRoute: AdminPartner_applicationsRoute,
   AdminProjectsRoute: AdminProjectsRoute,
   AdminResource_itemsRoute: AdminResource_itemsRoute,
   AdminRolesRoute: AdminRolesRoute,
