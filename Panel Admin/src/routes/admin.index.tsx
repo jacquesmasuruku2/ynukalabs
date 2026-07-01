@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { StatCard } from "@/components/StatCard";
 import { PageShell } from "@/components/PageShell";
@@ -39,6 +39,7 @@ const SOURCES = [
     color: "#38bdf8",
     iconBg: "bg-sky-500/10",
     iconColor: "text-sky-400",
+    route: "/admin/users",
   },
   {
     key: "donations",
@@ -47,6 +48,7 @@ const SOURCES = [
     color: "#c084fc",
     iconBg: "bg-fuchsia-500/10",
     iconColor: "text-fuchsia-400",
+    route: "/admin/donations",
   },
   {
     key: "event_registrations",
@@ -55,6 +57,7 @@ const SOURCES = [
     color: "#34d399",
     iconBg: "bg-emerald-500/10",
     iconColor: "text-emerald-400",
+    route: "/admin/event_registrations",
   },
   {
     key: "contact_messages",
@@ -63,6 +66,7 @@ const SOURCES = [
     color: "#818cf8",
     iconBg: "bg-indigo-500/10",
     iconColor: "text-indigo-400",
+    route: "/admin/contact_messages",
   },
   {
     key: "newsletter_subscribers",
@@ -71,6 +75,7 @@ const SOURCES = [
     color: "#fbbf24",
     iconBg: "bg-amber-500/10",
     iconColor: "text-amber-400",
+    route: "/admin/newsletter_subscribers",
   },
 ] as const satisfies ReadonlyArray<{
   key: string;
@@ -79,9 +84,11 @@ const SOURCES = [
   color: string;
   iconBg: string;
   iconColor: string;
+  route: string;
 }>;
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>(30);
   const [totals, setTotals] = useState<Record<string, number>>({});
   const [series, setSeries] = useState<Record<string, string | number>[]>([]);
@@ -175,6 +182,7 @@ function Dashboard() {
               loading={loading}
               value={totals[s.key] ?? 0}
               hint={`Nouveaux sur ${period} j`}
+              onClick={() => navigate({ to: s.route })}
             />
           ))}
         </div>

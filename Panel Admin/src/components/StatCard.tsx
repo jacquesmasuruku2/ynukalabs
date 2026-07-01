@@ -10,6 +10,7 @@ type StatCardProps = {
   iconColor: string;
   valueColor?: string;
   loading?: boolean;
+  onClick?: () => void;
 };
 
 export function StatCard({
@@ -21,12 +22,15 @@ export function StatCard({
   iconColor,
   valueColor,
   loading,
+  onClick,
 }: StatCardProps) {
   return (
     <div
       className={cn(
         "stat-card group relative flex flex-col rounded-xl bg-white border border-slate-100 p-6 shadow-sm transition-all duration-300 hover:shadow-md",
+        onClick && "cursor-pointer hover:border-slate-300",
       )}
+      onClick={onClick}
     >
       {/* Header with icon */}
       <div className="flex items-start justify-between gap-3">
