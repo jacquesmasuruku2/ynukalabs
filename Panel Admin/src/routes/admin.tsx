@@ -51,21 +51,21 @@ function AdminLayout() {
           showNotifications={showNotifications}
         />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-10 flex h-[3.75rem] items-center gap-4 border-b border-sidebar-border/30 bg-sidebar text-sidebar-foreground shadow-sm backdrop-blur px-5 md:px-6">
+          <header className="sticky top-0 z-10 flex h-[3.75rem] items-center gap-2 md:gap-4 border-b border-sidebar-border/30 bg-sidebar text-sidebar-foreground shadow-sm backdrop-blur px-3 md:px-5 lg:px-6">
             <SidebarTrigger className="rounded-lg text-sidebar-foreground transition-colors hover:bg-sidebar-primary/20" />
 
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60 sm:inline">
                 Admin
               </span>
-              <span className="truncate font-mono text-sm text-sidebar-foreground/85">{path}</span>
+              <span className="truncate font-mono text-xs md:text-sm text-sidebar-foreground/85">{path}</span>
             </div>
 
-            <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-2 md:gap-3 ml-auto">
               <AdminUserMenu />
             </div>
           </header>
-          <main className="flex-1 overflow-auto bg-white !dark:bg-slate-950 px-5 py-7 md:px-8 md:py-8 lg:px-10 lg:py-9">
+          <main className="flex-1 overflow-auto bg-white !dark:bg-slate-950 px-3 py-5 md:px-5 md:py-7 lg:px-8 lg:py-8 xl:px-10 xl:py-9">
             <Outlet />
           </main>
         </div>

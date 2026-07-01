@@ -137,7 +137,8 @@ export function ResourceTable({ resource }: { resource: Resource }) {
       />
 
       <ContentCard>
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -180,6 +181,54 @@ export function ResourceTable({ resource }: { resource: Resource }) {
             </TableBody>
           </Table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {loading && rows.length === 0 && (
+            <div className="text-center py-8 text-slate-500">Chargement…</div>
+          )}
+          {!loading && rows.length === 0 && (
+            <div className="text-center py-8 text-slate-500">Aucun enregistrement</div>
+          )}
+          {rows.map((row, i) => (
+            <div
+              key={row[idKey] ?? i}
+              className="border border-slate-200 rounded-lg p-4 bg-white shadow-sm"
+            >
+              <div className="space-y-2">
+                {columns.slice(0, 4).map((c) => (
+                  <div key={c} className="flex justify-between items-start">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {c.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-sm text-slate-700 text-right max-w-[60%] truncate">
+                      {formatCell(row[c])}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditing(row)}
+                  className="text-xs"
+                >
+                  Modifier
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onDelete(row[idKey])}
+                  className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Supprimer
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <ContentCardFooter>
           <span className="text-sm font-medium text-slate-500">
             Page {page} / {totalPages}
