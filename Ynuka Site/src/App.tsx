@@ -26,6 +26,14 @@ import OnboardingProgram from "./pages/OnboardingProgram";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import LumaEvents from "./pages/LumaEvents";
+import Gallery from "./pages/Gallery";
+import Opportunities from "./pages/Opportunities";
+import OpportunityDetail from "./pages/OpportunityDetail";
+import Presentation from "./pages/Presentation";
+import Services from "./pages/Services";
+import Team from "./pages/Team";
+import Catalog from "./pages/Catalog";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +78,14 @@ const App = () => (
               <Route path="/documentation" element={<Documentation />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/onboarding" element={<OnboardingProgram />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/opportunities/:id" element={<OpportunityDetail />} />
+              <Route path="/presentation" element={<Presentation />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/catalog" element={<Catalog />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route
                 path="/admin"

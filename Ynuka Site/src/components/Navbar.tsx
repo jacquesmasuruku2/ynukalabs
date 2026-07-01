@@ -77,11 +77,11 @@ const Navbar = () => {
     {
       label: "nav.about",
       items: [
-        { key: "presentation", path: "/about#presentation" },
-        { key: "services", path: "/about#services" },
-        { key: "team", path: "/about#team" },
-        { key: "partners", path: "/about#partners" },
-        { key: "contact", path: "/about#contact" },
+        { key: "presentation", path: "/presentation" },
+        { key: "services", path: "/services" },
+        { key: "team", path: "/team" },
+        { key: "partners", path: "/partners" },
+        { key: "contact", path: "/contact" },
       ],
     },
     {
@@ -101,10 +101,10 @@ const Navbar = () => {
     {
       label: "nav.resources",
       items: [
-        { key: "blog", path: "/resources#blog" },
-        { key: "documentation", path: "/resources#documentation" },
-        { key: "tools", path: "/resources#tools" },
-        { key: "gallery", path: "/resources#gallery" },
+        { key: "blog", path: "/blog" },
+        { key: "documentation", path: "/documentation" },
+        { key: "tools", path: "/tools" },
+        { key: "gallery", path: "/gallery" },
       ],
     },
   ];
@@ -139,10 +139,10 @@ const Navbar = () => {
           return {
             ...entry,
             items: [
-              { key: "blog", path: "/resources#blog" },
-              { key: "documentation", path: "/resources#documentation" },
-              { key: "tools", path: "/resources#tools" },
-              { key: "gallery", path: "/resources#gallery" },
+              { key: "blog", path: "/blog" },
+              { key: "documentation", path: "/documentation" },
+              { key: "tools", path: "/tools" },
+              { key: "gallery", path: "/gallery" },
             ],
           };
         }
