@@ -27,21 +27,21 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "stat-card group relative flex flex-col rounded-xl bg-white border border-slate-100 p-6 shadow-sm transition-all duration-300 hover:shadow-md",
-        onClick && "cursor-pointer hover:border-slate-300",
+        "stat-card group relative flex flex-col rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 shadow-sm transition-all duration-300 hover:shadow-md",
+        onClick && "cursor-pointer hover:border-slate-300 dark:hover:border-slate-700",
       )}
       onClick={onClick}
     >
       {/* Header with icon */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-400 leading-tight break-words pl-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 leading-tight break-words">
             {label}
           </p>
         </div>
         <div
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-2 transition-transform group-hover:scale-105 flex-shrink-0",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-2 transition-transform group-hover:scale-105",
             iconBg,
             iconColor,
           )}
@@ -52,7 +52,7 @@ export function StatCard({
       </div>
 
       {/* Main value */}
-      <div className="mt-3 flex flex-col gap-1.5 pl-1">
+      <div className="mt-3 flex flex-col gap-1.5">
         <p
           className={cn(
             "text-3xl font-bold tabular-nums tracking-tight leading-tight h-10 flex items-center",
@@ -66,7 +66,7 @@ export function StatCard({
           )}
         </p>
         {hint && (
-          <p className="text-xs text-slate-600 dark:text-slate-500 leading-tight h-5 flex items-center">
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-tight h-5 flex items-center">
             {hint}
           </p>
         )}

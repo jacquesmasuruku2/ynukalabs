@@ -1,26 +1,30 @@
 import logo from "@/assets/logo.jpg";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard,
+  ChartLineUp,
   Users,
   Shield,
-  FileText,
-  MessageSquare,
-  Mail,
-  HeartHandshake,
+  Article,
+  ChatCircle,
+  Envelope,
+  HandHeart,
   Calendar,
-  ClipboardList,
-  Image as ImageIcon,
-  Send,
-  FolderKanban,
+  ClipboardText,
+  Image,
+  PaperPlaneTilt,
+  Folder,
   BookOpen,
-  UsersRound,
-  LogOut,
-  Settings,
+  UsersThree,
+  SignOut,
+  Gear,
   Activity,
   Bell,
-  type LucideIcon,
-} from "lucide-react";
+  Briefcase,
+  Handshake,
+  Newspaper,
+  CaretRight,
+  CaretDown,
+} from "@phosphor-icons/react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,29 +38,72 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { RESOURCE_LABELS, setToken } from "@/lib/api";
+import { useState } from "react";
 
-type SidebarItem = { url: string; label: string; icon: LucideIcon };
+type SidebarItem = { url: string; label: string; icon: any };
+type SidebarGroup = {
+  label: string;
+  items: SidebarItem[];
+  icon?: any;
+};
 
-const items: SidebarItem[] = [
-  { url: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { url: "/admin/users", label: RESOURCE_LABELS.users, icon: Users },
-  { url: "/admin/roles", label: "Gestion des rôles", icon: Shield },
-  { url: "/admin/blog_posts", label: RESOURCE_LABELS.blog_posts, icon: FileText },
-  { url: "/admin/blog_comments", label: RESOURCE_LABELS.blog_comments, icon: MessageSquare },
-  { url: "/admin/contact_messages", label: RESOURCE_LABELS.contact_messages, icon: Mail },
-  { url: "/admin/donations", label: RESOURCE_LABELS.donations, icon: HeartHandshake },
-  { url: "/admin/events", label: RESOURCE_LABELS.events, icon: Calendar },
-  { url: "/admin/event_registrations", label: RESOURCE_LABELS.event_registrations, icon: ClipboardList },
-  { url: "/admin/gallery_images", label: RESOURCE_LABELS.gallery_images, icon: ImageIcon },
-  { url: "/admin/newsletter_subscribers", label: RESOURCE_LABELS.newsletter_subscribers, icon: Send },
-  { url: "/admin/projects", label: RESOURCE_LABELS.projects, icon: FolderKanban },
-  { url: "/admin/resource_items", label: RESOURCE_LABELS.resource_items, icon: BookOpen },
-  { url: "/admin/team_members", label: RESOURCE_LABELS.team_members, icon: UsersRound },
+const sidebarGroups: SidebarGroup[] = [
+  {
+    label: "Administration",
+    items: [
+      { url: "/admin/users", label: "Utilisateurs", icon: Users },
+      { url: "/admin/roles", label: "Gestion des rôles", icon: Shield },
+    ],
+  },
+  {
+    label: "Contenu",
+    items: [
+      { url: "/admin/blog_posts", label: "Articles", icon: Article },
+      { url: "/admin/blog_comments", label: "Commentaires", icon: ChatCircle },
+      { url: "/admin/contact_messages", label: "Messages contact", icon: Envelope },
+    ],
+  },
+  {
+    label: "Activités",
+    items: [
+      { url: "/admin/donations", label: "Dons", icon: HandHeart },
+      { url: "/admin/events", label: "Événements", icon: Calendar },
+      { url: "/admin/events/registrations", label: "Inscriptions", icon: ClipboardText },
+    ],
+  },
+  {
+    label: "Projets & Ressources",
+    items: [
+      { url: "/admin/projects", label: "Projets", icon: Folder },
+      { url: "/admin/resource_items", label: "Ressources", icon: BookOpen },
+      { url: "/admin/team_members", label: "Équipe", icon: UsersThree },
+    ],
+  },
+  {
+    label: "Opportunités",
+    items: [
+      { url: "/admin/opportunities", label: "Opportunités", icon: Briefcase },
+      { url: "/admin/opportunities/applications", label: "Candidatures", icon: ClipboardText },
+    ],
+  },
+  {
+    label: "Partenariats",
+    items: [
+      { url: "/admin/partner_applications", label: "Demandes de partenariat", icon: Handshake },
+    ],
+  },
+  {
+    label: "Newsletter",
+    items: [
+      { url: "/admin/newsletter_subscribers", label: "Abonnés", icon: PaperPlaneTilt },
+      { url: "/admin/newsletters", label: "Gestion des newsletters", icon: Newspaper },
+    ],
+  },
 ];
 
-const footerItems: SidebarItem[] = [
+const systemItems: SidebarItem[] = [
   { url: "/admin/diagnostic", label: "Diagnostic", icon: Activity },
-  { url: "/admin/settings", label: "Paramètres", icon: Settings },
+  { url: "/admin/settings", label: "Paramètres", icon: Gear },
 ];
 
 interface AppSidebarProps {
@@ -67,9 +114,22 @@ interface AppSidebarProps {
 export function AppSidebar({ onNotificationsToggle, showNotifications }: AppSidebarProps) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Activités"]));
 
   const isActive = (url: string) =>
     url === "/admin" ? path === "/admin" || path === "/admin/" : path.startsWith(url);
+
+  const toggleGroup = (groupLabel: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupLabel)) {
+        next.delete(groupLabel);
+      } else {
+        next.add(groupLabel);
+      }
+      return next;
+    });
+  };
 
   const logout = () => {
     setToken(null);
@@ -99,25 +159,51 @@ export function AppSidebar({ onNotificationsToggle, showNotifications }: AppSide
 
       <SidebarContent className="px-6 py-6">
         <SidebarGroup className="p-4">
-          <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70">Administration</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70">Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((it) => {
-                const Icon = it.icon;
-                return (
-                  <SidebarMenuItem key={it.url}>
-                    <SidebarMenuButton asChild isActive={isActive(it.url)} tooltip={it.label}>
-                      <Link to={it.url}>
-                        {Icon ? <Icon className="size-4 shrink-0" strokeWidth={2} /> : null}
-                        <span className="truncate pl-3">{it.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip="Dashboard">
+                  <Link to="/admin">
+                    <ChartLineUp className="size-4 shrink-0" />
+                    <span className="truncate pl-3">Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {sidebarGroups.map((group) => {
+          const isExpanded = expandedGroups.has(group.label);
+          return (
+            <SidebarGroup key={group.label} className="p-4">
+              <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground" onClick={() => toggleGroup(group.label)}>
+                <span className="text-sidebar-primary font-bold">{group.label}</span>
+                {isExpanded ? <CaretDown className="size-3 text-sidebar-primary" /> : <CaretRight className="size-3 text-sidebar-primary" />}
+              </SidebarGroupLabel>
+              {isExpanded && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <SidebarMenuItem key={item.url}>
+                          <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.label}>
+                            <Link to={item.url}>
+                              <Icon className="size-4 shrink-0" />
+                              <span className="truncate pl-3 text-sidebar-foreground/80">{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border/60 p-4">
@@ -128,17 +214,17 @@ export function AppSidebar({ onNotificationsToggle, showNotifications }: AppSide
               tooltip="Notifications"
               className={showNotifications ? "bg-sidebar-accent" : ""}
             >
-              <Bell className="size-4 shrink-0" strokeWidth={2} />
+              <Bell className="size-4 shrink-0" />
               <span>Notifications</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {footerItems.map((it) => {
+          {systemItems.map((it) => {
             const Icon = it.icon;
             return (
               <SidebarMenuItem key={it.url}>
                 <SidebarMenuButton asChild isActive={isActive(it.url)} tooltip={it.label}>
                   <Link to={it.url}>
-                    {Icon ? <Icon className="size-4 shrink-0" strokeWidth={2} /> : null}
+                    <Icon className="size-4 shrink-0" />
                     <span>{it.label}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -147,7 +233,7 @@ export function AppSidebar({ onNotificationsToggle, showNotifications }: AppSide
           })}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={logout} tooltip="Déconnexion">
-              <LogOut className="size-4 shrink-0" strokeWidth={2} />
+              <SignOut className="size-4 shrink-0" />
               <span>Déconnexion</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

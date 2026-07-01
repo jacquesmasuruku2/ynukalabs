@@ -13,14 +13,14 @@ import {
   Zap,
   Globe,
   Heart,
-  Linkedin,
-  Twitter,
   GraduationCap,
   ServerCog,
   Code2,
   FileText,
   ClipboardList,
   Leaf,
+  Link,
+  Share2,
 } from "lucide-react";
 import ModernButton from "@/components/ui/ModernButton";
 import ModernCard from "@/components/ui/ModernCard";
@@ -831,7 +831,7 @@ const About = () => {
                             className="team-social-link"
                             aria-label={`Compte X de ${member.name}`}
                           >
-                            <Twitter className="w-4 h-4" />
+                            <Share2 className="w-4 h-4" />
                           </a>
                         )}
                         {hasLinkedIn && (
@@ -842,7 +842,7 @@ const About = () => {
                             className="team-social-link"
                             aria-label={`Compte LinkedIn de ${member.name}`}
                           >
-                            <Linkedin className="w-4 h-4" />
+                            <Link className="w-4 h-4" />
                           </a>
                         )}
                         {hasTelegram && (

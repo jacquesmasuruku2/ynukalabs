@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Blog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .result {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test API Blog Posts</h1>
+    
+    <div class="test-section">
+        <h2>1. Tester la connexion à l'API</h2>
+        <button onclick="testPing()">Ping API</button>
+        <div id="pingResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Lister les blog posts</h2>
+        <button onclick="testListBlogPosts()">Lister Blog Posts</button>
+        <div id="listResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Vérifier la structure de la table blog_posts</h2>
+        <button onclick="testTableStructure()">Vérifier Structure</button>
+        <div id="structureResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://admin.ynukalabs.com/api/api.php';
+
+        async function testPing() {
+            const resultDiv = document.getElementById('pingResult');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=ping`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✓ API accessible</span>\n\nRéponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Erreur de connexion</span>\n\nErreur: ${error.message}`;
+            }
+        }
+
+        async function testListBlogPosts() {
+            const resultDiv = document.getElementById('listResult');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=list&resource=blog_posts&limit=10`);
+                const data = await response.json();
+                
+                if (data.rows && data.rows.length > 0) {
+                    resultDiv.innerHTML = `<span class="success">✓ ${data.rows.length} blog post(s) trouvé(s)</span>\n\nDonnées:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">✗ Aucun blog post trouvé</span>\n\nRéponse: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Erreur</span>\n\nErreur: ${error.message}`;
+            }
+        }
+
+        async function testTableStructure() {
+            const resultDiv = document.getElementById('structureResult');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                // Essayer de créer un blog post temporaire pour voir les champs acceptés
+                const response = await fetch(`${API_URL}?action=create&resource=blog_posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Structure',
+                        content: 'Test content',
+                        published: 0
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Supprimer le test
+                    await fetch(`${API_URL}?action=remove&resource=blog_posts&id=${data.id}`, {
+                        method: 'POST'
+                    });
+                    
+                    resultDiv.innerHTML = `<span class="success">✓ Table structure OK</span>\n\nChamps acceptés: title, content, published, etc.\n\nRéponse création: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">✗ Erreur de création</span>\n\nErreur: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Erreur</span>\n\nErreur: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

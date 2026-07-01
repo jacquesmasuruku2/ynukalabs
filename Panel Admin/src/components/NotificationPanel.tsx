@@ -162,8 +162,8 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       {/* Panel */}
       <Card className="fixed right-0 top-0 h-full w-full max-w-md z-50 shadow-2xl rounded-none border-l border-border/50 bg-background">
         {/* Header */}
-        <div className="sticky top-0 z-10 border-b border-border/50 bg-background">
-          <div className="flex items-center justify-between p-6">
+        <div className="sticky top-0 z-10 border-b border-border/50 bg-background p-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Bell className="h-6 w-6 text-primary" />
@@ -191,7 +191,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between px-6 pb-4">
+          <div className="flex items-center justify-between pt-4">
             <div className="flex gap-2">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
@@ -359,8 +359,8 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           />
           <Card className="fixed right-0 top-0 h-full w-full max-w-lg z-[70] shadow-2xl rounded-none border-l border-border/50 bg-background overflow-hidden">
             {/* Header */}
-            <div className="sticky top-0 z-10 border-b border-border/50 bg-background">
-              <div className="flex items-center justify-between p-6">
+            <div className="sticky top-0 z-10 border-b border-border/50 bg-background p-6">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     {getNotificationIcon(selectedNotification.type)}
