@@ -1,7 +1,9 @@
 export interface TeamMember {
+  slug: string;
   name: string;
   role: string;
   image: string;
+  description: string;
   social: {
     x: string;
     telegram: string;
@@ -16,9 +18,11 @@ export interface TeamMember {
 // Exemple LinkedIn: "https://www.linkedin.com/in/nom-d'utilisateur/"
 export const teamMembers: TeamMember[] = [
   {
+    slug: "bandu-balume-boaz",
     name: "BANDU BALUME Boaz",
     role: "Hub Leader",
     image: "/team/boaz.jpg",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "https://x.com/BoazB318",
       telegram: "TO_ADD_TELEGRAM_BOAZ",
@@ -26,9 +30,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
+    slug: "mupenda-byalahire-paul",
     name: "MUPENDA BYALAHIRE Paul",
     role: "Software Developer",
     image: "/team/Paul.jpg",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "/team/Paul.jpg",
       telegram: "TO_ADD_TELEGRAM_PAUL",
@@ -36,9 +42,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
+    slug: "kanjira-musagara-martin",
     name: "KANJIRA MUSAGARA Martin",
     role: "Marketing Manager",
     image: "/team/martin.jpg",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "https://x.com/martin_musagara",
       telegram: "TO_ADD_TELEGRAM_KANJIRA_MARTIN",
@@ -46,9 +54,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
+    slug: "olivier-mwatsimulamo",
     name: "Olivier MWATSIMULAMO",
     role: "Developer & Trainer",
     image: "/team/olivier.png",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "https://x.com/OlivierMWATSIM1",
       telegram: "TO_ADD_TELEGRAM_KANJIRA_MARTIN",
@@ -56,9 +66,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
     {
+    slug: "akilimali-innocent",
     name: "AKILIMALI Innocent",
     role: "Software Developer",
     image: "TO_ADD_IMAGE_AKILIMALI",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "TO_ADD_X_AKILIMALI",
       telegram: "TO_ADD_TELEGRAM_AKILIMALI",
@@ -66,10 +78,12 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
+    slug: "jacques-masuruku",
     name: "Jacques MASURUKU",
     role: "Developer/Writter",
     // Ma photo statique qui est dans le dossier  `public/team/Jacques.jpg`
     image: "/team/Jacques.jpg",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "https://x.com/MapenziJacques",
       telegram: "https://t.me/JacquesMasuruku",
@@ -77,9 +91,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
+    slug: "amida-musa",
     name: "Amida MUSA",
     role: "Marketing Manager",
     image: "TO_ADD_IMAGE_BOTEMBE_AMIDA",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "TO_ADD_X_BOTEMBE_AMIDA",
       telegram: "TO_ADD_TELEGRAM_BOTEMBE_AMIDA",
@@ -87,9 +103,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
+    slug: "imara-kabiona-abel",
     name: "IMARA KABIONA Abel",
     role: "Design and Media",
     image: "TO_ADD_IMAGE_IMARA_ABEL",
+    description: "Membre de l'équipe Ynuka Labs.",
     social: {
       x: "TO_ADD_X_IMARA_ABEL",
       telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
@@ -97,9 +115,11 @@ export const teamMembers: TeamMember[] = [
     },
   },
 {
+  slug: "olivier-rishi",
   name: "Olivier RISHI",
   role: "Logistic Manager",
   image: "TO_ADD_IMAGE_IMARA_ABEL",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_IMARA_ABEL",
     telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
@@ -107,9 +127,11 @@ export const teamMembers: TeamMember[] = [
   },
 },
 {
+  slug: "marcellin-mulezi",
   name: "Marcellin MULEZI",
   role: "Developer & Trainer",
   image: "TO_ADD_IMAGE_IMARA_ABEL",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_IMARA_ABEL",
     telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
@@ -117,9 +139,11 @@ export const teamMembers: TeamMember[] = [
   },
 },
 {
+  slug: "jonas-makeke",
   name: "Jonas Makeke",
   role: "Communication Manager",
   image: "/team/Jonas.png",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_JONAS",
     telegram: "TO_ADD_TELEGRAM_JONAS",
@@ -127,9 +151,11 @@ export const teamMembers: TeamMember[] = [
   },
 },
 {
+  slug: "rachel-ciza",
   name: "Rachel CIZA",
   role: "Trainer",
   image: "/team/rachel.jpg",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_IMARA_ABEL",
     telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
@@ -137,9 +163,11 @@ export const teamMembers: TeamMember[] = [
   },
 },
 {
+  slug: "pablo-balonda",
   name: "Pablo BALONDA",
   role: "Developer",
   image: "TO_ADD_IMAGE_IMARA_ABEL",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_IMARA_ABEL",
     telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
@@ -147,9 +175,11 @@ export const teamMembers: TeamMember[] = [
   },
 },
 {
+  slug: "jean-claude-niyo",
   name: "Jean Claude NIYO",
   role: "IT & Advicer",
   image: "TO_ADD_IMAGE_IMARA_ABEL",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_IMARA_ABEL",
     telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",
@@ -157,9 +187,11 @@ export const teamMembers: TeamMember[] = [
   },
 },
 {
+  slug: "jules-vamuleke",
   name: "Jules VAMULEKE",
   role: "Advicer & Trainer",
   image: "TO_ADD_IMAGE_IMARA_ABEL",
+  description: "Membre de l'équipe Ynuka Labs.",
   social: {
     x: "TO_ADD_X_IMARA_ABEL",
     telegram: "TO_ADD_TELEGRAM_IMARA_ABEL",

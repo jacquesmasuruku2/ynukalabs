@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, X, MessageCircle } from "lucide-react";
 import Container from "@/components/ui/Container";
@@ -34,25 +35,28 @@ const Team = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/team-members?populate=image&pagination[pageSize]=100"
-        );
-        const items = res.data || [];
+        const adminApiUrl = import.meta.env.VITE_ADMIN_API_URL as string | undefined;
+        const res = adminApiUrl
+          ? await fetch(`${adminApiUrl.replace(/\/$/, "")}/api/team-members`).then((response) => response.json())
+          : await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>("/api/team-members?populate=image&pagination[pageSize]=100");
+        const items = res.data ?? res.rows ?? [];
 
         const mapped: TeamMember[] = items
           .map((item) => {
             const it = item as { id?: string | number; attributes?: Record<string, unknown> };
             const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const imageUrl = mediaToUrl(attrs.image) ?? "";
+            const imageUrl = mediaToUrl(attrs.image ?? attrs.imageUrl) ?? "";
 
             return {
+              slug: String(attrs.slug ?? String(attrs.name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")),
               name: String(attrs.name ?? ""),
               role: String(attrs.role ?? ""),
               image: imageUrl,
+              description: String(attrs.description ?? attrs.bio ?? ""),
               social: {
-                x: String(attrs.social_x ?? attrs.x ?? ""),
-                telegram: String(attrs.social_telegram ?? attrs.telegram ?? ""),
-                linkedin: String(attrs.social_linkedin ?? attrs.linkedin ?? ""),
+                x: String(attrs.social_x ?? attrs.x ?? attrs.xUrl ?? ""),
+                telegram: String(attrs.social_telegram ?? attrs.telegram ?? attrs.telegramUrl ?? ""),
+                linkedin: String(attrs.social_linkedin ?? attrs.linkedin ?? attrs.linkedinUrl ?? ""),
               },
             } satisfies TeamMember;
           })
@@ -99,6 +103,7 @@ const Team = () => {
               const hasAnySocial = hasX || hasTelegram || hasLinkedIn;
 
               return (
+                <Link to={`/team/${member.slug}`} className="block">
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
@@ -169,6 +174,7 @@ const Team = () => {
                     <p className="team-role">{member.role}</p>
                   </div>
                 </motion.div>
+                </Link>
               );
             })}
           </div>

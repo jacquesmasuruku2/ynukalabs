@@ -32,6 +32,7 @@ import OpportunityDetail from "./pages/OpportunityDetail";
 import Presentation from "./pages/Presentation";
 import Services from "./pages/Services";
 import Team from "./pages/Team";
+import TeamMemberDetail from "./pages/TeamMemberDetail";
 import Catalog from "./pages/Catalog";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/presentation" element={<Presentation />} />
               <Route path="/services" element={<Services />} />
               <Route path="/team" element={<Team />} />
+              <Route path="/team/:slug" element={<TeamMemberDetail />} />
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/admin/login" element={<AdminLogin />} />

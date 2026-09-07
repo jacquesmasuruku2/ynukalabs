@@ -61,6 +61,7 @@ export default function AdminLayout({
     { name: 'Articles', href: '/articles', icon: FileText },
     { name: 'Catégories', href: '/categories', icon: FolderOpen },
     { name: 'Auteurs', href: '/authors', icon: Users },
+    { name: 'Équipe', href: '/team-members', icon: Users },
     { name: 'Radio', href: '/radio', icon: Radio },
     { name: 'Émissions radio', href: '/radio/programs', icon: ListVideo },
     { name: 'Lives', href: '/lives', icon: Video },
