@@ -1,9 +1,6 @@
 const { spawnSync } = require('node:child_process');
-const fs = require('node:fs');
 
-const hasLocalEnvironmentFile = fs.existsSync('.env') || fs.existsSync('.env.local');
-
-if (!process.env.DATABASE_URL && !hasLocalEnvironmentFile) {
+if (!process.env.DATABASE_URL) {
   console.warn('[admin-panel] DATABASE_URL is not configured; skipping Prisma migrations for this preview build.');
   process.exit(0);
 }
