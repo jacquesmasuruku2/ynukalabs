@@ -2,9 +2,6 @@
   "buildCommand": "cd 'Panel Admin' && npm run build",
   "installCommand": "cd 'Panel Admin' && npm install",
   "outputDirectory": "Panel Admin/dist",
-  "framework": "other",
-  "env": [
-    "VITE_API_URL"
-  ]
+  "framework": "other"
 }
 
