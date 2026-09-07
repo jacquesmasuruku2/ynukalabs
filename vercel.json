@@ -2,5 +2,11 @@
   "buildCommand": "cd 'Ynuka Site' && npm run build",
   "installCommand": "cd 'Ynuka Site' && npm install",
   "outputDirectory": "Ynuka Site/dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
