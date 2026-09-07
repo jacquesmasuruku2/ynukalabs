@@ -22,7 +22,9 @@ function teamMembersWithValidImages(members: TeamMember[]): TeamMember[] {
     (m) =>
       Boolean(m.image?.trim()) &&
       !m.image.startsWith("TO_ADD_") &&
-      !m.image.startsWith("http://TO_ADD")
+      !m.image.startsWith("http://TO_ADD") &&
+      !m.name.toLowerCase().includes("frederic samvura") &&
+      !m.name.toLowerCase().includes("frédéric samvura")
   );
 }
 
@@ -56,7 +58,13 @@ const Team = () => {
           })
           .filter((m) => m.name && m.role);
 
-        if (mapped.length) setTeam(mapped);
+        const filtered = mapped.filter(
+          (member) =>
+            !member.name.toLowerCase().includes("frederic samvura") &&
+            !member.name.toLowerCase().includes("frédéric samvura")
+        );
+
+        if (filtered.length) setTeam(filtered);
       } catch {
         // fallback: teamMembers local
       }

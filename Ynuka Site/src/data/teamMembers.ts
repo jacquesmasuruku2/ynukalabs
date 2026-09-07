@@ -16,16 +16,6 @@ export interface TeamMember {
 // Exemple LinkedIn: "https://www.linkedin.com/in/nom-d'utilisateur/"
 export const teamMembers: TeamMember[] = [
   {
-    name: "FREDERIC SAMVURA Genty",
-    role: "Executive Officer",
-    image:"/team/frederic.png",
-    social: {
-      x: "https://x.com/GentyS37341",
-      telegram: "TO_ADD_TELEGRAM_FREDERIC",
-      linkedin: "https://www.linkedin.com/in/fr%C3%A9d%C3%A9ric-samvura/",
-    },
-  },
-  {
     name: "BANDU BALUME Boaz",
     role: "Hub Leader",
     image: "/team/boaz.jpg",
