@@ -5,13 +5,17 @@ interface UseCommentLikesProps {
   commentId: string;
   userEmail: string | null;
   onLikeUpdate?: (likes: number, userLiked: boolean) => void;
+  onAuthRequired?: () => void;
 }
 
-export const useCommentLikes = ({ commentId, userEmail, onLikeUpdate }: UseCommentLikesProps) => {
+export const useCommentLikes = ({ commentId, userEmail, onLikeUpdate, onAuthRequired }: UseCommentLikesProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const toggleLike = async (currentLiked: boolean) => {
     if (!userEmail) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
       return { success: false, message: 'Connectez-vous pour liker' };
     }
 

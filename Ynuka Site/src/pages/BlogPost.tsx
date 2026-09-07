@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Calendar, ArrowLeft, Share2, MessageCircle, Send, Link as LinkIcon } from "lucide-react";
+import { Calendar, ArrowLeft, Share2, MessageCircle, Send, Link as LinkIcon, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { fetchBlogPost } from "@/lib/api";
 import { strapiFetch } from "@/lib/strapi";
+import RichTextDisplay from "@/components/RichTextDisplay";
+import { authService } from "@/lib/auth";
 
 interface BlogPostData {
   id: string;
@@ -38,6 +40,8 @@ const BlogPost = () => {
   const [post, setPost] = useState<BlogPostData | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(authService.getUser());
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [commentForm, setCommentForm] = useState({ author_name: "", author_email: "", content: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -61,6 +65,100 @@ const BlogPost = () => {
     };
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    setUser(authService.getUser());
+  }, []);
+
+  const handleGoogleSignIn = () => {
+    if (typeof window !== "undefined" && (window as any).google) {
+      (window as any).google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+        callback: (response: any) => {
+          const base64Url = response.credential.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const userData = JSON.parse(jsonPayload);
+          const authUser = {
+            email: userData.email,
+            name: userData.name,
+            avatar: userData.picture,
+          };
+          
+          authService.signIn(authUser);
+          setUser(authUser);
+          setShowAuthDialog(false);
+          setIsCommentFormOpen(true);
+          
+          toast({
+            title: isFr ? "Connexion réussie" : "Signed in successfully",
+            description: isFr 
+              ? `Bienvenue, ${authUser.name}` 
+              : `Welcome, ${authUser.name}`,
+          });
+        },
+      });
+      
+      const buttonDiv = document.getElementById('google-signin-button-blog');
+      if (buttonDiv) {
+        (window as any).google.accounts.id.renderButton(buttonDiv, {
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          width: '100%',
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (showAuthDialog && typeof window !== "undefined" && (window as any).google) {
+      (window as any).google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+        callback: (response: any) => {
+          const base64Url = response.credential.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const userData = JSON.parse(jsonPayload);
+          const authUser = {
+            email: userData.email,
+            name: userData.name,
+            avatar: userData.picture,
+          };
+          
+          authService.signIn(authUser);
+          setUser(authUser);
+          setShowAuthDialog(false);
+          setIsCommentFormOpen(true);
+          
+          toast({
+            title: isFr ? "Connexion réussie" : "Signed in successfully",
+            description: isFr 
+              ? `Bienvenue, ${authUser.name}` 
+              : `Welcome, ${authUser.name}`,
+          });
+        },
+      });
+      
+      setTimeout(() => {
+        const buttonDiv = document.getElementById('google-signin-button-blog');
+        if (buttonDiv) {
+          (window as any).google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            text: 'continue_with',
+            width: '100%',
+          });
+        }
+      }, 100);
+    }
+  }, [showAuthDialog]);
 
   const mapComment = (comment: unknown): Comment => {
     const item = comment as {
@@ -159,9 +257,11 @@ const BlogPost = () => {
         <div className="container mx-auto px-4 max-w-3xl">
           {post.cover_url && <img src={post.cover_url} alt={title} className="w-full rounded-xl mb-8 object-cover max-h-96" />}
           
-          <div className="prose prose-invert max-w-none mb-12 text-foreground leading-relaxed whitespace-pre-wrap">
-            {content || t("blog.noContent")}
-          </div>
+          {content ? (
+            <RichTextDisplay content={content} className="mb-12 text-foreground" />
+          ) : (
+            <div className="prose prose-invert mb-12 text-foreground">{t("blog.noContent")}</div>
+          )}
 
           {/* Share */}
           <div className="flex items-center gap-3 border-t border-b border-border py-4 mb-12">
@@ -191,7 +291,13 @@ const BlogPost = () => {
             ))}
 
             {!isCommentFormOpen && (
-              <Button type="button" variant="glow" className="mt-6" onClick={() => setIsCommentFormOpen(true)}>
+              <Button type="button" variant="glow" className="mt-6" onClick={() => {
+                if (!user) {
+                  setShowAuthDialog(true);
+                } else {
+                  setIsCommentFormOpen(true);
+                }
+              }}>
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {t("blog.addComment")}
               </Button>
@@ -216,6 +322,32 @@ const BlogPost = () => {
           </div>
         </div>
       </section>
+
+      {/* Auth Dialog */}
+      {showAuthDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-background rounded-2xl p-6 max-w-md w-full"
+          >
+            <h3 className="font-display text-xl font-semibold mb-2">
+              {isFr ? "Connectez-vous pour continuer" : "Sign in to continue"}
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              {isFr 
+                ? "Connectez-vous avec votre compte Google pour commenter ou liker." 
+                : "Sign in with your Google account to comment or like."}
+            </p>
+            <div className="flex flex-col gap-3">
+              <div id="google-signin-button-blog" className="w-full"></div>
+              <Button variant="outline" onClick={() => setShowAuthDialog(false)}>
+                {isFr ? "Annuler" : "Cancel"}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
