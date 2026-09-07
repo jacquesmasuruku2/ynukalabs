@@ -38,6 +38,7 @@ const BlogPost = () => {
   const [post, setPost] = useState<BlogPostData | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [commentForm, setCommentForm] = useState({ author_name: "", author_email: "", content: "" });
   const [submitting, setSubmitting] = useState(false);
 
@@ -47,8 +48,11 @@ const BlogPost = () => {
       try {
         const postData = await fetchBlogPost(id);
         setPost(postData);
-        // TODO: Fetch comments when blog_comments table is available
-        setComments([]);
+        const commentsRes = await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>(
+          `/api/blog-comments?search=post_id=${encodeURIComponent(id)}&pagination[pageSize]=100`
+        );
+        const items = commentsRes.data ?? commentsRes.rows ?? [];
+        setComments(items.map(mapComment));
       } catch {
         setPost(null);
       } finally {
@@ -57,6 +61,22 @@ const BlogPost = () => {
     };
     fetchData();
   }, [id]);
+
+  const mapComment = (comment: unknown): Comment => {
+    const item = comment as {
+      id?: string | number;
+      author_name?: string;
+      content?: string;
+      created_at?: string;
+      attributes?: { author_name?: string; content?: string; createdAt?: string; created_at?: string };
+    };
+    return {
+      id: String(item.id ?? crypto.randomUUID()),
+      author_name: item.attributes?.author_name ?? item.author_name ?? "",
+      content: item.attributes?.content ?? item.content ?? "",
+      created_at: item.attributes?.createdAt ?? item.attributes?.created_at ?? item.created_at ?? new Date().toISOString(),
+    };
+  };
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +87,7 @@ const BlogPost = () => {
         method: "POST",
         body: JSON.stringify({
           data: {
-            post: id,
+            post_id: id,
             author_name: commentForm.author_name,
             author_email: commentForm.author_email,
             content: commentForm.content,
@@ -76,22 +96,14 @@ const BlogPost = () => {
       });
 
       toast({ title: t("blog.commentAdded") });
+      setComments((current) => [...current, mapComment({
+        id: `local-${Date.now()}`,
+        author_name: commentForm.author_name,
+        content: commentForm.content,
+        created_at: new Date().toISOString(),
+      })]);
       setCommentForm({ author_name: "", author_email: "", content: "" });
-
-      const commentsRes = await strapiFetch<{ data: unknown[] }>(
-        `/api/blog-comments?filters[post][id][$eq]=${id}&sort=createdAt:asc&pagination[pageSize]=100`
-      );
-      setComments(
-        commentsRes.data.map((c) => {
-          const item = c as { id: string | number; attributes?: { author_name?: string; content?: string; createdAt?: string; created_at?: string } };
-          return {
-            id: String(item.id),
-            author_name: item.attributes?.author_name ?? "",
-            content: item.attributes?.content ?? "",
-            created_at: item.attributes?.createdAt ?? item.attributes?.created_at ?? "",
-          };
-        })
-      );
+      setIsCommentFormOpen(false);
     } catch {
       toast({ title: t("admin.error"), variant: "destructive" });
     }
@@ -178,17 +190,29 @@ const BlogPost = () => {
               </div>
             ))}
 
-            <form onSubmit={handleComment} className="glass rounded-xl p-6 mt-6 space-y-4">
+            {!isCommentFormOpen && (
+              <Button type="button" variant="glow" className="mt-6" onClick={() => setIsCommentFormOpen(true)}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {t("blog.addComment")}
+              </Button>
+            )}
+
+            {isCommentFormOpen && <form onSubmit={handleComment} className="glass rounded-xl p-6 mt-6 space-y-4">
               <h3 className="font-display font-semibold">{t("blog.addComment")}</h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input placeholder={t("blog.yourName")} value={commentForm.author_name} onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })} required />
                 <Input type="email" placeholder={t("blog.yourEmail")} value={commentForm.author_email} onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })} required />
               </div>
               <Textarea placeholder={t("blog.yourComment")} value={commentForm.content} onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })} required rows={4} />
-              <Button type="submit" variant="glow" disabled={submitting}>
-                {submitting ? t("events.submitting") : t("blog.submitComment")}
-              </Button>
-            </form>
+              <div className="flex flex-wrap gap-3">
+                <Button type="submit" variant="glow" disabled={submitting}>
+                  {submitting ? t("events.submitting") : t("blog.submitComment")}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setIsCommentFormOpen(false)}>
+                  Annuler
+                </Button>
+              </div>
+            </form>}
           </div>
         </div>
       </section>

@@ -497,7 +497,7 @@ try {
     // CREATE (insert new row) - requires auth for sensitive tables
     if ($action === 'create' || $action === 'insert') {
         // Check authentication for non-public tables
-        $publicTables = ['newsletter_subscribers', 'contact_messages', 'event_registrations', 'donations'];
+        $publicTables = ['newsletter_subscribers', 'contact_messages', 'event_registrations', 'donations', 'blog_comments'];
         $user = get_auth_user();
         
         if (!in_array($resource, $publicTables) && !$user) {
