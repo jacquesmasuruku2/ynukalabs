@@ -94,8 +94,8 @@ const Navbar = () => {
         { key: "blockchains", path: "/blockchains#blockchains" },
         { key: "validators", path: "/blockchains#validators" },
         { key: "events", path: "/blockchains#events" },
-        { key: "joinOurCommunity", path: "/blockchains#community" },
-        { key: "opportunities", path: "/opportunities" },
+        { key: "community", path: "/community" },
+        { key: "opportunity", path: "/opportunities" },
       ],
     },
     {
@@ -112,50 +112,57 @@ const Navbar = () => {
   const applyRequestedNavStructure = (groups: NavEntry[]): NavEntry[] => {
     const cleaned = groups
       .filter((entry) => {
-        if (!("items" in entry)) return true;
+        if (!("items" in entry)) {
+          return entry.path !== "/contact" && entry.key !== "contact" && entry.key !== "opportunities" && entry.key !== "opportunity";
+        }
         const normalizedLabel = entry.label.toLowerCase();
         return !normalizedLabel.includes("onboarding");
       })
       .map((entry) => {
         if (!("items" in entry)) return entry;
+
         const normalizedLabel = entry.label.toLowerCase();
+        let items = entry.items.filter((item) => item.key !== "contact" && item.key !== "opportunities" && item.key !== "opportunity");
+
         if (
           normalizedLabel.includes("ecosystem") ||
           normalizedLabel.includes("ecosysteme") ||
           normalizedLabel.includes("ecosytem")
         ) {
-          return {
-            ...entry,
-            items: [
-              { key: "blockchains", path: "/blockchains#blockchains" },
-              { key: "validators", path: "/blockchains#validators" },
-              { key: "events", path: "/blockchains#events" },
-              { key: "joinOurCommunity", path: "/blockchains#community" },
-              { key: "opportunities", path: "/opportunities" },
-            ],
-          };
+          items = [
+            { key: "blockchains", path: "/blockchains#blockchains" },
+            { key: "validators", path: "/blockchains#validators" },
+            { key: "events", path: "/blockchains#events" },
+            { key: "community", path: "/community" },
+            { key: "opportunity", path: "/opportunities" },
+          ];
         }
+
         if (normalizedLabel.includes("resource") || normalizedLabel.includes("ressource")) {
-          return {
-            ...entry,
-            items: [
-              { key: "blog", path: "/blog" },
-              { key: "documentation", path: "/documentation" },
-              { key: "tools", path: "/tools" },
-              { key: "gallery", path: "/gallery" },
-            ],
-          };
+          items = [
+            { key: "blog", path: "/blog" },
+            { key: "documentation", path: "/documentation" },
+            { key: "tools", path: "/tools" },
+            { key: "gallery", path: "/gallery" },
+          ];
         }
-        return entry;
+
+        if (
+          (normalizedLabel.includes("about") || normalizedLabel.includes("à propos") || normalizedLabel.includes("apropos")) &&
+          !items.some((item) => item.key === "contact")
+        ) {
+          items = [...items, { key: "contact", path: "/contact" }];
+        }
+
+        return { ...entry, items };
       });
 
     const withoutProjectsGroup = cleaned.filter(
       (entry) =>
-        !(
-          "items" in entry &&
-          (entry.label.toLowerCase().includes("projects") || entry.label.toLowerCase().includes("projets"))
-              )
-                        );
+        !("items" in entry && (
+          entry.label.toLowerCase().includes("projects") || entry.label.toLowerCase().includes("projets")
+        ))
+    );
     const hasProjectsTopLevel = withoutProjectsGroup.some(
       (entry) => !("items" in entry) && entry.path === "/projects"
     );
@@ -250,6 +257,7 @@ const Navbar = () => {
               { key: "about", path: "/about" },
               { key: "team", path: "/community#team" },
               { key: "partners", path: "/partners" },
+              { key: "contact", path: "/contact" },
             ],
           },
           {
@@ -258,6 +266,8 @@ const Navbar = () => {
               { key: "blockchains", path: "/blockchains" },
               { key: "validators", path: "/validators" },
               { key: "events", path: "/events" },
+              { key: "community", path: "/community" },
+              { key: "opportunity", path: "/opportunities" },
             ],
           },
           {
@@ -268,13 +278,6 @@ const Navbar = () => {
               { key: "tools", path: "/resources#tools" },
             ],
           },
-          {
-            label: "nav.opportunities",
-            items: [
-              { key: "opportunities", path: "/opportunities" },
-            ],
-          },
-          { key: "contact", path: "/contact" },
         ];
         setNavGroups(applyRequestedNavStructure(fallbackNav));
       }

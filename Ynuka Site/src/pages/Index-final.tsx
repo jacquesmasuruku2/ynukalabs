@@ -1,19 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
 import type { ElementType } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Users, Calendar, Rocket, Trees, Star, Zap, Globe } from "lucide-react";
 import ModernButton from "@/components/ui/ModernButton";
 import ModernCard from "@/components/ui/ModernCard";
 import ModernSectionWrapper from "@/components/ui/ModernSectionWrapper";
 import Container from "@/components/ui/Container";
-import EventRegistrationModal from "@/components/EventRegistrationModal";
 import { useHeroAnimations } from "@/hooks/useHeroAnimations";
 import { useCountUp } from "@/hooks/useCountUp";
 import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchBlogPosts, fetchEvents } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import UpcomingEventsCarousel from "@/components/UpcomingEventsCarousel";
+import OpportunitiesSection from "@/components/OpportunitiesSection";
 
 interface Event {
   id?: string;
@@ -202,175 +203,52 @@ const StatBentoTile = ({
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
-  // Les événements de la section "Événements à venir" sont pilotés par Strapi.
-  // On garde une valeur de fallback pour éviter une page vide si l'API n'est pas joignable.
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { t, i18n } = useTranslation();
-
+  const navigate = useNavigate();
   const { heroRef, titleRef, buttonsRef, navigationRef } = useHeroAnimations(isLoading);
-
-  const innovationSentenceWords = useMemo(
-    () => t("home.innovationMission").split(/\s+/).filter(Boolean),
-    [t, i18n.language]
-  );
+  const innovationSentenceWords = useMemo(() => t("home.innovationMission").split(/\s+/).filter(Boolean), [t, i18n.language]);
 
   const handleOpenModal = (event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
+    if (event.id) {
+      navigate(`/events/${event.id}`);
+    }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
-  };
-
-  const stats: StatItem[] = useMemo(
-    () => [
-      { icon: Users, value: 500, label: "Membres Actifs", suffix: "+" },
-      { icon: Calendar, value: 30, label: "Événements Organisés", suffix: "+" },
-      { icon: Rocket, value: 15, label: "Projets Lancés", suffix: "+" },
-      { icon: Trees, value: 10000, label: t("stats.treesPlanted"), suffix: "+" },
-    ],
-    [t]
-  );
-
-  const hardcodedUpcomingEvents: Event[] = [
-    {
-      id: "fallback-1",
-      title: "Workshop Blockchain Fondamentaux",
-      date: "25 Mars 2026",
-      type: "Workshop",
-      location: "Goma Innovation Center",
-      time: "14:00 - 18:00",
-      image: "https://images.unsplash.com/photo-1639322533843-2b5a3b5b5b5?w=600&h=400&fit=crop",
-      description: "Initiation aux concepts fondamentaux de la blockchain",
-      fullDescription:
-        "Plongez dans l'univers fascinant de la blockchain avec ce workshop intensif. Vous apprendrez les concepts de base, les mécanismes de consensus, la cryptographie, et comment cette technologie révolutionnaire transforme les industries. Session pratique avec démonstrations live et études de cas concrets applicables au contexte africain.",
-    },
-    {
-      id: "fallback-2",
-      title: "Hackathon Web3 pour le Développement",
-      date: "10 Avril 2026",
-      type: "Hackathon",
-      location: "Virunga Tech Park",
-      time: "09:00 - 20:00",
-      image: "https://images.unsplash.com/photo-1557683316-973673baf926?w=600&h=400&fit=crop",
-      description: "48h de développement intensif pour créer des solutions Web3",
-      fullDescription:
-        "Rejoignez-nous pour 48 heures de création intensive ! Formez des équipes, développez des solutions innovantes utilisant les technologies Web3, et présentez vos projets à un jury d'experts. Thème central : 'Technologie Blockchain pour le Développement Durable en RDC'. Prix exceptionnels et opportunités de financement pour les meilleurs projets.",
-    },
-    {
-      id: "fallback-3",
-      title: "Meetup Crypto et Investissement",
-      date: "20 Avril 2026",
-      type: "Meetup",
-      location: "Goma Hub HQ",
-      time: "17:00 - 19:00",
-      image: "https://images.unsplash.com/photo-1611224923853-80b0237ed8b3?w=600&h=400&fit=crop",
-      description: "Réseautage et discussions sur les opportunités d'investissement crypto",
-      fullDescription:
-        "Un meetup exclusif pour explorer les opportunités d'investissement dans les cryptomonnaies et projets blockchain. Échanges avec des investisseurs expérimentés, analyses de marché, et présentation de projets prometteurs. Session networking suivie d'un cocktail. Places limitées pour garantir des échanges de qualité.",
-    },
-    {
-      id: "fallback-4",
-      title: "Workshop Blockchain Fondamentaux — session 2",
-      date: "15 Avril 2026",
-      type: "Workshop",
-      location: "Goma Innovation Center",
-      time: "14:00 - 18:00",
-      image: "https://images.unsplash.com/photo-1639322533843-2b5a3b5b5b5?w=600&h=400&fit=crop",
-      description: "Initiation aux concepts fondamentaux de la blockchain",
-      fullDescription:
-        "Plongez dans l'univers fascinant de la blockchain avec ce workshop intensif. Vous apprendrez les concepts de base, les mécanismes de consensus, la cryptographie, et comment cette technologie révolutionnaire transforme les industries. Session pratique avec démonstrations live et études de cas concrets applicables au contexte africain.",
-    },
-    {
-      id: "fallback-5",
-      title: "Hackathon Web3 pour le Développement — édition printemps",
-      date: "22 Mai 2026",
-      type: "Hackathon",
-      location: "Virunga Tech Park",
-      time: "09:00 - 20:00",
-      image: "https://images.unsplash.com/photo-1557683316-973673baf926?w=600&h=400&fit=crop",
-      description: "48h de développement intensif pour créer des solutions Web3",
-      fullDescription:
-        "Rejoignez-nous pour 48 heures de création intensive ! Formez des équipes, développez des solutions innovantes utilisant les technologies Web3, et présentez vos projets à un jury d'experts. Thème central : 'Technologie Blockchain pour le Développement Durable en RDC'. Prix exceptionnels et opportunités de financement pour les meilleurs projets.",
-    },
-    {
-      id: "fallback-6",
-      title: "Meetup Crypto et Investissement — afterwork",
-      date: "5 Juin 2026",
-      type: "Meetup",
-      location: "Goma Hub HQ",
-      time: "17:00 - 19:00",
-      image: "https://images.unsplash.com/photo-1611224923853-80b0237ed8b3?w=600&h=400&fit=crop",
-      description: "Réseautage et discussions sur les opportunités d'investissement crypto",
-      fullDescription:
-        "Un meetup exclusif pour explorer les opportunités d'investissement dans les cryptomonnaies et projets blockchain. Échanges avec des investisseurs expérimentés, analyses de marché, et présentation de projets prometteurs. Session networking suivie d'un cocktail. Places limitées pour garantir des échanges de qualité.",
-    },
-  ];
+  const stats: StatItem[] = useMemo(() => [
+    { icon: Users, value: 500, label: "Membres Actifs", suffix: "+" },
+    { icon: Calendar, value: 30, label: "Événements Organisés", suffix: "+" },
+    { icon: Rocket, value: 15, label: "Projets Lancés", suffix: "+" },
+    { icon: Trees, value: 10000, label: t("stats.treesPlanted"), suffix: "+" },
+  ], [t]);
 
   useEffect(() => {
-    setUpcomingEvents(hardcodedUpcomingEvents);
-
     const fetchUpcoming = async () => {
       try {
-        type StrapiEventItem = {
-          id: string | number;
-          attributes?: {
-            title?: string;
-            title_fr?: string | null;
-            date?: string;
-            type?: string;
-            location?: string;
-            time?: string;
-            image?: unknown;
-            description?: string | null;
-            description_fr?: string | null;
-          };
-        };
-
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/events?filters[upcoming][$eq]=true&sort=date:asc&populate=image&pagination[pageSize]=12"
-        );
-        const items = res.data || [];
-
-        const formatDate = (d: string) => {
-          try {
-            const dt = new Date(d);
-            return dt.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-          } catch {
-            return d;
-          }
-        };
-
-        const mapped: Event[] = items
-          .map((item) => {
-            const it = item as StrapiEventItem;
-            return {
-              id: String(it.id),
-              title: it.attributes?.title_fr ?? it.attributes?.title ?? "",
-              date: formatDate(it.attributes?.date ?? ""),
-              type: it.attributes?.type ?? "",
-              location: it.attributes?.location ?? "",
-              time: it.attributes?.time ?? "",
-              image: mediaToUrl(it.attributes?.image) ?? "",
-              description: it.attributes?.description_fr ?? it.attributes?.description ?? "",
-              fullDescription: it.attributes?.description_fr ?? it.attributes?.description ?? "",
-            };
-          })
-          .filter((e) => e.id && e.title && e.date && e.type && e.location);
-
-        if (mapped.length) setUpcomingEvents(mapped);
+        const events = await fetchEvents(12);
+        const mapped: Event[] = events
+          .filter((event) => event.upcoming !== false)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .slice(0, 6)
+          .map((event) => ({
+            id: String(event.id),
+            title: i18n.language === "fr" && event.title_fr ? event.title_fr : event.title,
+            date: event.date ? new Date(event.date).toLocaleDateString(i18n.language === "fr" ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" }) : "",
+            type: event.type,
+            location: event.location,
+            time: event.time || "",
+            image: event.imageUrl || "",
+            description: i18n.language === "fr" && event.description_fr ? event.description_fr : event.description || "",
+            fullDescription: i18n.language === "fr" && event.description_fr ? event.description_fr : event.description || "",
+          }))
+          .filter((event) => event.title && event.date && event.type && event.location);
+        setUpcomingEvents(mapped);
       } catch {
-        // fallback déjà présent (hardcodedUpcomingEvents)
+        setUpcomingEvents([]);
       }
     };
-
     fetchUpcoming();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [i18n.language]);
 
   type HomeProject = { name: string; category: string; description: string };
   const hardcodedProjects: HomeProject[] = [
@@ -396,60 +274,19 @@ const Index = () => {
   const [latestBlogPosts, setLatestBlogPosts] = useState<HomeBlogPost[]>([]);
   const [blogPostsLoading, setBlogPostsLoading] = useState(true);
 
-  const blogFallbackPosts = useMemo(
-    () =>
-      [
-        { id: "1", title: t("blog.p1Title"), title_fr: null, excerpt: t("blog.p1Excerpt"), excerpt_fr: null, category: "Announcement", created_at: "2026-03-01" },
-        { id: "2", title: t("blog.p2Title"), title_fr: null, excerpt: t("blog.p2Excerpt"), excerpt_fr: null, category: "Event Recap", created_at: "2026-02-20" },
-        { id: "3", title: t("blog.p3Title"), title_fr: null, excerpt: t("blog.p3Excerpt"), excerpt_fr: null, category: "Education", created_at: "2026-02-10" },
-        { id: "4", title: t("blog.p4Title"), title_fr: null, excerpt: t("blog.p4Excerpt"), excerpt_fr: null, category: "Innovation", created_at: "2026-01-28" },
-        { id: "5", title: t("blog.p5Title"), title_fr: null, excerpt: t("blog.p5Excerpt"), excerpt_fr: null, category: "Community", created_at: "2026-01-15" },
-        { id: "6", title: t("blog.p6Title"), title_fr: null, excerpt: t("blog.p6Excerpt"), excerpt_fr: null, category: "Education", created_at: "2026-01-05" },
-      ] satisfies HomeBlogPost[],
-    [t]
-  );
-
-  const displayHomeBlogPosts = useMemo(() => {
-    if (latestBlogPosts.length > 0) return latestBlogPosts.slice(0, 3);
-    return blogFallbackPosts.slice(0, 3);
-  }, [latestBlogPosts, blogFallbackPosts]);
+  const displayHomeBlogPosts = latestBlogPosts.slice(0, 3);
 
   useEffect(() => {
     const fetchLatestBlog = async () => {
       try {
-        type StrapiBlogPostItem = {
-          id: string | number;
-          attributes?: {
-            title?: string;
-            title_fr?: string | null;
-            excerpt?: string | null;
-            excerpt_fr?: string | null;
-            category?: string;
-            createdAt?: string;
-            created_at?: string;
-          };
-        };
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/blog-posts?filters[published][$eq]=true&sort=createdAt:desc&pagination[pageSize]=3"
+        const posts = await fetchBlogPosts(100);
+        setLatestBlogPosts(
+          posts
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 3)
         );
-        const items = res.data || [];
-        const mapped: HomeBlogPost[] = items
-          .map((item) => {
-            const it = item as StrapiBlogPostItem;
-            return {
-              id: String(it.id),
-              title: it.attributes?.title ?? "",
-              title_fr: it.attributes?.title_fr ?? null,
-              excerpt: it.attributes?.excerpt ?? null,
-              excerpt_fr: it.attributes?.excerpt_fr ?? null,
-              category: it.attributes?.category ?? "",
-              created_at: it.attributes?.createdAt ?? it.attributes?.created_at ?? "",
-            };
-          })
-          .filter((p) => p.id && p.created_at);
-        if (mapped.length) setLatestBlogPosts(mapped);
       } catch {
-        // fallback: blogFallbackPosts
+        setLatestBlogPosts([]);
       } finally {
         setBlogPostsLoading(false);
       }
@@ -543,17 +380,17 @@ const Index = () => {
             <ModernButton
               variant="primary"
               size="lg"
-              href="/community"
+              href="/about"
               className="!bg-[#ffb800] !text-[#111111] shadow-none hover:shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[#ffb800]/60"
             >
               <Zap className="mr-2 h-5 w-5" />
-              Rejoindre la communauté
+              Découvrir Ynuka Labs
               <ArrowRight className="ml-2 h-5 w-5" />
             </ModernButton>
             
-            <ModernButton variant="outline" size="lg" href="/events" className="bg-white/20 border-white/30 text-white hover:bg-white/30">
-              <Calendar className="mr-2 h-5 w-5" />
-              Voir les événements
+            <ModernButton variant="outline" size="lg" href="/community" className="bg-white/20 border-white/30 text-white hover:bg-white/30">
+              <Users className="mr-2 h-5 w-5" />
+              Rejoindre la communauté
             </ModernButton>
           </div>
         </Container>
@@ -727,6 +564,9 @@ const Index = () => {
         </div>
       </ModernSectionWrapper>
 
+      {/* Opportunities from the published database content */}
+      <OpportunitiesSection />
+
       {/* Projects */}
       <ModernSectionWrapper className="py-24">
         <motion.div
@@ -786,6 +626,10 @@ const Index = () => {
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="h-64 rounded-xl bg-muted/50 animate-pulse" />
                 ))}
+              </div>
+            ) : displayHomeBlogPosts.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                Aucun article publié pour le moment.
               </div>
             ) : (
               <>
@@ -852,12 +696,6 @@ const Index = () => {
       </ModernSectionWrapper>
       </div>
 
-      {/* Modal d'inscription aux événements */}
-      <EventRegistrationModal 
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        event={selectedEvent}
-      />
     </div>
   );
 };

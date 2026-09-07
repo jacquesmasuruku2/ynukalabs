@@ -21,6 +21,7 @@ export interface BlogPost {
   excerpt_fr: string | null;
   category: string;
   created_at: string;
+  cover_url: string | null;
 }
 
 type BlogPostsSectionProps = {
@@ -83,20 +84,32 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
                 key={post.id}
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-                className="glass rounded-xl p-6 hover:border-primary/30 transition-colors flex flex-col"
+                className="glass rounded-xl overflow-hidden hover:border-primary/30 transition-colors flex flex-col"
               >
-                <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full self-start">{post.category}</span>
-                <h3 className="font-display text-lg font-semibold mt-4 mb-2">{getTitle(post)}</h3>
-                <p className="text-sm text-muted-foreground flex-1 mb-4">{getExcerpt(post)}</p>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" /> {new Date(post.created_at).toLocaleDateString()}
-                  </span>
-                  <Button variant="link" className="p-0 h-auto text-primary text-sm" asChild>
-                    <Link to={`/blog/${post.id}`}>
-                      {t("blog.readMore")} <ArrowRight className="ml-1 h-3 w-3" />
-                    </Link>
-                  </Button>
+                {post.cover_url && (
+                  <Link to={`/blog/${post.id}`} className="block relative aspect-[16/10] overflow-hidden">
+                    <img
+                      src={post.cover_url}
+                      alt={getTitle(post)}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </Link>
+                )}
+
+                <div className="p-6 flex flex-col flex-1">
+                  <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full self-start">{post.category}</span>
+                  <h3 className="font-display text-lg font-semibold mt-4 mb-2">{getTitle(post)}</h3>
+                  <p className="text-sm text-muted-foreground flex-1 mb-4">{getExcerpt(post)}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" /> {new Date(post.created_at).toLocaleDateString()}
+                    </span>
+                    <Button variant="link" className="p-0 h-auto text-primary text-sm" asChild>
+                      <Link to={`/blog/${post.id}`}>
+                        {t("blog.readMore")} <ArrowRight className="ml-1 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ))}

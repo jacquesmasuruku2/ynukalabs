@@ -82,8 +82,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 export function CommunityPageBody() {
   const { t } = useTranslation();
 
-  const whatsappUrl =
-    (import.meta.env.VITE_COMMUNITY_WHATSAPP_URL as string | undefined)?.trim() || "https://wa.me/";
+  const whatsappUrl = (import.meta.env.VITE_COMMUNITY_WHATSAPP_URL as string | undefined)?.trim();
 
   type JoinCardVariant = "whatsapp" | "discord" | "telegram" | "events";
   type JoinItem = {
@@ -95,9 +94,10 @@ export function CommunityPageBody() {
   };
 
   const joinItems: JoinItem[] = [
-    { icon: WhatsAppIcon, title: t("community.whatsapp"), desc: t("community.whatsappDesc"), href: whatsappUrl, variant: "whatsapp" },
-    { icon: MessageCircle, title: t("community.discord"), desc: t("community.discordDesc"), href: "#", variant: "discord" },
-    { icon: Send, title: t("community.telegram"), desc: t("community.telegramDesc"), href: "#", variant: "telegram" },
+    ...(whatsappUrl
+      ? [{ icon: WhatsAppIcon, title: t("community.whatsapp"), desc: t("community.whatsappDesc"), href: whatsappUrl, variant: "whatsapp" as const }]
+      : []),
+    { icon: MessageCircle, title: t("community.contact"), desc: t("community.contactDesc"), href: "/contact", variant: "discord" },
     { icon: Users, title: t("community.attend"), desc: t("community.attendDesc"), href: "/events", variant: "events" },
   ];
 
@@ -255,17 +255,30 @@ export function CommunityPageBody() {
 
       <section className="py-20 bg-brand-navy text-[hsl(42_28%_96%)]">
         <div className="container mx-auto px-4">
-          <motion.div {...fadeUp} className="max-w-2xl mx-auto text-center">
+          <motion.div {...fadeUp} className="max-w-3xl mx-auto text-center">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">
-              {t("community.ambassadorTitle")}
+              {t("community.coreTeamTitle")}
             </h2>
-            <p className="text-white/85 text-lg max-w-2xl mx-auto mb-4">{t("community.ambassadorSubtitle")}</p>
-            <p className="text-white/75 mb-8 leading-relaxed">{t("community.ambassadorDesc")}</p>
-            <Button
-              size="lg"
-              className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md"
-            >
-              {t("community.applyNow")} <ArrowRight className="ml-2 h-4 w-4" />
+            <p className="text-white/85 text-lg max-w-2xl mx-auto mb-4">{t("community.coreTeamSubtitle")}</p>
+            <p className="text-white/75 mb-8 leading-relaxed">{t("community.coreTeamDesc")}</p>
+            <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+              <a href="/team">{t("community.coreTeamCta")} <ArrowRight className="ml-2 h-4 w-4" /></a>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div {...fadeUp} className="max-w-3xl mx-auto text-center">
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              {t("community.partnershipTitle")}
+            </h2>
+            <p className="text-muted-foreground text-lg leading-relaxed mb-8">
+              {t("community.partnershipDesc")}
+            </p>
+            <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+              <a href="/partners">{t("community.partnershipCta")} <ArrowRight className="ml-2 h-4 w-4" /></a>
             </Button>
           </motion.div>
         </div>

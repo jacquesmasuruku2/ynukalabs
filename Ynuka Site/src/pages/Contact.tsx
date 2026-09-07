@@ -5,6 +5,7 @@ import { Mail, MapPin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/lib/api";
+import { socialLinks } from "@/data/socialLinks";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
@@ -83,8 +84,8 @@ const Contact = () => {
                 <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6">
                   <h3 className="font-display font-semibold text-sm sm:text-base mb-3">{t("contact.followUs")}</h3>
                   <div className="flex flex-wrap gap-2">
-                    {["Twitter", "Discord", "Telegram", "GitHub"].map((s) => (
-                      <a key={s} href="#" className="px-2 sm:px-3 py-1.5 rounded-lg bg-secondary text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">{s}</a>
+                    {socialLinks.map(({ href, ariaLabel }) => (
+                      <a key={ariaLabel} href={href} target="_blank" rel="noopener noreferrer" className="px-2 sm:px-3 py-1.5 rounded-lg bg-secondary text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">{ariaLabel}</a>
                     ))}
                   </div>
                 </div>

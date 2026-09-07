@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, Search } from "lucide-react";
+import { fetchProjects } from "@/lib/api";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
@@ -20,83 +21,36 @@ const Projects = () => {
     external?: boolean;
   };
 
-  const projectShowcases: ProjectShowcase[] = [
-    {
-      slug: "onboarding-program",
-      title: "Onboarding Program",
-      category: "Education",
-      shortPresentation:
-        "Programme d'integration progressive pour nouveaux membres de la communaute Web3 locale, avec un accompagnement structure en cohortes.",
-      imageUrl: "/projects/onboarding-program.jpg",
-      exploreUrl: "/onboarding",
-      external: false,
-    },
-    {
-      slug: "genealogy",
-      title: "Genealogy",
-      category: "Social Impact",
-      shortPresentation:
-        "Plateforme pilote de gestion de genealogie communautaire sur registre decentralise pour renforcer la tracabilite et la confiance des donnees.",
-      imageUrl: "/projects/genealogy.jpg",
-      exploreUrl: "https://genealogie.io",
-    },
-    {
-      slug: "mtidano-nftree",
-      title: "Mtidano NFTree",
-      category: "Environnement",
-      shortPresentation:
-        "Solution de tracabilite verte basee sur NFT pour suivre la plantation et la survie des arbres dans des programmes environnementaux.",
-      imageUrl: "/projects/mtidano.jpg",
-      exploreUrl: "https://mtidano-nft.com",
-    },
-    {
-      slug: "stakepool-goma",
-      title: "Stakepool Goma",
-      category: "Infrastructure",
-      shortPresentation:
-        "Infrastructure de validation locale orientee performance, disponibilite et bonnes pratiques de securite pour le reseau.",
-      imageUrl: "/projects/stakepool-goma.jpg",
-      exploreUrl: "https://gomapool.com/",
-    },
-    {
-      slug: "shiriki-drc",
-      title: "Shiriki DRC",
-      category: "Social Impact",
-      shortPresentation:
-        "Outil collaboratif pour coordonner des initiatives citoyennes et projets de quartier avec un suivi transparent des actions.",
-      imageUrl: "/projects/shiriki-drc.jpg",
-      exploreUrl: "https://example.com/shiriki-drc",
-    },
-    {
-      slug: "wenze",
-      title: "Wenze",
-      category: "DeFi",
-      shortPresentation:
-        "Prototype marketplace pour connecter vendeurs locaux, services digitaux et paiements modernes dans un parcours simple.",
-      imageUrl: "/projects/wenze.jpg",
-      exploreUrl: "https://wenze-beta.vercel.app",
-    },
-    {
-      slug: "umoja-fund",
-      title: "UmojaFund",
-      category: "DeFi",
-      shortPresentation:
-        "Mecanisme communautaire de micro-financement transparent pour soutenir des projets a impact avec une gouvernance claire.",
-      imageUrl: "/projects/umoja-fund.jpg",
-      exploreUrl: "https://umoja-fund.vercel.app",
-    },
-    {
-      slug: "goma-hub-hackathon",
-      title: "Goma Hub Hackathon",
-      category: "AI + Blockchain",
-      shortPresentation:
-        "Programme de hackathon annuel du hub pour accelerer l'ideation, le mentoring et la mise en valeur des equipes au demo day.",
-      imageUrl: "/projects/goma-hub-hackathon.jpg",
-      exploreUrl: "https://docs-topaz-tau-22.vercel.app/",
-    },
-  ];
+  const [projectShowcases, setProjectShowcases] = useState<ProjectShowcase[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = ["Tous", "DeFi", "Environnement", "Education", "Social Impact", "Infrastructure", "AI + Blockchain"];
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const projects = await fetchProjects(100);
+        setProjectShowcases(
+          projects.map((project) => ({
+            slug: project.slug,
+            title: project.title,
+            category: project.category,
+            shortPresentation: project.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(),
+            imageUrl: project.featured_image || "/projects/default.jpg",
+            exploreUrl: project.live_url || project.repository_url || `/projects#${project.slug}`,
+            external: Boolean(project.live_url || project.repository_url),
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+        setProjectShowcases([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  const categories = ["Tous", ...Array.from(new Set(projectShowcases.map((project) => project.category).filter(Boolean)))];
 
   const normalizeText = (value: string) =>
     value
@@ -179,6 +133,9 @@ const Projects = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="py-16 text-center text-muted-foreground">Chargement des projets...</div>
+          ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filteredProjects.map((project, i) => (
               <motion.article
@@ -230,6 +187,7 @@ const Projects = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </section>
     </div>

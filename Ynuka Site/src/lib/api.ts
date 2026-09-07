@@ -244,6 +244,28 @@ export async function fetchOpportunity(id: string) {
   };
 }
 
+// Projects API
+export async function fetchProjects(limit = 100) {
+  const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[] }>("list", {
+    resource: "projects",
+    limit,
+    search: "status=active",
+  });
+
+  const rows = result.rows ?? result.data ?? [];
+  return rows.map((item: any) => ({
+    id: String(item.id),
+    slug: item.slug || String(item.id),
+    title: item.title || "",
+    category: item.category || "General",
+    description: item.description || "",
+    featured_image: item.featured_image || null,
+    repository_url: item.repository_url || null,
+    live_url: item.live_url || null,
+    created_at: item.created_at || "",
+  }));
+}
+
 // Apply for opportunity
 export async function applyForOpportunity(data: {
   opportunity_id: string;

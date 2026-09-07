@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Users, Calendar, Rocket, Trees, ChevronRight, MapPin, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { strapiFetch } from "@/lib/strapi";
+import { fetchEvents } from "@/lib/api";
 import CustomButton from "@/components/ui/CustomButton";
 import EventCard from "@/components/ui/EventCard";
 import SectionWrapper from "@/components/ui/SectionWrapper";
@@ -24,40 +25,65 @@ const fadeInUpVariants = {
 };
 
 const Index = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState<Array<{ id: string; title: string; date: string; type: string; location: string; time: string }>>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const isFr = i18n.language === "fr";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUpcomingEvents = async () => {
+      try {
+        const events = await fetchEvents(6);
+        const sorted = [...events]
+          .filter((event) => event.upcoming !== false)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .slice(0, 3)
+          .map((event) => ({
+            id: String(event.id),
+            title: isFr && event.title_fr ? event.title_fr : event.title || (isFr ? "Événement" : "Event"),
+            date: event.date
+              ? new Date(event.date).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })
+              : "",
+            type: event.type || (isFr ? "Événement" : "Event"),
+            location: event.location || (isFr ? "Goma" : "Goma"),
+            time: event.time || (isFr ? "À venir" : "Upcoming"),
+          }));
+
+        if (isMounted) {
+          setUpcomingEvents(sorted);
+        }
+      } catch (error) {
+        console.error("Failed to fetch upcoming events:", error);
+        if (isMounted) {
+          setUpcomingEvents([]);
+        }
+      } finally {
+        if (isMounted) {
+          setEventsLoading(false);
+        }
+      }
+    };
+
+    loadUpcomingEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, [isFr]);
 
   const stats = [
     { icon: Users, value: "500+", label: t("stats.members") },
     { icon: Calendar, value: "30+", label: t("stats.events") },
     { icon: Rocket, value: "15+", label: t("stats.projects") },
     { icon: Trees, value: "10000+", label: t("stats.treesPlanted") },
-  ];
-
-  const upcomingEvents = [
-    { 
-      title: t("events.event1Title"), 
-      date: "25 Mars 2026", 
-      type: "Workshop", 
-      location: "Goma Innovation Center",
-      time: "14:00 - 18:00"
-    },
-    { 
-      title: t("events.event2Title"), 
-      date: "10 Avril 2026", 
-      type: "Hackathon", 
-      location: "Virunga Tech Park",
-      time: "09:00 - 20:00"
-    },
-    { 
-      title: t("events.event3Title"), 
-      date: "20 Avril 2026", 
-      type: "Meetup", 
-      location: "Goma Hub HQ",
-      time: "17:00 - 19:00"
-    },
   ];
 
   const projects = [
@@ -223,32 +249,46 @@ const Index = () => {
           title={t("home.upcomingTitle")} 
           subtitle={t("home.upcomingSubtitle")} 
         />
-        <div className="grid md:grid-cols-3 gap-6">
-          {upcomingEvents.map((event, i) => (
-            <EventCard key={i} delay={i * 0.15}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
-                  {event.type}
-                </span>
-                <span className="text-xs text-muted-foreground">{event.time}</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 font-display">{event.title}</h3>
-              <div className="space-y-1 mb-4">
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {event.date}
-                </p>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {event.location}
-                </p>
-              </div>
-              <CustomButton variant="outline" size="sm" className="w-full">
-                {t("home.register")} <ArrowRight className="ml-1 h-3 w-3" />
-              </CustomButton>
-            </EventCard>
-          ))}
-        </div>
+        {eventsLoading ? (
+          <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+            Chargement des événements...
+          </div>
+        ) : upcomingEvents.length === 0 ? (
+          <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+            Aucun événement publié pour le moment.
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
+            {upcomingEvents.map((event, i) => (
+              <Link key={event.id || `${event.title}-${i}`} to="/events" className="block h-full">
+                <EventCard delay={i * 0.15} className="h-full flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
+                        {event.type}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{event.time}</span>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2 font-display">{event.title}</h3>
+                    <div className="space-y-1 mb-4">
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {event.date}
+                      </p>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {event.location}
+                      </p>
+                    </div>
+                  </div>
+                  <CustomButton variant="outline" size="sm" className="w-full mt-4">
+                    {t("home.viewAllEvents")} <ArrowRight className="ml-1 h-3 w-3" />
+                  </CustomButton>
+                </EventCard>
+              </Link>
+            ))}
+          </div>
+        )}
         <div className="text-center mt-8">
           <CustomButton variant="outline" asChild>
             <Link to="/events">{t("home.viewAllEvents")}</Link>

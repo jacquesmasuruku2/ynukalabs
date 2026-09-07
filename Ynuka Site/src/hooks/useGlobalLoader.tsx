@@ -8,11 +8,9 @@ export const useGlobalLoader = () => {
   useEffect(() => {
     setIsLoading(true);
     
-    // Réduire à 1.5 secondes pour une meilleure expérience utilisateur
-    // Le scroll est déjà autorisé, donc pas besoin d'attendre longtemps
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
