@@ -23,6 +23,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         xUrl: body.xUrl || null,
         linkedinUrl: body.linkedinUrl || null,
         telegramUrl: body.telegramUrl || null,
+        portfolioUrl: body.portfolioUrl || null,
         isActive: body.isActive !== false,
       },
     });

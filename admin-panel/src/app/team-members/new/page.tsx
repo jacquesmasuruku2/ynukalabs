@@ -11,7 +11,7 @@ const slugify = (value: string) => value.toLowerCase().normalize('NFD').replace(
 export default function NewTeamMemberPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', slug: '', role: '', description: '', imageUrl: '', imageAlt: '', xUrl: '', linkedinUrl: '', telegramUrl: '', isActive: true });
+  const [form, setForm] = useState({ name: '', slug: '', role: '', description: '', imageUrl: '', imageAlt: '', xUrl: '', linkedinUrl: '', telegramUrl: '', portfolioUrl: '', isActive: true });
   const update = (key: string, value: string | boolean) => setForm((current) => ({ ...current, [key]: value }));
 
   const submit = async (event: React.FormEvent) => {
@@ -32,6 +32,7 @@ export default function NewTeamMemberPage() {
         <label className="text-sm font-medium text-secondary">Lien X<input value={form.xUrl} onChange={(e) => update('xUrl', e.target.value)} className="mt-2 w-full rounded-md border px-3 py-2 text-primary" /></label>
         <label className="text-sm font-medium text-secondary">Lien LinkedIn<input value={form.linkedinUrl} onChange={(e) => update('linkedinUrl', e.target.value)} className="mt-2 w-full rounded-md border px-3 py-2 text-primary" /></label>
         <label className="text-sm font-medium text-secondary">Lien Telegram<input value={form.telegramUrl} onChange={(e) => update('telegramUrl', e.target.value)} className="mt-2 w-full rounded-md border px-3 py-2 text-primary" /></label>
+        <label className="text-sm font-medium text-secondary">Portfolio<input value={form.portfolioUrl} onChange={(e) => update('portfolioUrl', e.target.value)} className="mt-2 w-full rounded-md border px-3 py-2 text-primary" placeholder="https://..." /></label>
       </div>
       <div><label className="mb-2 block text-sm font-medium text-secondary">Description du membre</label><WordEditor content={form.description} onChange={(value) => update('description', value)} /></div>
       <div className="flex justify-end border-t pt-5"><button disabled={saving} className="flex items-center gap-2 rounded-md bg-blue-600 px-5 py-2 text-white disabled:opacity-50"><Save className="h-4 w-4" />{saving ? 'Enregistrement...' : 'Publier le membre'}</button></div>

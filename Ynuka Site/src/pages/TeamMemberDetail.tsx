@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, MessageCircle, Users } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
+import { Globe, LinkedinLogo, TelegramLogo, XLogo } from "@phosphor-icons/react";
 import { teamMembers, type TeamMember } from "@/data/teamMembers";
 import { mediaToUrl, strapiFetch } from "@/lib/strapi";
 
@@ -15,7 +16,7 @@ const TeamMemberDetail = () => {
         const response = adminApiUrl
           ? { rows: await fetch(`${adminApiUrl.replace(/\/$/, "")}/api/team-members?slug=${encodeURIComponent(slug ?? "")}`).then((result) => result.json()) }
           : await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>(`/api/team-members?filters[slug][$eq]=${slug}&populate=image`);
-        const item = (response.data ?? response.rows ?? [])[0] as { attributes?: Record<string, unknown>; slug?: string; name?: string; role?: string; description?: string; imageUrl?: string; xUrl?: string; linkedinUrl?: string; telegramUrl?: string } | undefined;
+        const item = (response.data ?? response.rows ?? [])[0] as { attributes?: Record<string, unknown>; slug?: string; name?: string; role?: string; description?: string; imageUrl?: string; xUrl?: string; linkedinUrl?: string; telegramUrl?: string; portfolioUrl?: string } | undefined;
         const attrs = item?.attributes ?? item;
         if (!attrs) return;
         setMember({
@@ -23,6 +24,7 @@ const TeamMemberDetail = () => {
           name: String(attrs.name ?? ""),
           role: String(attrs.role ?? ""),
           description: String(attrs.description ?? ""),
+          portfolioUrl: String(attrs.portfolioUrl ?? attrs.portfolio_url ?? ""),
           image: mediaToUrl(attrs.image ?? attrs.imageUrl) ?? "",
           social: {
             x: String(attrs.social_x ?? attrs.x ?? attrs.xUrl ?? ""),
@@ -53,9 +55,10 @@ const TeamMemberDetail = () => {
             <p className="mt-3 text-xl text-amber-300">{member.role}</p>
             <div className="prose prose-invert mt-8 max-w-none whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: member.description || "Aucune description disponible pour le moment." }} />
             <div className="mt-8 flex gap-3">
-              {member.social.x.startsWith("http") && <a href={member.social.x} target="_blank" rel="noreferrer" aria-label="X" className="rounded-full bg-white/10 p-3"><span className="font-bold">X</span></a>}
-              {member.social.linkedin.startsWith("http") && <a href={member.social.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="rounded-full bg-white/10 p-3"><span className="font-bold">in</span></a>}
-              {member.social.telegram.startsWith("http") && <a href={member.social.telegram} target="_blank" rel="noreferrer" aria-label="Telegram" className="rounded-full bg-white/10 p-3"><MessageCircle className="h-5 w-5" /></a>}
+              {member.portfolioUrl?.startsWith("http") && <a href={member.portfolioUrl} target="_blank" rel="noreferrer" aria-label="Portfolio" title="Portfolio" className="rounded-full bg-white/10 p-3"><Globe weight="bold" className="h-5 w-5" /></a>}
+              {member.social.x.startsWith("http") && <a href={member.social.x} target="_blank" rel="noreferrer" aria-label="X" title="X" className="rounded-full bg-white/10 p-3"><XLogo weight="bold" className="h-5 w-5" /></a>}
+              {member.social.linkedin.startsWith("http") && <a href={member.social.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" title="LinkedIn" className="rounded-full bg-white/10 p-3"><LinkedinLogo weight="bold" className="h-5 w-5" /></a>}
+              {member.social.telegram.startsWith("http") && <a href={member.social.telegram} target="_blank" rel="noreferrer" aria-label="Telegram" title="Telegram" className="rounded-full bg-white/10 p-3"><TelegramLogo weight="bold" className="h-5 w-5" /></a>}
             </div>
           </div>
         </article>

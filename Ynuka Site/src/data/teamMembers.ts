@@ -4,6 +4,7 @@ export interface TeamMember {
   role: string;
   image: string;
   description: string;
+  portfolioUrl?: string;
   social: {
     x: string;
     telegram: string;

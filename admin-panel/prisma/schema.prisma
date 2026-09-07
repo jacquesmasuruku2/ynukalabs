@@ -65,6 +65,7 @@ model TeamMember {
   xUrl        String?
   linkedinUrl String?
   telegramUrl String?
+  portfolioUrl String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

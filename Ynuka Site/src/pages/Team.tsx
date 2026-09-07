@@ -44,7 +44,7 @@ const Team = () => {
         const mapped: TeamMember[] = items
           .map((item) => {
             const it = item as { id?: string | number; attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
+            const attrs = (it.attributes ?? it) as Record<string, unknown>;
             const imageUrl = mediaToUrl(attrs.image ?? attrs.imageUrl) ?? "";
 
             return {
@@ -53,6 +53,7 @@ const Team = () => {
               role: String(attrs.role ?? ""),
               image: imageUrl,
               description: String(attrs.description ?? attrs.bio ?? ""),
+              portfolioUrl: String(attrs.portfolioUrl ?? attrs.portfolio_url ?? ""),
               social: {
                 x: String(attrs.social_x ?? attrs.x ?? attrs.xUrl ?? ""),
                 telegram: String(attrs.social_telegram ?? attrs.telegram ?? attrs.telegramUrl ?? ""),
