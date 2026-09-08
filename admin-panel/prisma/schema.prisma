@@ -74,6 +74,41 @@ model TeamMember {
   @@index([name])
 }
 
+model ResourceSection {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?
+  displayOrder Int          @default(0)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  items       ResourceItem[]
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model ResourceItem {
+  id          String         @id @default(cuid())
+  sectionId   String?
+  section     ResourceSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  title       String
+  titleFr     String?
+  description String?
+  descriptionFr String?
+  category    String?
+  url         String?
+  filePath    String?
+  fileType    String?
+  iconKey     String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([sectionId])
+  @@index([category])
+}
+
 model Article {
   id                String             @id @default(cuid())
   title             String

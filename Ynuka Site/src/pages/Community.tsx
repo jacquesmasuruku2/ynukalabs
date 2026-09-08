@@ -277,9 +277,14 @@ export function CommunityPageBody() {
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
               {t("community.partnershipDesc")}
             </p>
-            <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
-              <a href="/partners">{t("community.partnershipCta")} <ArrowRight className="ml-2 h-4 w-4" /></a>
-            </Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+                <a href="/contact?subject=Partenariat%20YNUKA%20Labs">Apply Now <ArrowRight className="ml-2 h-4 w-4" /></a>
+              </Button>
+              <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+                <a href="/partners">{t("community.partnershipCta")} <ArrowRight className="ml-2 h-4 w-4" /></a>
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>

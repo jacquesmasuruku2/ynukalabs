@@ -659,8 +659,7 @@ const About = () => {
               Nos <span style={{ color: "var(--accent-logo-blue)" }}>Services</span>
             </h2>
             <p className="section-subtitle">
-              Des services concrets, pensés pour les jeunes, les porteurs de projets,
-              les institutions et les entrepreneurs qui veulent créer un impact réel.
+              Découvrez ici nos services
             </p>
           </motion.div>
 

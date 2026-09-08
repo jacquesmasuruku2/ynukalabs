@@ -363,6 +363,70 @@ const Presentation = () => {
         </Container>
       </section>
 
+      <section className="about-section py-12">
+        <Container size="lg">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="section-header"
+          >
+            <h2 className="section-title">
+              Onboarding Programme : <span style={{ color: "var(--accent-logo-blue)" }}>Formation sur les nouvelles technologies</span>
+            </h2>
+            <p className="section-subtitle max-w-4xl mx-auto text-justify">
+              Un parcours progressif pour aider les apprenants à passer de zéro à une pratique autonome des outils technologiques. Notre programme d'intégration est conçu pour propulser les compétences des participants à travers un apprentissage pratique et un accompagnement de proximité :
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mt-10">
+            {[
+              {
+                title: "Bootcamps intensifs",
+                description: "Des formations immersives de 4 à 8 semaines, rythmées par des exercices pratiques hebdomadaires pour ancrer les connaissances.",
+              },
+              {
+                title: "Parcours diversifiés",
+                description: "Une immersion complète dans les compétences d'avenir : Blockchain & Web3, Intelligence Artificielle (IA), No-Code et outils de productivité numérique.",
+              },
+              {
+                title: "Coaching individuel",
+                description: "Un suivi personnalisé pour le développement de votre portfolio et votre orientation professionnelle.",
+              },
+              {
+                title: "Apprentissage par projet",
+                description: "Une évaluation finale basée sur la réalisation d'un mini-projet concret, prêt à être valorisé sur le marché du travail.",
+              },
+            ].map((item, index) => (
+              <motion.article
+                key={item.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-lg"
+              >
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#ffb800]/15 text-[#ffb800] text-lg font-bold">
+                  {index + 1}
+                </div>
+                <h3 className="font-display text-xl font-semibold text-white mb-3">{item.title}</h3>
+                <p className="text-sm leading-relaxed text-slate-200/90">{item.description}</p>
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <a
+              href="/contact?subject=Rejoindre%20la%20prochaine%20session"
+              className="inline-flex items-center justify-center rounded-2xl bg-[#ffb800] px-6 py-3 text-base font-semibold text-[#111111] shadow-lg shadow-[#ffb800]/20 transition hover:brightness-110"
+            >
+              Rejoindre la prochaine session <ArrowRight className="ml-2 h-4 w-4" />
+            </a>
+          </div>
+        </Container>
+      </section>
+
       {/* Services Section */}
       <section className="about-section py-12">
         <Container size="lg">
