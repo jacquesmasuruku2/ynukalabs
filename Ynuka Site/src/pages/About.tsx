@@ -495,21 +495,6 @@ const About = () => {
                   />
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.15 }}
-                  className="absolute right-4 sm:right-auto sm:left-[55%] md:left-[55%] lg:left-[335px] bottom-8 sm:top-auto sm:bottom-auto sm:top-[50%] -translate-y-1/2 z-20 rounded-lg sm:rounded-xl bg-white px-3 sm:px-5 py-2 sm:py-3 shadow-2xl border border-white/70"
-                >
-                  <img
-                    src="/logo.PNG"
-                    alt="Logo Ynuka Labs"
-                    className="block h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain"
-                    loading="lazy"
-                  />
-                </motion.div>
-
                 <div className="absolute -left-12 -bottom-12 w-32 sm:w-40 md:w-48 lg:w-48 h-32 sm:h-40 md:h-48 lg:h-48 rounded-full bg-blue-500/15 blur-2xl hidden sm:block" />
               </div>
             </div>
