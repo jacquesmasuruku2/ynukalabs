@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd 'Ynuka Site' && npm run build",
-  "installCommand": "cd 'Ynuka Site' && npm install",
+  "buildCommand": "npm --prefix \"Ynuka Site\" run build",
+  "installCommand": "npm --prefix \"Ynuka Site\" install",
   "outputDirectory": "Ynuka Site/dist",
   "framework": "vite",
   "rewrites": [
