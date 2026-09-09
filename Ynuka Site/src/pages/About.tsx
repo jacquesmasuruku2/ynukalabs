@@ -12,7 +12,6 @@ import {
   Star,
   Zap,
   Globe,
-  Heart,
   GraduationCap,
   ServerCog,
   Code2,
@@ -896,97 +895,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Contact (ancre #contact) */}
-      <section id="contact" className="about-section scroll-mt-24">
-        <Container size="md">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="section-header text-center mb-10"
-          >
-            <h2 className="section-title">
-              {t("contact.title")}
-            </h2>
-            <p className="section-subtitle max-w-2xl mx-auto">{t("contact.subtitle")}</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="content-card text-center"
-            style={{
-              margin: "20px auto",
-              width: "calc(100% - 24px)",
-              maxWidth: "920px",
-              background:
-                "linear-gradient(135deg, #2a3166, #242b5c)",
-              border: "none",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "32px",
-                fontWeight: "700",
-                color: "#ffb800",
-                marginBottom: "16px",
-                fontFamily: "var(--font-heading)",
-              }}
-            >
-              Rejoignez Notre Mission
-            </h3>
-            <p
-              style={{
-                fontSize: "18px",
-                lineHeight: "1.6",
-                color: "rgba(255, 255, 255, 0.9)",
-                marginBottom: "32px",
-                fontFamily: "var(--font-body)",
-                maxWidth: "600px",
-                margin: "0 auto 32px",
-              }}
-            >
-              Ensemble, transformons la RD Congo en un pôle d'innovation
-              blockchain et de développement durable. Votre contribution fait la
-              différence.
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "24px",
-                justifyContent: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <a
-                href="/contact"
-                className="btn-primary"
-                style={{
-                  background: "var(--light-primary)",
-                  color: "var(--accent-logo-blue)",
-                }}
-              >
-                <Heart className="w-5 h-5" />
-                Nous Contacter
-              </a>
-              <a
-                href="/community"
-                className="btn-primary"
-                style={{
-                  background: "#ffb800",
-                  color: "#111111",
-                }}
-              >
-                <Users className="w-5 h-5" />
-                Rejoindre la communauté
-              </a>
-            </div>
-          </motion.div>
-        </Container>
-      </section>
     </div>
   );
 };
