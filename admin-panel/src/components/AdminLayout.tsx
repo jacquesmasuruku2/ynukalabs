@@ -22,7 +22,6 @@ import {
   Video,
   ExternalLink,
   ClipboardList,
-  Radio,
   Music,
   ChevronLeft,
   ChevronRight
@@ -63,7 +62,6 @@ export default function AdminLayout({
     { name: 'Auteurs', href: '/authors', icon: Users },
     { name: 'Équipe', href: '/team-members', icon: Users },
     { name: 'Documentation', href: '/documentation', icon: FolderOpen },
-    { name: 'Radio', href: '/radio', icon: Radio },
     { name: 'Émissions radio', href: '/radio/programs', icon: ListVideo },
     { name: 'Lives', href: '/lives', icon: Video },
     { name: 'Médias', href: '/media', icon: Music },
