@@ -13,7 +13,7 @@ const Tools = () => {
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
               <span className="gradient-text">{t("tools.title")}</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("tools.subtitle")}</p>
+            <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">{t("tools.subtitle")}</p>
           </motion.div>
         </div>
       </section>

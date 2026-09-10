@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { fetchEvents as fetchEventsFromApi, registerForEvent } from "@/lib/api";
 import EventVisualCard from "@/components/events/EventVisualCard";
+import { stripHtml } from "@/lib/utils";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
@@ -110,7 +111,13 @@ const Events = () => {
   };
 
   const getTitle = (e: EventData) => isFr && e.title_fr ? e.title_fr : e.title;
-  const getDesc = (e: EventData) => isFr && e.description_fr ? e.description_fr : e.description;
+  const getDesc = (e: EventData) =>
+    stripHtml((isFr && e.description_fr ? e.description_fr : e.description) || "");
+  const formatEventDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString(isFr ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+  };
 
   const displayEventsBase = filtered;
 
@@ -136,10 +143,10 @@ const Events = () => {
       <section className="py-20 hero-gradient">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
-              <span className="gradient-text">{t("events.title")}</span>
+            <h1 className="typo-page-title mb-4 text-[#0f2847] dark:text-white">
+              {t("events.title")}
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("events.subtitle")}</p>
+            <p className="typo-lead mx-auto max-w-2xl text-[#315795] dark:text-[#93c5fc]">{t("events.subtitle")}</p>
           </motion.div>
         </div>
       </section>
@@ -153,7 +160,7 @@ const Events = () => {
           </div>
           <div className="flex flex-wrap gap-2 mb-10 justify-center">
             {filters.map((f) => (
-              <button key={f.key} onClick={() => setActiveFilter(f.key)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeFilter === f.key ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+              <button key={f.key} onClick={() => setActiveFilter(f.key)} className={`px-4 py-2 rounded-none text-sm font-medium transition-colors ${activeFilter === f.key ? "bg-[#ffb800] text-[#0f2847]" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
                 {f.label}
               </button>
             ))}
@@ -183,7 +190,7 @@ const Events = () => {
                         id: event.id,
                         title: getTitle(event),
                         description: getDesc(event),
-                        date: event.date,
+                        date: formatEventDate(event.date),
                         type: event.type,
                         location: event.location,
                         time: event.time ?? null,

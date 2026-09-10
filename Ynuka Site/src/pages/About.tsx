@@ -7,17 +7,6 @@ import {
   Users,
   Calendar,
   Send,
-  Rocket,
-  Award,
-  Star,
-  Zap,
-  Globe,
-  GraduationCap,
-  ServerCog,
-  Code2,
-  FileText,
-  ClipboardList,
-  Leaf,
   Link,
   Share2,
 } from "lucide-react";
@@ -204,21 +193,18 @@ const About = () => {
       title: "Education",
       description:
         "Programmes d'apprentissage, coaching et accompagnement pour développer les competences pratiques des jeunes et professionnels.",
-      icon: <GraduationCap className="w-8 h-8" />,
       color: "#0f6be8",
     },
     {
       title: "Nouvelles Technologies",
       description:
         "Blockchain, Web3, developpement logiciel et solutions numeriques pour accelerer l'innovation locale et regionale.",
-      icon: <Code2 className="w-8 h-8" />,
       color: "#60a5fa",
     },
     {
       title: "Environnement",
       description:
         "Actions technologiques et communautaires en faveur de la durabilite, de l'agriculture responsable et de la resilience ecologique.",
-      icon: <Leaf className="w-8 h-8" />,
       color: "#34d399",
     },
   ];
@@ -228,42 +214,36 @@ const About = () => {
       title: "Formation sur les nouvelles technologies",
       description:
         "Programmes pratiques et sessions intensives sur Web3, blockchain, outils numériques, IA et compétences digitales adaptées aux besoins locaux.",
-      icon: <GraduationCap className="w-8 h-8" />,
       color: "#0f6be8",
     },
     {
       title: "Opérateur de stake pools",
       description:
         "Exploitation et maintenance de nœuds validateurs et stake pools avec supervision continue, bonnes pratiques de sécurité et performance réseau.",
-      icon: <ServerCog className="w-8 h-8" />,
       color: "#ffb800",
     },
     {
       title: "Developpement des solutions Web2 et Web3",
       description:
         "Conception de solutions digitales complètes : applications web, plateformes métiers, intégration blockchain et développement de contrats intelligents.",
-      icon: <Code2 className="w-8 h-8" />,
       color: "#22c55e",
     },
     {
       title: "Services de secrétariat",
       description:
         "Services professionnels de bureau : impressions, saisie, scan, photocopie de documents, mise en page, préparation de dossiers et archivage.",
-      icon: <FileText className="w-8 h-8" />,
       color: "#60a5fa",
     },
     {
       title: "Conception et planification des projets",
       description:
         "Accompagnement stratégique pour transformer une idée en projet exécutable : cadrage, planification, budget, feuille de route et suivi d'impact.",
-      icon: <ClipboardList className="w-8 h-8" />,
       color: "#a78bfa",
     },
     {
       title: "Innovation verte et agriculture durable",
       description:
         "Intégration de solutions technologiques au service de l'agriculture durable pour renforcer la productivité locale et la résilience communautaire.",
-      icon: <Leaf className="w-8 h-8" />,
       color: "#34d399",
     },
   ];
@@ -420,22 +400,16 @@ const About = () => {
                 transition={{ duration: 0.7 }}
                 className="space-y-4 sm:space-y-6"
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-100">
-                  <Star className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-blue-300" />
-                  <span className="whitespace-nowrap">Centre d'Innovation Hybride</span>
+                <div className="inline-flex items-center rounded-full border border-blue-400/20 bg-blue-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-100">
+                  <span className="whitespace-nowrap">{t("about.heroBadge")}</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl md:text-[42px] font-bold leading-tight text-white">
-                  À propos de <span className="text-blue-400">Ynuka Labs</span>
+                <h1 className="typo-page-title font-bold text-white">
+                  {t("about.title")} <span className="text-blue-400">{t("about.titleHighlight")}</span>
                 </h1>
 
-                <p className="text-sm sm:text-base md:text-lg leading-relaxed text-blue-50/90 max-w-xl text-justify">
-                  Ynuka Labs est un centre d'innovation engagé dans l'éducation et l'incubation des
-                  talents en Afrique Centrale. Notre approche conjugue rigueur académique et
-                  expérimentation terrain pour former des builders capables de concevoir, déployer et
-                  améliorer des solutions Web3 responsables. En reliant la blockchain à des pratiques
-                  durables, nous transformons le potentiel de la jeunesse en résultats mesurables :
-                  apprentissage structuré, projets incubés et impact concret au bénéfice des communautés.
+                <p className="typo-lead max-w-xl text-justify text-blue-50/90">
+                  {t("about.heroDesc")}
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 pt-2">
@@ -447,15 +421,14 @@ const About = () => {
                       color: "#111111",
                     }}
                   >
-                    <Zap className="w-4 sm:w-5 h-4 sm:h-5 inline" />
-                    <span className="hidden sm:inline ml-1">Rejoindre la communauté</span>
-                    <span className="inline sm:hidden">Rejoindre</span>
+                    <span className="hidden sm:inline">{t("about.joinCommunity")}</span>
+                    <span className="inline sm:hidden">{t("about.joinCommunity")}</span>
                     <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 inline ml-1" />
                   </a>
-                  <a href="/events" className="btn-secondary rounded-2xl w-full sm:w-auto text-center text-sm sm:text-base shadow-md shadow-black/20">
+                  <a href="/events" className="btn-secondary rounded-2xl w-full sm:w-auto text-center text-sm sm:text-base">
                     <Calendar className="w-4 sm:w-5 h-4 sm:h-5 inline" />
-                    <span className="hidden sm:inline ml-1">Voir les événements</span>
-                    <span className="inline sm:hidden">Événements</span>
+                    <span className="hidden sm:inline ml-1">{t("about.viewEvents")}</span>
+                    <span className="inline sm:hidden">{t("about.viewEvents")}</span>
                   </a>
                 </div>
               </motion.div>
@@ -469,7 +442,7 @@ const About = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7 }}
-                  className="hidden sm:block absolute left-0 top-0 w-32 sm:w-40 md:w-48 lg:w-[320px] h-40 sm:h-52 md:h-64 lg:h-[360px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="hidden sm:block absolute left-0 top-0 w-32 sm:w-40 md:w-48 lg:w-[320px] h-40 sm:h-52 md:h-64 lg:h-[360px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5"
                 >
                   <img
                     src={heroLeft?.image ?? FALLBACK_ABOUT_HERO_BG}
@@ -484,7 +457,7 @@ const About = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.05 }}
-                  className="absolute left-1/2 transform -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:left-[45%] md:left-[50%] lg:left-[230px] top-1/2 sm:top-auto sm:top-[60%] md:top-[65%] lg:top-[300px] -translate-y-1/2 sm:translate-y-0 w-28 sm:w-36 md:w-44 lg:w-[300px] h-28 sm:h-36 md:h-44 lg:h-[200px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="absolute left-1/2 transform -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:left-[45%] md:left-[50%] lg:left-[230px] top-1/2 sm:top-auto sm:top-[60%] md:top-[65%] lg:top-[300px] -translate-y-1/2 sm:translate-y-0 w-28 sm:w-36 md:w-44 lg:w-[300px] h-28 sm:h-36 md:h-44 lg:h-[200px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5"
                 >
                   <img
                     src={heroRight?.image ?? FALLBACK_ABOUT_HERO_BG}
@@ -570,12 +543,6 @@ const About = () => {
                   key={i}
                   className={`objective-card ${i === 0 || i === 3 ? "objective-card--blue" : "objective-card--light"}`}
                 >
-                  <div className="objective-icon">
-                    {i === 0 && <GraduationCap className="h-6 w-6" />}
-                    {i === 1 && <Leaf className="h-6 w-6" />}
-                    {i === 2 && <Rocket className="h-6 w-6" />}
-                    {i === 3 && <ServerCog className="h-6 w-6" />}
-                  </div>
                   <h4 className="objective-title">{objective.title}</h4>
                   <p className="objective-description">{objective.description}</p>
                 </div>
@@ -615,9 +582,6 @@ const About = () => {
                   viewport={{ once: true }}
                   className="intervention-card"
                 >
-                  <span className="intervention-icon" style={{ color: "var(--accent-logo-blue)" }}>
-                    {domain.icon}
-                  </span>
                   <div className="intervention-card-inner">
                     <h3 className="intervention-card-title">{domain.title}</h3>
                     <p className="intervention-card-description">{domain.description}</p>
@@ -731,7 +695,6 @@ const About = () => {
             </button>
 
             <div className="service-popup-header">
-              <span className="service-popup-icon">{selectedService.icon}</span>
               <h3 id="service-popup-title" className="service-popup-title">
                 {selectedService.title}
               </h3>
@@ -879,7 +842,7 @@ const About = () => {
                     className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     aria-label={`${t("partners.visit")} — ${partner.name}`}
                   >
-                    <div className="bg-white rounded-2xl border border-white/95 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center shadow-[0_12px_40px_rgba(15,55,80,0.12)]">
+                    <div className="bg-white rounded-2xl border border-black/10 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center">
                       <img
                         src={partner.logo}
                         alt=""

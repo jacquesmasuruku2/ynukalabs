@@ -444,7 +444,7 @@ const OnboardingProgram = () => {
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
               <span className="gradient-text">{t("onboarding.title")}</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+            <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">
               {t("onboarding.subtitle")}
             </p>
           </motion.div>
@@ -649,7 +649,7 @@ const OnboardingProgram = () => {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass rounded-xl p-6 md:p-7 border border-border/70 shadow-sm"
+                className="glass rounded-xl p-6 md:p-7 border border-border/70"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Smartphone className="h-5 w-5 text-primary shrink-0" />
@@ -891,7 +891,7 @@ const OnboardingProgram = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ y: -2 }}
-                className="glass rounded-xl p-6 md:p-7 border border-border/70 shadow-sm"
+                className="glass rounded-xl p-6 md:p-7 border border-border/70"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <Wallet className="h-5 w-5 text-primary" />
@@ -1088,7 +1088,7 @@ const OnboardingProgram = () => {
               <p className="text-sm text-destructive mt-3 text-center">{donateError}</p>
             )}
 
-            <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-secondary/20 p-6 md:p-7 mt-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-secondary/20 p-6 md:p-7 mt-6">
               <h3 className="font-display text-xl font-semibold mb-2 text-center">
                 {t("onboarding.ideaTitle")}
               </h3>

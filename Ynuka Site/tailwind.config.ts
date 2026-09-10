@@ -15,8 +15,21 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"SN Pro"', 'system-ui', 'sans-serif'],
-        display: ['"SN Pro"', 'system-ui', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+        display: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+      },
+      fontWeight: {
+        extrabold: "700",
+        black: "700",
+      },
+      fontSize: {
+        display: ["clamp(2rem, 3.6vw + 0.875rem, 3.25rem)", { lineHeight: "1.05", letterSpacing: "-0.035em" }],
+        page: ["clamp(1.75rem, 1.8vw + 1rem, 2.25rem)", { lineHeight: "1.12", letterSpacing: "-0.028em" }],
+        section: ["clamp(1.375rem, 1.1vw + 1rem, 1.625rem)", { lineHeight: "1.2", letterSpacing: "-0.022em" }],
+        lead: ["clamp(1.0625rem, 0.45vw + 0.95rem, 1.1875rem)", { lineHeight: "1.55" }],
+        support: ["0.9375rem", { lineHeight: "1.55" }],
+        label: ["0.8125rem", { lineHeight: "1.4", letterSpacing: "0.06em" }],
+        meta: ["0.75rem", { lineHeight: "1.4", letterSpacing: "0.06em" }],
       },
       colors: {
         border: "hsl(var(--border))",

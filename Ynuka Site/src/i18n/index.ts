@@ -4,10 +4,10 @@ import en from "./en.json";
 import fr from "./fr.json";
 
 const getInitialLanguage = () => {
-  if (typeof window === "undefined") return "en";
+  if (typeof window === "undefined") return "fr";
   const saved = window.localStorage.getItem("lang");
   if (saved === "fr" || saved === "en") return saved;
-  return "en";
+  return "fr";
 };
 
 i18n.use(initReactI18next).init({
@@ -16,7 +16,7 @@ i18n.use(initReactI18next).init({
     fr: { translation: fr },
   },
   lng: getInitialLanguage(),
-  fallbackLng: "en",
+  fallbackLng: "fr",
   interpolation: { escapeValue: false },
 });
 

@@ -15,7 +15,7 @@ const LumaEvents = () => {
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
             <span className="gradient-text">{t("events.lumaTitle")}</span>
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("events.lumaSubtitle")}</p>
+          <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">{t("events.lumaSubtitle")}</p>
 
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button variant="outline-glow" size="lg" asChild>

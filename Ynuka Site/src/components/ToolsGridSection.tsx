@@ -37,7 +37,7 @@ const ToolsGridSection = ({ showHeading = true }: ToolsGridSectionProps) => {
             <h2 className="font-display text-3xl font-bold md:text-4xl">
               <span className="gradient-text">{t("tools.title")}</span>
             </h2>
-            <p className="mt-3 text-muted-foreground max-w-2xl mx-auto text-lg">{t("tools.subtitle")}</p>
+            <p className="typo-lead mx-auto mt-3 max-w-2xl text-muted-foreground">{t("tools.subtitle")}</p>
           </motion.div>
         )}
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">

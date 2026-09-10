@@ -13,7 +13,7 @@ const Validators = () => {
             <h1 className="mb-4 font-display text-4xl font-bold md:text-5xl">
               <span className="gradient-text">{t("validators.title")}</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">{t("validators.subtitle")}</p>
+            <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">{t("validators.subtitle")}</p>
           </motion.div>
         </div>
       </section>

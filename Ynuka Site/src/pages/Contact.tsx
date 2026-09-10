@@ -48,7 +48,7 @@ const Contact = () => {
         <div className="container mx-auto px-4 sm:px-6 md:px-8 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4"><span className="gradient-text">{t("contact.title")}</span></h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base md:text-lg">{t("contact.subtitle")}</p>
+            <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">{t("contact.subtitle")}</p>
           </motion.div>
         </div>
       </section>
@@ -61,7 +61,7 @@ const Contact = () => {
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <input type="text" placeholder={t("contact.name")} required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 <input type="email" placeholder={t("contact.email")} required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                <input type="tel" placeholder={t("Phone Number") || "Phone (optional)"} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <input type="tel" placeholder={t("contact.phone")} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 <input type="text" placeholder={t("contact.subject")} required value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
                 <textarea placeholder={t("contact.message")} required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
                 <Button variant="glow" size="lg" type="submit" className="w-full text-sm sm:text-base" disabled={submitting}>

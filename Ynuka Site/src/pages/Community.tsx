@@ -113,7 +113,7 @@ export function CommunityPageBody() {
       btn: "border-white/45 text-white hover:bg-white/15 hover:text-white hover:border-white/55",
     },
     discord: {
-      card: "bg-white border border-slate-200/95 text-slate-900 shadow-md dark:bg-white dark:border-slate-200",
+      card: "bg-white border border-slate-200/95 text-slate-900 dark:bg-white dark:border-slate-200",
       iconWrap: "bg-[#5865F2]/12 border border-[#5865F2]/30 text-[#5865F2]",
       title: "text-slate-900",
       desc: "text-slate-600",
@@ -165,7 +165,7 @@ export function CommunityPageBody() {
               <span className="text-foreground">{t("community.title")}</span>{" "}
               <span className="text-[#ffb800]">{t("community.titleHighlight")}</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("community.subtitle")}</p>
+            <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">{t("community.subtitle")}</p>
           </motion.div>
         </div>
       </section>
@@ -178,7 +178,7 @@ export function CommunityPageBody() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="relative w-full max-w-[420px] sm:max-w-[480px] mx-auto lg:max-w-none lg:mx-0 rounded-[20px] overflow-hidden shadow-xl aspect-[4/5] max-h-[460px] lg:max-h-[440px]"
+              className="relative w-full max-w-[420px] sm:max-w-[480px] mx-auto lg:max-w-none lg:mx-0 rounded-[20px] overflow-hidden aspect-[4/5] max-h-[460px] lg:max-h-[440px]"
             >
               <img
                 src="/onboarding/onboarding-2.jpg"
@@ -202,7 +202,7 @@ export function CommunityPageBody() {
                       viewport={{ once: true }}
                       transition={{ duration: 0.45, delay: i * 0.08 }}
                       className={cn(
-                        "rounded-[10px] p-4 md:p-5 min-h-[190px] flex flex-col shadow-[0_12px_26px_rgba(0,0,0,0.15)]",
+                        "rounded-[10px] p-4 md:p-5 min-h-[190px] flex flex-col border border-black/10",
                         shiftUp && "md:-translate-y-[34px]",
                         st.card
                       )}
@@ -261,7 +261,7 @@ export function CommunityPageBody() {
             </h2>
             <p className="text-white/85 text-lg max-w-2xl mx-auto mb-4">{t("community.coreTeamSubtitle")}</p>
             <p className="text-white/75 mb-8 leading-relaxed">{t("community.coreTeamDesc")}</p>
-            <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+            <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold">
               <a href="/team">{t("community.coreTeamCta")} <ArrowRight className="ml-2 h-4 w-4" /></a>
             </Button>
           </motion.div>
@@ -278,10 +278,10 @@ export function CommunityPageBody() {
               {t("community.partnershipDesc")}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+              <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold">
                 <a href="/contact?subject=Partenariat%20YNUKA%20Labs">Apply Now <ArrowRight className="ml-2 h-4 w-4" /></a>
               </Button>
-              <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold shadow-md">
+              <Button size="lg" asChild className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 border-0 font-semibold">
                 <a href="/partners">{t("community.partnershipCta")} <ArrowRight className="ml-2 h-4 w-4" /></a>
               </Button>
             </div>

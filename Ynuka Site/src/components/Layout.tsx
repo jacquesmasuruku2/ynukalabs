@@ -14,7 +14,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const isHome = pathname === "/";
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-white text-foreground transition-colors duration-300 dark:bg-background">
       <Preloader onComplete={handlePreloaderComplete} />
       <Navbar />
       <main className={cn("flex-1", !isHome && "site-inner-pages")}>

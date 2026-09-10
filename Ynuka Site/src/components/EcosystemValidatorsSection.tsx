@@ -43,7 +43,7 @@ const ChainLogoSmall = ({
     <img
       src={url}
       alt={name}
-      className="h-10 w-10 object-contain drop-shadow-md"
+      className="h-10 w-10 object-contain"
       loading="lazy"
       onError={() => setFailed(true)}
     />
@@ -193,13 +193,13 @@ export const EcosystemValidatorsSection = ({
         <div className={cn(showHeading ? "mx-auto mb-10 max-w-2xl text-center md:mb-12" : "mb-6")}>
           {showHeading ? (
             <>
-              <h2 className="font-display text-3xl font-bold md:text-4xl">
+              <h2 className="typo-section-title font-display">
                 <span className="gradient-text">{t("validators.title")}</span>
               </h2>
-              <p className="mt-3 text-lg text-muted-foreground">{t("validators.subtitle")}</p>
+              <p className="typo-lead mt-3 text-muted-foreground">{t("validators.subtitle")}</p>
             </>
           ) : null}
-          <p className={cn(showHeading ? "mt-4 text-sm text-muted-foreground" : "text-sm text-muted-foreground")}>
+          <p className={cn(showHeading ? "typo-support mt-4 text-muted-foreground" : "typo-support text-muted-foreground")}>
             {t("validators.delegateHelp")}
           </p>
         </div>
@@ -211,7 +211,7 @@ export const EcosystemValidatorsSection = ({
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: i * 0.15 }}
               className={cn(
-                "relative overflow-hidden rounded-2xl border p-7 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-colors",
+                "relative overflow-hidden rounded-2xl border p-7 transition-colors",
                 "border-slate-200/90 bg-white hover:border-primary/40",
                 "dark:border-white/10 dark:bg-slate-950/35",
                 v.id === "cardano" ? "dark:hover:border-[#ff4da6]/30" : null

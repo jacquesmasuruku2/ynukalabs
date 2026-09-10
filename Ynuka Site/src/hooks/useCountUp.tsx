@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 interface UseCountUpProps {
   end: number;
@@ -6,10 +6,10 @@ interface UseCountUpProps {
   startOnView?: boolean;
 }
 
-export const useCountUp = ({ 
-  end, 
-  duration = 2000, 
-  startOnView = true 
+export const useCountUp = ({
+  end,
+  duration = 2000,
+  startOnView = true,
 }: UseCountUpProps) => {
   const [count, setCount] = useState(0);
   const [barProgress, setBarProgress] = useState(0);
@@ -21,43 +21,57 @@ export const useCountUp = ({
 
     const startTime = Date.now();
     const endTime = startTime + duration;
+    let frame = 0;
 
     const animate = () => {
       const now = Date.now();
       const t = Math.min((now - startTime) / duration, 1);
-      
-      // Easing function for smooth animation
       const easeOutQuart = 1 - Math.pow(1 - t, 4);
       const currentCount = Math.floor(easeOutQuart * end);
-      
+
       setCount(currentCount);
       setBarProgress(easeOutQuart);
 
       if (now < endTime) {
-        requestAnimationFrame(animate);
+        frame = requestAnimationFrame(animate);
       } else {
         setCount(end);
         setBarProgress(1);
       }
     };
 
-    requestAnimationFrame(animate);
+    frame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(frame);
   }, [end, duration, isVisible]);
 
   useEffect(() => {
-    if (!startOnView || !elementRef.current) return;
+    if (!startOnView) return;
+
+    const node = elementRef.current;
+    if (!node) return;
+
+    const start = () => setIsVisible(true);
+
+    const rect = node.getBoundingClientRect();
+    const alreadyVisible =
+      rect.top < window.innerHeight * 0.92 && rect.bottom > 0 && rect.height > 0;
+    if (alreadyVisible) {
+      start();
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
+          start();
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.01, rootMargin: "80px 0px" }
     );
 
-    observer.observe(elementRef.current);
+    observer.observe(node);
 
     return () => observer.disconnect();
   }, [startOnView]);

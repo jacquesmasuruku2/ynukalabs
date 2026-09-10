@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 export const useHeroAnimations = (isLoading: boolean) => {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -8,69 +8,90 @@ export const useHeroAnimations = (isLoading: boolean) => {
   const navigationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isLoading) return; // Ne pas lancer les animations pendant le chargement
+    if (isLoading) return;
+
+    const title = titleRef.current;
+    const buttons = buttonsRef.current;
+    const navigation = navigationRef.current;
+    const hero = heroRef.current;
+    const decorations = hero ? hero.querySelectorAll(".hero-decoration") : [];
 
     const tl = gsap.timeline();
 
-    // Configuration initiale (état avant animation)
-    gsap.set(titleRef.current, {
-      y: 100,
-      opacity: 0,
-      overflow: 'hidden'
-    });
+    if (title) {
+      gsap.set(title, {
+        y: 100,
+        opacity: 0,
+        overflow: "hidden",
+      });
+      tl.to(title, {
+        y: 0,
+        opacity: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        onComplete: () => {
+          gsap.set(title, { overflow: "visible" });
+        },
+      });
+    }
 
-    gsap.set(buttonsRef.current, {
-      y: 20,
-      opacity: 0
-    });
+    if (buttons) {
+      gsap.set(buttons, {
+        y: 20,
+        opacity: 0,
+      });
+      tl.to(
+        buttons,
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power2.out",
+        },
+        title ? "-=0.6" : 0
+      );
+    }
 
-    gsap.set(navigationRef.current, {
-      y: 20,
-      opacity: 0
-    });
+    if (navigation) {
+      gsap.set(navigation, {
+        y: 20,
+        opacity: 0,
+      });
+      tl.to(
+        navigation,
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power2.out",
+        },
+        "-=0.4"
+      );
+    }
 
-    // Animation du titre principal avec effet "reveal"
-    tl.to(titleRef.current, {
-      y: 0,
-      opacity: 1,
-      duration: 1.2,
-      ease: "power3.out",
-      onComplete: () => {
-        // Rétablir overflow après l'animation
-        gsap.set(titleRef.current, { overflow: 'visible' });
-      }
-    });
-
-    // Animation des boutons avec stagger
-    tl.to(buttonsRef.current, {
-      y: 0,
-      opacity: 1,
-      duration: 0.8,
-      ease: "power2.out"
-    }, "-=0.6");
-
-    // Animation de la navigation
-    tl.to(navigationRef.current, {
-      y: 0,
-      opacity: 1,
-      duration: 0.8,
-      ease: "power2.out"
-    }, "-=0.4");
-
-    // Animation des éléments décoratifs
-    tl.fromTo('.hero-decoration', {
-      scale: 0,
-      opacity: 0
-    }, {
-      scale: 1,
-      opacity: 1,
-      duration: 0.6,
-      ease: "back.out(1.7)",
-      stagger: 0.1
-    }, "-=0.3");
+    if (decorations.length > 0) {
+      tl.fromTo(
+        decorations,
+        {
+          scale: 0,
+          opacity: 0,
+        },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.6,
+          ease: "back.out(1.7)",
+          stagger: 0.1,
+        },
+        "-=0.3"
+      );
+    }
 
     return () => {
       tl.kill();
+      if (title) gsap.set(title, { clearProps: "all" });
+      if (buttons) gsap.set(buttons, { clearProps: "all" });
+      if (navigation) gsap.set(navigation, { clearProps: "all" });
     };
   }, [isLoading]);
 
@@ -78,6 +99,6 @@ export const useHeroAnimations = (isLoading: boolean) => {
     heroRef,
     titleRef,
     buttonsRef,
-    navigationRef
+    navigationRef,
   };
 };

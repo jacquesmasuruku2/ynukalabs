@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Calendar, MapPin, Zap } from "lucide-react";
 import ModernButton from "@/components/ui/ModernButton";
 import logo from "@/assets/logo.png";
-import { cn } from "@/lib/utils";
+import { cn, stripHtml } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 export type EventVisualCardData = {
@@ -69,25 +69,25 @@ const EventVisualCard = ({
 
   const secondaryClass = compact
     ? secondaryTone === "red"
-      ? "!px-3 !py-1.5 mt-3 w-full bg-transparent border-[#ff4d4d]/45 text-[#ffd6d6] hover:bg-[#ff4d4d]/10 hover:text-[#ffecec]"
-      : "!px-3 !py-1.5 mt-3 w-full bg-transparent border-[#12B1A6]/35 text-[#bfdbfe] hover:bg-white/10 hover:text-white"
+      ? "!rounded-none !px-3 !py-1.5 mt-3 w-full bg-transparent border-[#ff4d4d]/45 text-[#ffd6d6] hover:bg-[#ff4d4d]/10 hover:text-[#ffecec]"
+      : "!rounded-none !px-3 !py-1.5 mt-3 w-full bg-transparent border-[#12B1A6]/35 text-[#bfdbfe] hover:bg-white/10 hover:text-white"
     : secondaryTone === "red"
-      ? "!px-3 !py-1.5 mt-6 w-full bg-transparent border-[#ff4d4d]/40 text-[#ffd6d6] hover:bg-[#ff4d4d]/10 hover:text-[#ffecec]"
-      : "mt-6 w-full bg-transparent border-[#12B1A6]/35 text-[#bfdbfe] hover:bg-white/10 hover:text-white";
+      ? "!rounded-none !px-3 !py-1.5 mt-6 w-full bg-transparent border-[#ff4d4d]/40 text-[#ffd6d6] hover:bg-[#ff4d4d]/10 hover:text-[#ffecec]"
+      : "!rounded-none mt-6 w-full bg-transparent border-[#12B1A6]/35 text-[#bfdbfe] hover:bg-white/10 hover:text-white";
 
   const img = useMemo(() => {
     const u = event.imageUrl?.trim();
     return u ? u : FALLBACK_IMG;
   }, [event.imageUrl]);
 
-  const description = event.description?.trim() ? event.description : "";
+  const description = event.description?.trim() ? stripHtml(event.description) : "";
   const showZap = showTime && !!event.time?.trim();
 
   return (
     <div
       className={cn(
-        "flex overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e4a7e] via-[#173a62] to-[#0f2847] text-white shadow-2xl ring-1 ring-[#3b82f6]/35",
-        compact ? "min-h-[165px] p-4 md:min-h-[220px] md:p-4" : "min-h-[320px] p-5 md:min-h-[420px] md:p-6",
+        "flex overflow-hidden rounded-none bg-[#0f2847] text-white ring-1 ring-[#ffb800]/35",
+        compact ? "min-h-[150px] p-3.5 md:min-h-[190px] md:p-4" : "min-h-[260px] p-4 md:min-h-[300px] md:p-5",
         className
       )}
     >
@@ -99,7 +99,7 @@ const EventVisualCard = ({
               <p className="truncate text-xs font-bold uppercase tracking-wider text-white/70">
                 Ynuka Labs
               </p>
-              <span className="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-[#ffb800] text-[#1e3a8a]">
+              <span className="inline-block rounded-none px-2 py-0.5 text-[10px] font-bold bg-[#ffb800] text-[#0f2847]">
                 {event.type}
               </span>
             </div>
@@ -133,11 +133,11 @@ const EventVisualCard = ({
           </div>
         </div>
 
-        <div className="mt-auto overflow-hidden rounded-2xl pt-2">
+        <div className="mt-auto overflow-hidden pt-2">
           <div
             className={cn(
-              "w-full overflow-hidden rounded-xl bg-[#0a3d44] ring-1 ring-[#12B1A6]/25",
-              compact ? "aspect-[16/5.2] md:aspect-[16/5.8]" : "aspect-[16/7.5] md:aspect-[16/9]"
+              "w-full overflow-hidden rounded-none bg-[#0a3d44] ring-1 ring-[#ffb800]/20",
+              compact ? "aspect-[16/4.6] md:aspect-[16/5]" : "aspect-[16/6.5] md:aspect-[16/7]"
             )}
           >
             <img src={img} alt={event.title} className="h-full w-full object-cover" />
@@ -152,8 +152,8 @@ const EventVisualCard = ({
               href={primaryHref}
               className={cn(
                 compact
-                  ? "!px-3 !py-1.5 mt-3 w-full bg-[#ffb800] font-bold text-[#1e3a8a] hover:bg-[#e6a600]"
-                  : "mt-6 w-full bg-[#ffb800] font-bold text-[#1e3a8a] hover:bg-[#e6a600]"
+                  ? "!rounded-none !px-3 !py-1.5 mt-3 w-full bg-[#ffb800] font-bold text-[#0f2847] hover:bg-[#e6a600]"
+                  : "!rounded-none mt-6 w-full bg-[#ffb800] font-bold text-[#0f2847] hover:bg-[#e6a600]"
               )}
             >
               {primaryLabel ?? t("home.registerNow")}
@@ -165,8 +165,8 @@ const EventVisualCard = ({
               onClick={onPrimaryClick}
               className={cn(
                 compact
-                  ? "!px-3 !py-1.5 mt-3 w-full bg-[#ffb800] font-bold text-[#1e3a8a] hover:bg-[#e6a600]"
-                  : "mt-6 w-full bg-[#ffb800] font-bold text-[#1e3a8a] hover:bg-[#e6a600]"
+                  ? "!rounded-none !px-3 !py-1.5 mt-3 w-full bg-[#ffb800] font-bold text-[#0f2847] hover:bg-[#e6a600]"
+                  : "!rounded-none mt-6 w-full bg-[#ffb800] font-bold text-[#0f2847] hover:bg-[#e6a600]"
               )}
             >
               {primaryLabel ?? t("home.registerNow")}

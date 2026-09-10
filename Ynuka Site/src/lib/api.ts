@@ -16,6 +16,19 @@ const PUBLIC_RESOURCES = [
   "partners",
 ];
 
+function pickOptionalUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const url = value.trim();
+  return url ? url : null;
+}
+
+function extractYoutubeUrl(text: string): string | null {
+  const match = text.match(
+    /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[\w-]+[^\s"'<>]*|youtu\.be\/[\w-]+)/i
+  );
+  return match ? match[0] : null;
+}
+
 export async function fetchFromApi<T = unknown>(
   action: string,
   params: Record<string, string | number> = {},
@@ -119,6 +132,10 @@ export async function fetchEvents(limit = 100) {
     time: item.time || null,
     imageUrl: item.image_url || null,
     capacity: item.capacity || null,
+    recapUrl: pickOptionalUrl(item.recap_url || item.recapUrl || item.summary_url || item.summaryUrl),
+    youtubeUrl: pickOptionalUrl(
+      item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl || extractYoutubeUrl(`${item.description || ""} ${item.description_fr || ""}`)
+    ),
   }));
 }
 
@@ -143,6 +160,10 @@ export async function fetchEvent(id: string) {
     time: item.time || null,
     imageUrl: item.image_url || null,
     capacity: item.capacity || null,
+    recapUrl: pickOptionalUrl(item.recap_url || item.recapUrl || item.summary_url || item.summaryUrl),
+    youtubeUrl: pickOptionalUrl(
+      item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl || extractYoutubeUrl(`${item.description || ""} ${item.description_fr || ""}`)
+    ),
   };
 }
 
@@ -218,6 +239,9 @@ export async function fetchOpportunities(limit = 100) {
     content_fr: item.content_fr || null,
     cover_url: item.cover_url || null,
     created_at: item.created_at || "",
+    deadline: item.deadline || item.end_date || item.closes_at || item.expiry_date || null,
+    status: item.status || null,
+    published: item.published == null ? true : Boolean(Number(item.published)),
   }));
 }
 
@@ -249,7 +273,7 @@ export async function fetchProjects(limit = 100) {
   const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[] }>("list", {
     resource: "projects",
     limit,
-    search: "status=active",
+    filter: "status=active",
   });
 
   const rows = result.rows ?? result.data ?? [];
@@ -257,12 +281,18 @@ export async function fetchProjects(limit = 100) {
     id: String(item.id),
     slug: item.slug || String(item.id),
     title: item.title || "",
-    category: item.category || "General",
-    description: item.description || "",
-    featured_image: item.featured_image || null,
+    category: item.category || item.type || "",
+    description: item.description || item.excerpt || "",
+    featured_image: item.featured_image || item.image_url || item.logo_url || null,
     repository_url: item.repository_url || null,
     live_url: item.live_url || null,
     created_at: item.created_at || "",
+    tags: Array.isArray(item.tags)
+      ? item.tags.map(String).filter(Boolean)
+      : String(item.tags || item.keywords || "")
+          .split(/[,|;]/)
+          .map((tag: string) => tag.trim())
+          .filter(Boolean),
   }));
 }
 

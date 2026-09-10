@@ -73,7 +73,7 @@ const ChainLogo = ({
     <img
       src={url}
       alt=""
-      className={cn("h-12 w-12 object-contain drop-shadow-md md:h-14 md:w-14", className)}
+      className={cn("h-12 w-12 object-contain md:h-14 md:w-14", className)}
       loading="lazy"
       onError={() => setFailed(true)}
     />
@@ -131,14 +131,14 @@ const BlockchainEcosystemSection = ({
           transition={{ duration: 0.55 }}
           className="mx-auto mb-12 max-w-3xl text-center md:mb-14"
         >
-          <p className="mb-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#12B1A6]">
+          <p className="typo-label mb-3 font-display text-[#12B1A6]">
             {ui.sectionKicker}
           </p>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white md:text-4xl lg:text-5xl">
+          <h2 className="typo-section-title font-display text-slate-900 dark:text-white">
             {ui.sectionTitle}
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">{intro}</p>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{ui.hint}</p>
+          <p className="typo-lead mt-4 text-slate-600 dark:text-slate-300">{intro}</p>
+          <p className="typo-support mt-2 text-slate-500 dark:text-slate-400">{ui.hint}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -157,9 +157,9 @@ const BlockchainEcosystemSection = ({
                 whileTap={{ scale: 0.98 }}
                 onClick={() => openChain(id)}
                 className={cn(
-                  "group relative flex flex-col items-stretch rounded-2xl border p-5 text-left transition-[box-shadow,border-color] duration-300",
-                  "border-slate-200/90 bg-white shadow-md hover:border-[#ffb800]/45 hover:shadow-lg hover:shadow-slate-200/80",
-                  "dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[0_16px_48px_rgba(0,0,0,0.35)] dark:backdrop-blur-md dark:hover:border-[#ffb800]/40 dark:hover:shadow-[0_20px_56px_rgba(255,184,0,0.12)]",
+                  "group relative flex flex-col items-stretch rounded-2xl border p-5 text-left transition-colors duration-300",
+                  "border-slate-200/90 bg-white hover:border-[#ffb800]/45",
+                  "dark:border-white/10 dark:bg-slate-900/60 dark:hover:border-[#ffb800]/40",
                   selected && "border-[#ffb800] ring-2 ring-[#ffb800]/40 dark:ring-[#ffb800]/50"
                 )}
               >
@@ -176,7 +176,7 @@ const BlockchainEcosystemSection = ({
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Ouvrir le site de ${chain.name} dans un nouvel onglet`}
-                    className="absolute right-4 top-4 z-10 rounded-full bg-white/70 p-2 text-slate-900 shadow-sm ring-1 ring-slate-200/60 backdrop-blur transition hover:scale-105 dark:bg-slate-950/60 dark:text-white dark:ring-white/10"
+                    className="absolute right-4 top-4 z-10 rounded-full bg-white/70 p-2 text-slate-900 ring-1 ring-slate-200/60 backdrop-blur transition hover:scale-105 dark:bg-slate-950/60 dark:text-white dark:ring-white/10"
                   >
                     <ExternalLink className="h-4 w-4" />
                   </a>
@@ -204,7 +204,7 @@ const BlockchainEcosystemSection = ({
         <SheetContent
           side={isDesktop ? "right" : "bottom"}
           className={cn(
-            "flex w-full flex-col border-white/10 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-0 text-slate-100 shadow-2xl",
+            "flex w-full flex-col border-white/10 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-0 text-slate-100",
             isDesktop ? "max-w-full sm:max-w-lg lg:max-w-xl" : "max-h-[90vh] rounded-t-3xl"
           )}
         >
@@ -255,7 +255,7 @@ const BlockchainEcosystemSection = ({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 * i }}
-                        className="rounded-xl border border-white/10 bg-slate-900/50 p-4 shadow-inner"
+                        className="rounded-xl border border-white/10 bg-slate-900/50 p-4"
                       >
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ffb800]/10 ring-1 ring-[#ffb800]/25">

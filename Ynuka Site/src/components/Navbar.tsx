@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,24 +6,6 @@ import {
   X,
   CaretDown,
   EnvelopeSimple,
-  type IconProps,
-  House,
-  Info,
-  Briefcase,
-  Users,
-  Handshake,
-  IdentificationCard,
-  ChartBar,
-  Cube,
-  CheckSquare,
-  CalendarBlank,
-  ClipboardText,
-  Compass,
-  Newspaper,
-  FileText,
-  GearSix,
-  Images,
-  Lightbulb,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -39,30 +21,120 @@ interface NavGroup {
 }
 
 type NavEntry = NavGroup | { key: string; path: string };
-type PhosphorIcon = React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
 
-const NAV_ICONS: Record<string, PhosphorIcon> = {
-  home: House,
-  presentation: Info,
-  services: Briefcase,
-  team: Users,
-  partners: Handshake,
-  contact: IdentificationCard,
-  projects: ChartBar,
-  blockchains: Cube,
-  validators: CheckSquare,
-  events: CalendarBlank,
-  joinOurCommunity: Compass,
-  opportunities: Briefcase,
-  blog: Newspaper,
-  documentation: FileText,
-  tools: GearSix,
-  gallery: Images,
-};
-
-/** Palette : liens menu en noir (clair) / clair (sombre), jaune charte */
 const GOLD = "#ffb800";
 const EMAIL = "contact@ynukalabs.com";
+const DROPDOWN_VIEWPORT_PAD = 16;
+
+const keepDropdownInViewport = (el: HTMLElement, preferAlignEnd: boolean) => {
+  const parent = el.offsetParent as HTMLElement | null;
+  if (!parent) return;
+
+  const vw = document.documentElement.clientWidth;
+  const parentRect = parent.getBoundingClientRect();
+  const maxWidth = Math.max(180, vw - DROPDOWN_VIEWPORT_PAD * 2);
+  el.style.maxWidth = `${maxWidth}px`;
+
+  const width = Math.min(el.offsetWidth, maxWidth);
+  let left = preferAlignEnd ? parentRect.width - width : 0;
+  const minLeft = DROPDOWN_VIEWPORT_PAD - parentRect.left;
+  const maxLeft = vw - DROPDOWN_VIEWPORT_PAD - width - parentRect.left;
+  if (maxLeft >= minLeft) {
+    left = Math.min(Math.max(left, minLeft), maxLeft);
+  } else {
+    left = minLeft;
+  }
+
+  el.style.left = `${Math.round(left)}px`;
+  el.style.right = "auto";
+};
+
+const NavDropdownPanel = ({
+  items,
+  preferAlignEnd,
+  isActive,
+  t,
+}: {
+  items: NavGroup["items"];
+  preferAlignEnd: boolean;
+  isActive: (path: string) => boolean;
+  t: (key: string) => string;
+}) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const useGrid = items.length > 3;
+
+  useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+
+    const place = () => keepDropdownInViewport(el, preferAlignEnd);
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [items, preferAlignEnd]);
+
+  const itemClass = (path: string) =>
+    cn(
+      "flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors text-left leading-snug whitespace-nowrap",
+      isActive(path)
+        ? "bg-[#ffb800]/12 text-[#ffb800]"
+        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+    );
+
+  if (!useGrid) {
+    return (
+      <div
+        ref={panelRef}
+        className={cn(
+          "absolute top-full z-50 mt-3 w-max min-w-[13.5rem] rounded-2xl border border-border bg-popover py-1.5",
+          preferAlignEnd ? "right-0 left-auto origin-top-right" : "left-0 origin-top-left"
+        )}
+      >
+        {items.map((sub) => (
+          <Link key={sub.path} to={sub.path} className={cn(itemClass(sub.path), "mx-1")}>
+            {t(`nav.${sub.key}`)}
+          </Link>
+        ))}
+      </div>
+    );
+  }
+
+  const columnsCount = 2;
+  const perCol = Math.ceil(items.length / columnsCount);
+  const cols = Array.from({ length: columnsCount }, (_, i) =>
+    items.slice(i * perCol, (i + 1) * perCol)
+  ).filter((c) => c.length > 0);
+
+  return (
+    <div
+      ref={panelRef}
+      className={cn(
+        "absolute top-full z-50 mt-3 w-max max-w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-1.5",
+        preferAlignEnd ? "right-0 left-auto origin-top-right" : "left-0 origin-top-left"
+      )}
+    >
+      <div className="grid grid-cols-2 gap-x-1">
+        {cols.map((col, colIdx) => (
+          <div
+            key={colIdx}
+            className={cn(
+              "min-w-[8.75rem]",
+              colIdx === 0 && cols.length > 1 ? "border-r border-border/30 pr-1" : "pl-1"
+            )}
+          >
+            <div className="flex flex-col gap-0.5">
+              {col.map((sub) => (
+                <Link key={sub.path} to={sub.path} className={itemClass(sub.path)}>
+                  {t(`nav.${sub.key}`)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -347,7 +419,7 @@ const Navbar = () => {
 
   /* Liens menu : inactifs en noir, actifs en or Ynuka */
   const linkBase =
-    "px-4 py-2.5 text-base font-bold rounded-xl transition-colors whitespace-nowrap md:px-5 md:py-3 md:text-[1.0625rem]";
+    "px-4 py-2.5 text-base font-bold rounded-xl transition-colors whitespace-nowrap lg:px-5 lg:py-3 lg:text-[1.0625rem]";
   const linkActive = "text-[#ffb800] bg-[#ffb800]/12";
   const linkIdle =
     "text-neutral-950 hover:bg-black/[0.06] hover:text-black dark:text-neutral-100 dark:hover:bg-white/10 dark:hover:text-white";
@@ -360,7 +432,7 @@ const Navbar = () => {
           href={href}
           {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           className={cn(
-            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full shadow-sm ring-1 ring-black/10 transition-transform hover:scale-105 hover:ring-black/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffb800] dark:ring-white/15 dark:hover:ring-white/30 sm:h-8 sm:w-8",
+            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-1 ring-black/10 transition-transform hover:scale-105 hover:ring-black/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffb800] dark:ring-white/15 dark:hover:ring-white/30 sm:h-8 sm:w-8",
             iconClassName
           )}
           aria-label={ariaLabel}
@@ -373,31 +445,19 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full shrink-0 isolate">
-      {/*
-        Bandeau : mail à gauche dans la case jaune | icônes à droite, puis extension jaune | fond.
-      */}
-      <div className="flex w-full flex-col border-b border-border/50">
-        <div className="flex w-full min-w-0 flex-row items-stretch">
-          <div
-            className="flex min-h-[46px] min-w-0 flex-1 items-center justify-start px-4 py-2.5 sm:w-1/2 sm:flex-none md:min-h-[52px] md:py-0 md:pl-5 lg:min-h-[56px] lg:pl-8"
-            style={{ backgroundColor: GOLD }}
+      {/* Bandeau or — même jaune que le CTA home « Découvrir Ynuka Labs » */}
+      <div className="flex w-full flex-col">
+        <div className="flex w-full min-h-[46px] min-w-0 flex-row items-center justify-between gap-3 bg-[#ffb800] px-4 py-2.5 text-[#111111] md:min-h-[52px] md:py-0 md:pl-5 md:pr-5 lg:min-h-[56px] lg:pl-8 lg:pr-10">
+          <a
+            href={`mailto:${EMAIL}`}
+            className="inline-flex min-w-0 max-w-full items-center gap-2 text-xs font-bold text-[#111111] underline-offset-2 hover:underline sm:text-sm md:text-[0.95rem]"
           >
-            <a
-              href={`mailto:${EMAIL}`}
-              className="inline-flex min-w-0 max-w-full items-center gap-2 text-xs font-bold text-[#111111] underline-offset-2 hover:underline sm:text-sm md:text-[0.95rem]"
-            >
-              <EnvelopeSimple className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" weight="duotone" />
-              <span className="truncate sm:whitespace-normal sm:break-all">{EMAIL}</span>
-            </a>
-          </div>
-          <div className="flex min-h-[46px] min-w-0 flex-1 items-center justify-end bg-background px-4 py-2.5 sm:w-1/2 sm:flex-none md:min-h-[52px] md:py-0 md:pr-5 lg:min-h-[56px] lg:pr-10">
-            <TopBarSocialIcons />
-          </div>
+            <EnvelopeSimple className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" weight="duotone" />
+            <span className="truncate sm:whitespace-normal sm:break-all">{EMAIL}</span>
+          </a>
+          <TopBarSocialIcons />
         </div>
-        <div className="flex w-full flex-row" aria-hidden>
-          <div className="h-5 w-1/2 shrink-0 sm:h-7 md:h-9 lg:h-10" style={{ backgroundColor: GOLD }} />
-          <div className="h-5 w-1/2 shrink-0 bg-background sm:h-7 md:h-9 lg:h-10" />
-        </div>
+        <div className="h-5 w-full shrink-0 bg-[#ffb800] sm:h-7 md:h-9 lg:h-10" aria-hidden />
       </div>
 
       <div
@@ -410,7 +470,6 @@ const Navbar = () => {
         <nav
           className={cn(
             "flex w-full min-h-[3.25rem] items-center gap-2 rounded-2xl border border-slate-200/90 bg-white py-2.5 pl-4 pr-3",
-            "shadow-[0_4px_6px_-1px_rgba(5,46,70,0.06),0_20px_50px_-12px_rgba(5,46,70,0.18)]",
             "dark:border-slate-600 dark:bg-slate-900 md:min-h-[3.5rem] md:gap-3 md:rounded-[1.125rem] md:py-3 md:pl-6 md:pr-5 lg:gap-4 lg:min-h-[3.75rem] lg:rounded-[1.25rem] lg:py-3.5 lg:pl-8 lg:pr-6"
           )}
         >
@@ -421,8 +480,8 @@ const Navbar = () => {
             </span>
           </Link>
 
-          <div className="hidden flex-1 items-center justify-center gap-1 lg:flex lg:gap-2">
-            {navGroups.map((item) =>
+          <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-visible lg:flex lg:gap-2">
+            {navGroups.map((item, index) =>
               isGroup(item) ? (
                 <div
                   key={item.label}
@@ -442,79 +501,16 @@ const Navbar = () => {
                     />
                   </button>
                   {openDropdown === item.label && (
-                    (() => {
-                      const dropdownIsGrid = item.items.length > 3;
-                      if (!dropdownIsGrid) {
-                        return (
-                          <div className="absolute left-0 top-full z-50 mt-3 min-w-[260px] rounded-2xl border border-border bg-popover py-2 shadow-2xl">
-                            {item.items.map((sub) => {
-                              const Icon = NAV_ICONS[sub.key] || Lightbulb;
-                              return (
-                                <Link
-                                  key={sub.path}
-                                  to={sub.path}
-                                  className={cn(
-                                    "group flex items-center gap-3 px-5 py-3.5 text-base font-bold transition-colors whitespace-nowrap",
-                                    isActive(sub.path)
-                                      ? "bg-[#ffb800]/12 text-[#ffb800]"
-                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                  )}
-                                >
-                                  <Icon
-                                    weight="duotone"
-                                    size={20}
-                                    className="transition-transform duration-200 group-hover:scale-105 group-hover:text-amber-500"
-                                  />
-                                  {t(`nav.${sub.key}`)}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        );
+                    <NavDropdownPanel
+                      items={item.items}
+                      preferAlignEnd={
+                        navGroups.slice(index + 1).every((entry) => !isGroup(entry)) ||
+                        item.label.toLowerCase().includes("resource") ||
+                        item.label.toLowerCase().includes("ressource")
                       }
-
-                      // Grid layout for larger menus: split items into up to 2 columns
-                      const columnsCount = 2; // Changé de 3 à 2
-                      const perCol = Math.ceil(item.items.length / columnsCount);
-                      const cols = Array.from({ length: columnsCount }, (_, i) =>
-                        item.items.slice(i * perCol, (i + 1) * perCol)
-                      ).filter((c) => c.length > 0);
-
-                      return (
-                        <div className="absolute left-0 top-full z-50 mt-3 rounded-2xl border border-border bg-popover shadow-2xl min-w-[480px] px-2 py-4 sm:px-3 sm:py-6">
-                          <div className="grid grid-cols-2 gap-x-0 min-w-0">
-                            {cols.map((col, colIdx) => (
-                              <div key={colIdx} className={cn("min-w-0 w-[170px]", colIdx === 0 ? "pr-1 border-r border-border/30" : "pl-1")}> {/* Ajustement de la bordure */}
-                                <div className="space-y-3 leading-snug"> {/* Réduction de l'espacement vertical et interligne */}
-                                  {col.map((sub) => {
-                                    const Icon = NAV_ICONS[sub.key] || Lightbulb;
-                                    return (
-                                      <Link
-                                        key={sub.path}
-                                        to={sub.path}
-                                        className={cn(
-                                          "group flex items-center gap-3 px-4 py-3 text-base font-semibold transition-colors text-left rounded-lg",
-                                          isActive(sub.path)
-                                            ? "bg-[#ffb800]/12 text-[#ffb800]"
-                                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                        )}
-                                      >
-                                        <Icon
-                                          weight="duotone"
-                                          size={20}
-                                          className="transition-transform duration-200 group-hover:scale-105 group-hover:text-amber-500"
-                                        />
-                                        {t(`nav.${sub.key}`)}
-                                      </Link>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()
+                      isActive={isActive}
+                      t={t}
+                    />
                   )}
                 </div>
               ) : (
@@ -535,7 +531,7 @@ const Navbar = () => {
               size="icon"
               className="h-11 w-11 rounded-full text-neutral-950 hover:bg-black/[0.06] hover:text-black dark:text-neutral-100 dark:hover:bg-white/10 lg:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Menu"
+              aria-label={t("common.menu")}
             >
               {mobileOpen ? <X weight="duotone" size={28} /> : <List weight="duotone" size={28} />}
             </Button>
@@ -545,7 +541,7 @@ const Navbar = () => {
 
       {/* Menu mobile */}
       {mobileOpen && (
-        <div className="absolute left-0 right-0 top-full z-40 max-h-[min(85vh,calc(100dvh-5rem))] overflow-y-auto border-b border-border bg-background/98 px-4 pb-8 pt-4 shadow-xl backdrop-blur-md lg:hidden">
+        <div className="absolute left-0 right-0 top-full z-40 max-h-[min(85vh,calc(100dvh-5rem))] overflow-y-auto border-b border-border bg-background/98 px-4 pb-8 pt-4 lg:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-1">
             {navGroups.map((item) =>
               isGroup(item) ? (
@@ -564,24 +560,18 @@ const Navbar = () => {
                   {mobileExpanded === item.label && (
                     <div className="ml-3 flex flex-col gap-1 border-l-2 border-neutral-900/20 pl-4 dark:border-white/25">
                       {item.items.map((sub) => {
-                        const Icon = NAV_ICONS[sub.key] || Lightbulb;
                         return (
                           <Link
                             key={sub.path}
                             to={sub.path}
                             onClick={() => setMobileOpen(false)}
                             className={cn(
-                              "group flex items-center gap-3 rounded-lg px-3 py-3 text-base font-bold",
+                              "rounded-lg px-3 py-3 text-base font-bold",
                               isActive(sub.path)
                                 ? "text-[#ffb800]"
                                   : "text-muted-foreground"
                             )}
                           >
-                            <Icon
-                              weight="duotone"
-                              size={20}
-                              className="transition-transform duration-200 group-hover:scale-105 group-hover:text-amber-500"
-                            />
                             {t(`nav.${sub.key}`)}
                           </Link>
                         );

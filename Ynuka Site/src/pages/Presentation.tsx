@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Calendar, Star, Zap, GraduationCap, ServerCog, Code2, FileText, ClipboardList, Leaf, Users, X, MessageCircle } from "lucide-react";
+import { ArrowRight, Calendar, Users, X, MessageCircle } from "lucide-react";
 import Container from "@/components/ui/Container";
 import { teamMembers, type TeamMember } from "@/data/teamMembers";
 import { mediaToUrl, strapiFetch } from "@/lib/strapi";
@@ -42,37 +42,31 @@ const Presentation = () => {
     {
       title: t("about.service1Title"),
       description: t("about.service1Desc"),
-      icon: <GraduationCap className="w-8 h-8" />,
       color: "#0f6be8",
     },
     {
       title: t("about.service2Title"),
       description: t("about.service2Desc"),
-      icon: <ServerCog className="w-8 h-8" />,
       color: "#ffb800",
     },
     {
       title: t("about.service3Title"),
       description: t("about.service3Desc"),
-      icon: <Code2 className="w-8 h-8" />,
       color: "#22c55e",
     },
     {
       title: t("about.service4Title"),
       description: t("about.service4Desc"),
-      icon: <FileText className="w-8 h-8" />,
       color: "#60a5fa",
     },
     {
       title: t("about.service5Title"),
       description: t("about.service5Desc"),
-      icon: <ClipboardList className="w-8 h-8" />,
       color: "#a78bfa",
     },
     {
       title: t("about.service6Title"),
       description: t("about.service6Desc"),
-      icon: <Leaf className="w-8 h-8" />,
       color: "#34d399",
     },
   ], [t]);
@@ -287,16 +281,15 @@ const Presentation = () => {
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="space-y-4 sm:space-y-6"
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-100">
-                  <Star className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-blue-300" />
+                <div className="inline-flex items-center rounded-full border border-blue-400/20 bg-blue-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-100">
                   <span className="whitespace-nowrap">{t("about.heroBadge")}</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl md:text-[42px] font-bold leading-tight text-white">
+                <h1 className="typo-page-title font-bold text-white">
                   {t("about.heroTitle")} <span className="text-blue-400">{t("about.heroTitleHighlight")}</span>
                 </h1>
 
-                <p className="text-sm sm:text-base md:text-lg leading-relaxed text-blue-50/90 max-w-xl text-justify">
+                <p className="typo-lead max-w-xl text-justify text-blue-50/90">
                   {t("about.heroDesc")}
                 </p>
 
@@ -309,12 +302,11 @@ const Presentation = () => {
                       color: "#111111",
                     }}
                   >
-                    <Zap className="w-4 sm:w-5 h-4 sm:h-5 inline" />
-                    <span className="hidden sm:inline ml-1">{t("about.joinCommunity")}</span>
+                    <span className="hidden sm:inline">{t("about.joinCommunity")}</span>
                     <span className="inline sm:hidden">{t("about.joinCommunity").split(" ")[0]}</span>
                     <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 inline ml-1" />
                   </a>
-                  <a href="/events" className="btn-secondary rounded-2xl w-full sm:w-auto text-center text-sm sm:text-base shadow-md shadow-black/20">
+                  <a href="/events" className="btn-secondary rounded-2xl w-full sm:w-auto text-center text-sm sm:text-base">
                     <Calendar className="w-4 sm:w-5 h-4 sm:h-5 inline" />
                     <span className="hidden sm:inline ml-1">{t("about.viewEvents")}</span>
                     <span className="inline sm:hidden">{t("about.viewEvents").split(" ")[0]}</span>
@@ -331,7 +323,7 @@ const Presentation = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="hidden sm:block absolute left-0 top-0 w-32 sm:w-40 md:w-48 lg:w-[320px] h-40 sm:h-52 md:h-64 lg:h-[360px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="hidden sm:block absolute left-0 top-0 w-32 sm:w-40 md:w-48 lg:w-[320px] h-40 sm:h-52 md:h-64 lg:h-[360px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5"
                 >
                   <img
                     src={heroLeft?.image ?? FALLBACK_ABOUT_HERO_BG}
@@ -346,7 +338,7 @@ const Presentation = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="absolute left-1/2 transform -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:left-[45%] md:left-[50%] lg:left-[230px] top-1/2 sm:top-auto sm:top-[60%] md:top-[65%] lg:top-[300px] -translate-y-1/2 sm:translate-y-0 w-28 sm:w-36 md:w-44 lg:w-[300px] h-28 sm:h-36 md:h-44 lg:h-[200px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="absolute left-1/2 transform -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:left-[45%] md:left-[50%] lg:left-[230px] top-1/2 sm:top-auto sm:top-[60%] md:top-[65%] lg:top-[300px] -translate-y-1/2 sm:translate-y-0 w-28 sm:w-36 md:w-44 lg:w-[300px] h-28 sm:h-36 md:h-44 lg:h-[200px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-white/5"
                 >
                   <img
                     src={heroRight?.image ?? FALLBACK_ABOUT_HERO_BG}
@@ -405,7 +397,7 @@ const Presentation = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-lg"
+                className="rounded-2xl border border-white/10 bg-slate-900/40 p-6"
               >
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#ffb800]/15 text-[#ffb800] text-lg font-bold">
                   {index + 1}
@@ -419,7 +411,7 @@ const Presentation = () => {
           <div className="mt-10 text-center">
             <a
               href="/contact?subject=Rejoindre%20la%20prochaine%20session"
-              className="inline-flex items-center justify-center rounded-2xl bg-[#ffb800] px-6 py-3 text-base font-semibold text-[#111111] shadow-lg shadow-[#ffb800]/20 transition hover:brightness-110"
+              className="inline-flex items-center justify-center rounded-2xl bg-[#ffb800] px-6 py-3 text-base font-semibold text-[#111111] transition hover:brightness-110"
             >
               Rejoindre la prochaine session <ArrowRight className="ml-2 h-4 w-4" />
             </a>
@@ -529,7 +521,6 @@ const Presentation = () => {
             </button>
 
             <div className="service-popup-header">
-              <span className="service-popup-icon">{selectedService.icon}</span>
               <h3 id="service-popup-title" className="service-popup-title">
                 {selectedService.title}
               </h3>

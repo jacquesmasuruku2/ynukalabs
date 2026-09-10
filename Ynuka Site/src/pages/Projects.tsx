@@ -93,7 +93,7 @@ const Projects = () => {
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-[#ffb800]">
               Découvrez nos Projets
             </h1>
-            <p className="text-white/90 max-w-2xl mx-auto text-lg font-bold">
+            <p className="typo-lead mx-auto max-w-2xl text-white/90">
               Des solutions Web3 innovantes, des projets environnementaux, hackathons et
               programmes d'education construits et incubes par Ynuka Labs.
             </p>
@@ -112,7 +112,7 @@ const Projects = () => {
                   onClick={() => setActiveCategory(category)}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                     activeCategory === category
-                      ? "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(23,52,168,0.25)]"
+                      ? "bg-primary text-primary-foreground"
                       : "border border-border bg-background text-foreground hover:border-primary/40 hover:text-primary"
                   }`}
                 >
@@ -128,7 +128,7 @@ const Projects = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher intelligemment (nom, categorie, mots-cles...)"
-                className="w-full rounded-2xl border border-border/80 bg-background py-3 pl-11 pr-4 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full rounded-2xl border border-border/80 bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </div>
@@ -143,7 +143,7 @@ const Projects = () => {
                 id={project.slug}
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: i * 0.06 }}
-                className="group flex min-h-[220px] flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e4a7e] via-[#173a62] to-[#0f2847] p-4 text-white shadow-2xl ring-1 ring-[#3b82f6]/35 md:min-h-[245px] md:p-4"
+                className="group flex min-h-[220px] flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-[#1e4a7e] via-[#173a62] to-[#0f2847] p-4 text-white ring-1 ring-[#3b82f6]/35 md:min-h-[245px] md:p-4"
               >
                 <div className="flex h-full flex-col">
                   <div>

@@ -102,7 +102,7 @@ const Gallery = () => {
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
               <span className="gradient-text">{t("resources.galleryTitle")}</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-muted-foreground md:text-base leading-relaxed">
+            <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">
               {t("resources.gallerySubtitle")}
             </p>
           </motion.div>
