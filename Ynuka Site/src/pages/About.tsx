@@ -1,18 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import {
   ArrowRight,
+  ArrowUpRight,
+  ChevronDown,
   Users,
   Calendar,
   Send,
   Link,
   Share2,
 } from "lucide-react";
-import ModernButton from "@/components/ui/ModernButton";
-import ModernCard from "@/components/ui/ModernCard";
-import ModernSectionWrapper from "@/components/ui/ModernSectionWrapper";
 import Container from "@/components/ui/Container";
 import "@/styles/AboutDesign.css";
 import { teamMembers, type TeamMember } from "@/data/teamMembers";
@@ -29,52 +28,50 @@ function teamMembersWithValidImages(members: TeamMember[]): TeamMember[] {
   );
 }
 
-const About = () => {
-  const { t } = useTranslation();
-  const location = useLocation();
+function classifyTeamDepts(role: string) {
+  const r = role.toLowerCase();
+  const depts: Array<"administration" | "developers" | "trainers" | "members"> = [];
+  if (/leader|marketing|logistic|communication|design|media|manager|admin|\bit\b/.test(r)) {
+    depts.push("administration");
+  }
+  if (/developer|software|writter|writer/.test(r)) {
+    depts.push("developers");
+  }
+  if (/trainer|formateur/.test(r)) {
+    depts.push("trainers");
+  }
+  if (/advicer|advisor/.test(r) && !depts.includes("trainers") && !depts.includes("administration")) {
+    depts.push("administration");
+  }
+  if (depts.length === 0) {
+    depts.push("members");
+  }
+  return depts;
+}
 
-  const objectives = [
-    {
-      title: "Onboarding & Éducation Web3",
-      description:
-        "Initier et certifier au moins 500 jeunes par an aux technologies de la Blockchain et du Web3, en leur fournissant les compétences techniques nécessaires.",
-      icon: "",
-    },
-    {
-      title: "Innovation Environnementale",
-      description:
-        "Digitaliser la reforestation à travers le projet Mtidano, en utilisant les NFTs pour tracer, financer et garantir la survie d'arbres plantés.",
-      icon: "",
-    },
-    {
-      title: "Pionnier du Développement Durable",
-      description:
-        "Développer des fermes pilotes utilisant des méthodes d'agriculture durable et maraîchère pour accroître la production locale.",
-      icon: "",
-    },
-    {
-      title: "Infrastructure & Décentralisation",
-      description:
-        "Opérer des nœuds validateurs robustes sur les réseaux Cardano, Apex Fusion et Safrochain pour la gouvernance blockchain.",
-      icon: "",
-    },
-  ];
+const About = () => {
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const [activeInterv, setActiveInterv] = useState(0);
+  const [activeTeamDept, setActiveTeamDept] = useState<
+    "all" | "administration" | "developers" | "trainers" | "members"
+  >("members");
 
   const [team, setTeam] = useState<TeamMember[]>(teamMembers);
 
   type AboutPartner = { name: string; logo: string; url: string };
   const hardcodedAboutPartners: AboutPartner[] = [
-    { name: "Apex Fusion", logo: "/partners/apex.png", url: "https://apexfusion.com/" },
     { name: "Wada", logo: "/partners/wada.jpg", url: "https://wada.org/" },
     { name: "Catalyst", logo: "/partners/Catalyst.jpg", url: "https://projectcatalyst.io/" },
     { name: "Ekival", logo: "/partners/Ekival.png", url: "https://ekival.com/" },
     { name: "ISDR-GL", logo: "/partners/partner1.png", url: "https://isdrgl.com" },
+    { name: "Gender Chain", logo: "/partners/genderchain.png", url: "https://www.linkedin.com/company/genderchain" },
+    { name: "Coxygen Global", logo: "/partners/coxygen-global.png", url: "https://coxygen.global" },
+    { name: "Safrochain", logo: "/partners/safrochain.png", url: "https://safrochain.com/" },
   ];
   const [partnersList, setPartnersList] = useState<AboutPartner[]>(hardcodedAboutPartners);
 
   const [selectedServiceIndex, setSelectedServiceIndex] = useState<number | null>(null);
-  const popupCloseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const lastTriggerButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const heroTeamMembers = useMemo(() => teamMembersWithValidImages(team), [team]);
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
@@ -103,11 +100,8 @@ const About = () => {
       : heroCount === 1
         ? heroTeamMembers[0]
         : null;
-  const missionVisuals = useMemo(() => {
-    const fallback = Array.from({ length: 4 }, () => FALLBACK_ABOUT_HERO_BG);
-    const picked = heroTeamMembers.slice(0, 4).map((m) => m.image || FALLBACK_ABOUT_HERO_BG);
-    return [...picked, ...fallback].slice(0, 4);
-  }, [heroTeamMembers]);
+  const missionImage = "/onboarding/onboarding-2.jpg";
+  const visionImage = "/assets-about/vision-computer.jpg";
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -188,196 +182,72 @@ const About = () => {
     const targetTop = target.getBoundingClientRect().top + window.scrollY - navbarOffset;
     window.scrollTo({ top: targetTop, behavior: "smooth" });
   }, [location.hash]);
-  const interventionDomains = [
-    {
-      title: "Education",
-      description:
-        "Programmes d'apprentissage, coaching et accompagnement pour développer les competences pratiques des jeunes et professionnels.",
-      color: "#0f6be8",
-    },
-    {
-      title: "Nouvelles Technologies",
-      description:
-        "Blockchain, Web3, developpement logiciel et solutions numeriques pour accelerer l'innovation locale et regionale.",
-      color: "#60a5fa",
-    },
-    {
-      title: "Environnement",
-      description:
-        "Actions technologiques et communautaires en faveur de la durabilite, de l'agriculture responsable et de la resilience ecologique.",
-      color: "#34d399",
-    },
-  ];
+  const interventionDomains = useMemo(() => {
+    const asPoints = (key: string) => {
+      const points = t(key, { returnObjects: true });
+      return Array.isArray(points) ? (points as string[]) : [];
+    };
+    return [
+      {
+        title: t("about.interv1Title"),
+        description: t("about.interv1Desc"),
+        points: asPoints("about.interv1Points"),
+      },
+      {
+        title: t("about.interv2Title"),
+        description: t("about.interv2Desc"),
+        points: asPoints("about.interv2Points"),
+      },
+      {
+        title: t("about.interv3Title"),
+        description: t("about.interv3Desc"),
+        points: asPoints("about.interv3Points"),
+      },
+      {
+        title: t("about.interv4Title"),
+        description: t("about.interv4Desc"),
+        points: asPoints("about.interv4Points"),
+      },
+    ];
+  }, [t, i18n.language]);
 
-  const services = [
-    {
-      title: "Formation sur les nouvelles technologies",
-      description:
-        "Programmes pratiques et sessions intensives sur Web3, blockchain, outils numériques, IA et compétences digitales adaptées aux besoins locaux.",
-      color: "#0f6be8",
-    },
-    {
-      title: "Opérateur de stake pools",
-      description:
-        "Exploitation et maintenance de nœuds validateurs et stake pools avec supervision continue, bonnes pratiques de sécurité et performance réseau.",
-      color: "#ffb800",
-    },
-    {
-      title: "Developpement des solutions Web2 et Web3",
-      description:
-        "Conception de solutions digitales complètes : applications web, plateformes métiers, intégration blockchain et développement de contrats intelligents.",
-      color: "#22c55e",
-    },
-    {
-      title: "Services de secrétariat",
-      description:
-        "Services professionnels de bureau : impressions, saisie, scan, photocopie de documents, mise en page, préparation de dossiers et archivage.",
-      color: "#60a5fa",
-    },
-    {
-      title: "Conception et planification des projets",
-      description:
-        "Accompagnement stratégique pour transformer une idée en projet exécutable : cadrage, planification, budget, feuille de route et suivi d'impact.",
-      color: "#a78bfa",
-    },
-    {
-      title: "Innovation verte et agriculture durable",
-      description:
-        "Intégration de solutions technologiques au service de l'agriculture durable pour renforcer la productivité locale et la résilience communautaire.",
-      color: "#34d399",
-    },
-  ];
+  const services = useMemo(() => {
+    return [1, 2, 3, 4, 5, 6].map((n) => {
+      const points = [1, 2, 3, 4]
+        .map((p) => t(`about.service${n}Point${p}`))
+        .filter((point) => point && !point.startsWith("about."));
+      return {
+        title: t(`about.service${n}Title`),
+        description: t(`about.service${n}Desc`),
+        intro: t(`about.service${n}Intro`),
+        points,
+      };
+    });
+  }, [t, i18n.language]);
 
-  const serviceDetails = [
-    {
-      intro:
-        "Un parcours progressif pour aider les apprenants a passer de zero a une pratique autonome des outils technologiques.",
-      points: [
-        "Bootcamps de 4 a 8 semaines avec exercices hebdomadaires",
-        "Parcours Web3, IA, no-code et outils de productivite numerique",
-        "Coaching individuel pour portfolio et orientation professionnelle",
-        "Evaluation finale avec mini-projet concret",
-      ],
-    },
-    {
-      intro:
-        "Une exploitation fiable des infrastructures blockchain pour les projets qui recherchent stabilite et disponibilite.",
-      points: [
-        "Mise en place de nœuds validateurs et monitoring en temps reel",
-        "Configuration de la securite reseau et alertes automatiques",
-        "Rapports de performance mensuels avec indicateurs cles",
-        "Maintenance preventive et support technique continu",
-      ],
-    },
-    {
-      intro:
-        "Des produits digitaux sur mesure, de la conception a la mise en production avec accompagnement de l'equipe cliente.",
-      points: [
-        "Applications web et tableaux de bord metiers",
-        "Integration d'API, authentification et paiements",
-        "Developpement de smart contracts et interfaces Web3",
-        "Documentation technique et transfert de competences",
-      ],
-    },
-    {
-      intro:
-        "Un service administratif modernise pour gagner du temps et fiabiliser les flux documentaires.",
-      points: [
-        "Saisie, impression et mise en forme de documents officiels",
-        "Numerisation, scan et classement digital des archives",
-        "Preparation de dossiers administratifs complets",
-        "Assistance ponctuelle ou abonnement de support bureau",
-      ],
-    },
-    {
-      intro:
-        "Une methodologie pratique pour transformer une idee en plan d'action realiste et executable.",
-      points: [
-        "Etude des besoins et cadrage du projet",
-        "Planification par phases, budget et jalons",
-        "Suivi des risques et strategie d'attenuation",
-        "Pilotage avec tableaux de bord de progression",
-      ],
-    },
-    {
-      intro:
-        "Un appui terrain pour des initiatives vertes qui combinent impact social, environnemental et innovation numerique.",
-      points: [
-        "Conception d'initiatives d'agriculture durable locale",
-        "Utilisation d'outils numeriques pour le suivi des cultures",
-        "Formation des equipes communautaires aux bonnes pratiques",
-        "Mesure d'impact environnemental et social simplifiee",
-      ],
-    },
-  ];
-
-  const selectedService =
-    selectedServiceIndex !== null
-      ? {
-          ...services[selectedServiceIndex],
-          details: serviceDetails[selectedServiceIndex],
-        }
-      : null;
-
-  const openServiceDetails = (serviceIndex: number, triggerButton?: HTMLButtonElement | null) => {
-    if (triggerButton) {
-      lastTriggerButtonRef.current = triggerButton;
-    }
-    setSelectedServiceIndex(serviceIndex);
-    document.body.style.overflow = "hidden";
+  const toggleService = (serviceIndex: number) => {
+    setSelectedServiceIndex((prev) => (prev === serviceIndex ? null : serviceIndex));
   };
 
-  const closeServiceDetails = () => {
-    setSelectedServiceIndex(null);
-    document.body.style.overflow = "";
-    window.setTimeout(() => {
-      lastTriggerButtonRef.current?.focus();
-    }, 0);
-  };
+  const teamDepartments = useMemo(
+    () => [
+      { id: "administration" as const, label: t("about.teamDeptAdmin") },
+      { id: "developers" as const, label: t("about.teamDeptDevs") },
+      { id: "trainers" as const, label: t("about.teamDeptTrainers") },
+      { id: "members" as const, label: t("about.teamDeptMembers") },
+    ],
+    [t, i18n.language]
+  );
 
-  const backToServices = () => {
-    closeServiceDetails();
-    const section = document.getElementById("services");
-    section?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedServiceIndex === null) return;
-
-    popupCloseButtonRef.current?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeServiceDetails();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [selectedServiceIndex]);
-
-  const serviceImages = [
-    "/onboarding/onboarding-1.jpg",
-    "/onboarding/onboarding-2.jpg",
-    "/onboarding/onboarding-3.jpg",
-    "/onboarding/onboarding-4.jpg",
-    "/onboarding/onboarding-5.jpg",
-    "/onboarding/onboarding-6.jpg",
-  ];
+  const displayedTeam = useMemo(() => {
+    if (activeTeamDept === "all" || activeTeamDept === "members") return team;
+    return team.filter((m) => classifyTeamDepts(m.role).includes(activeTeamDept));
+  }, [team, activeTeamDept]);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--dark-bg)" }}>
       {/* Hero Section */}
-      <section id="presentation" className="relative overflow-hidden py-8 sm:py-12 md:py-24">
+      <section id="presentation" className="relative scroll-mt-28 overflow-hidden py-8 sm:py-12 md:py-24">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/70 via-slate-950/60 to-transparent" />
           <div
@@ -474,310 +344,470 @@ const About = () => {
         </Container>
       </section>
 
-      {/* Mission Section */}
-      <section className="about-section">
-        <Container size="lg">
-          <div className="mission-vision-layout">
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              viewport={{ once: true }}
-              className="mission-vision-text"
-            >
-              <h2 className="mission-title">
-                Notre <span style={{ color: "var(--accent-logo-blue)" }}>Mission</span>
-              </h2>
-              <p className="mission-paragraph">
-                Transformer le potentiel de la jeunesse de Goma en impact reel par l'innovation
-                hybride. Nous eduquons, accompagnons et outillons les talents locaux aux
-                technologies de la Blockchain et aux pratiques de l'agriculture durable.
-              </p>
-              <h3 className="mission-subtitle">
-                Notre <span style={{ color: "var(--accent-logo-blue)" }}>Vision</span>
-              </h3>
-              <p className="mission-paragraph">
-                Faire de la RDC le premier epicentre africain de la "Blockchain for Good". Nous
-                voulons faire de Goma Hub le moteur d'une economie decentralisee, verte et
-                prospere en Afrique Centrale.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.08 }}
-              viewport={{ once: true }}
-              className="mission-visual-grid"
-            >
-              {missionVisuals.map((src, i) => (
-                <div key={`${src}-${i}`} className={`mission-visual-card mission-visual-${i + 1}`}>
-                  <img src={src} alt={`Equipe Ynuka Labs ${i + 1}`} loading="lazy" />
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </Container>
-      </section>
-
-      {/* Objectives Section */}
-      <section className="about-section">
-        <Container size="lg">
-          <div className="objectives-showcase">
-            <div className="objective-main">
-              <p className="objective-kicker">Nos objectifs</p>
-              <h2 className="objective-main-title">
-                Objectif <span style={{ color: "var(--accent-logo-blue)" }}>Principal</span>
-              </h2>
-              <p className="objective-main-description">
-                Propulser la RDC comme le premier pôle d'innovation hybride en Afrique Centrale,
-                en formant une nouvelle génération de leaders capables de transformer l'économie
-                numérique (Web3/Blockchain) et la résilience écologique (Agriculture Durable).
-              </p>
-            </div>
-
-            <div className="objectives-right">
-              <div className="objectives-grid">
-              {objectives.map((objective, i) => (
-                <div
-                  key={i}
-                  className={`objective-card ${i === 0 || i === 3 ? "objective-card--blue" : "objective-card--light"}`}
-                >
-                  <h4 className="objective-title">{objective.title}</h4>
-                  <p className="objective-description">{objective.description}</p>
-                </div>
-              ))}
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* Intervention Domains Section */}
-      <section className="about-section">
-        <Container size="lg">
-          <div className="intervention-shell">
+      {/* Notre histoire — frise gauche étirée sur la hauteur du récit */}
+      <section className="relative overflow-hidden bg-[#0f2847] py-16 text-white md:py-20" id="historique">
+        <div
+          className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-[#ffb800]/10 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -left-16 bottom-0 h-56 w-56 rounded-full bg-white/5 blur-3xl"
+          aria-hidden
+        />
+        <Container size="lg" className="relative z-10">
+          <div className="grid items-stretch gap-10 lg:grid-cols-12 lg:gap-14">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.55 }}
               viewport={{ once: true }}
-              className="intervention-header-row"
+              className="flex h-full flex-col lg:col-span-4"
             >
-              <div>
-                <p className="intervention-kicker">
-                  <span className="intervention-kicker-dark">Nos domaines</span>{" "}
-                  <span className="intervention-kicker-blue">d'interventions</span>
-                </p>
-              </div>
+              <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl lg:text-[3.15rem] lg:leading-[1.1]">
+                {t("about.historyTitle")}{" "}
+                <span className="text-[#ffb800]">{t("about.historyTitleHighlight")}</span>
+              </h2>
+
+              <ol className="mt-8 flex min-h-0 flex-1 flex-col justify-between border-l-2 border-white/25 pl-6 md:mt-10 md:pl-7">
+                {[
+                  { year: t("about.historyYear2021"), label: t("about.historyLabel2021") },
+                  { year: t("about.historyYear2022"), label: t("about.historyLabel2022") },
+                  { year: t("about.historyYearImpact"), label: t("about.historyLabelImpact") },
+                  { year: t("about.historyYear2026"), label: t("about.historyLabel2026") },
+                ].map((item) => (
+                  <li key={item.year} className="relative py-1 first:pt-0 last:pb-0">
+                    <span
+                      className="absolute -left-[1.7rem] top-2 h-3.5 w-3.5 rounded-full bg-[#ffb800] ring-[5px] ring-[#0f2847] md:-left-[1.85rem] md:top-2.5 md:h-4 md:w-4"
+                      aria-hidden
+                    />
+                    <p className="font-display text-3xl font-bold leading-none tracking-tight text-[#ffb800] md:text-4xl lg:text-[2.75rem]">
+                      {item.year}
+                    </p>
+                    <p className="mt-2 text-sm font-medium leading-snug text-white/80 md:text-base">
+                      {item.label}
+                    </p>
+                  </li>
+                ))}
+              </ol>
             </motion.div>
 
-            <div className="intervention-grid">
-              {interventionDomains.map((domain, i) => (
-                <motion.article
-                  key={i}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.08 * i }}
-                  viewport={{ once: true }}
-                  className="intervention-card"
-                >
-                  <div className="intervention-card-inner">
-                    <h3 className="intervention-card-title">{domain.title}</h3>
-                    <p className="intervention-card-description">{domain.description}</p>
-                  </div>
-                </motion.article>
-              ))}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.08 }}
+              viewport={{ once: true }}
+              className="flex h-full flex-col justify-between lg:col-span-8"
+            >
+              <div className="space-y-5 md:space-y-6">
+                <p className="text-justify text-base font-medium leading-relaxed text-white/90 md:text-lg md:leading-[1.8]">
+                  {t("about.historyP1")}
+                </p>
+                <p className="text-justify text-base leading-relaxed text-white/75 md:text-[1.05rem] md:leading-[1.8]">
+                  {t("about.historyP2")}
+                </p>
+                <p className="text-justify text-base leading-relaxed text-white/75 md:text-[1.05rem] md:leading-[1.8]">
+                  {t("about.historyP3")}
+                </p>
+              </div>
+
+              <blockquote className="mt-8 border-l-[3px] border-[#ffb800] bg-white/[0.06] px-5 py-5 md:mt-10 md:px-6 md:py-6">
+                <p className="text-justify font-display text-lg font-semibold italic leading-relaxed text-white md:text-xl md:leading-[1.7]">
+                  {t("about.historyP4")}
+                </p>
+              </blockquote>
+            </motion.div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Mission & Vision — coins opposés marine/jaune + textes italiques */}
+      <section className="about-section" id="mission-vision">
+        <Container size="lg" className="space-y-10 md:space-y-12">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="grid items-center gap-6 lg:grid-cols-12 lg:gap-10"
+          >
+            <div className="lg:col-span-6">
+              <div className="mv-frame mv-frame--mission">
+                <span className="mv-corner mv-corner--tl" aria-hidden />
+                <span className="mv-corner mv-corner--br" aria-hidden />
+                <div className="mv-frame-media">
+                  <img src={missionImage} alt="" loading="lazy" />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col justify-center lg:col-span-6">
+              <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
+                Notre <span className="text-[#ffb800]">Mission</span>
+              </h2>
+              <p className="mv-copy">{t("about.missionDesc")}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+            viewport={{ once: true }}
+            className="grid items-center gap-6 lg:grid-cols-12 lg:gap-10"
+          >
+            <div className="order-2 flex flex-col justify-center lg:order-1 lg:col-span-6">
+              <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
+                Notre <span className="text-[#ffb800]">Vision</span>
+              </h2>
+              <p className="mv-copy">{t("about.visionDesc")}</p>
+            </div>
+            <div className="order-1 lg:order-2 lg:col-span-6">
+              <div className="mv-frame mv-frame--vision">
+                <span className="mv-corner mv-corner--tr" aria-hidden />
+                <span className="mv-corner mv-corner--bl" aria-hidden />
+                <div className="mv-frame-media">
+                  <img src={visionImage} alt="" loading="lazy" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </Container>
+      </section>
+
+      {/* Domaines d'intervention — axe à gauche, sous-points à droite */}
+      <section className="about-section scroll-mt-28" id="domaines">
+        <Container size="lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+            viewport={{ once: true }}
+            className="mb-8 md:mb-10"
+          >
+            <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
+              {t("about.interventionTitle")}{" "}
+              <span className="text-[#ffb800]">{t("about.interventionTitleHighlight")}</span>
+            </h2>
+          </motion.div>
+
+          <div className="grid items-stretch gap-8 lg:grid-cols-12 lg:gap-10">
+            <div className="flex flex-col justify-center gap-2 lg:col-span-5">
+              {interventionDomains.map((domain, i) => {
+                const active = i === activeInterv;
+                return (
+                  <button
+                    key={domain.title}
+                    type="button"
+                    onClick={() => setActiveInterv(i)}
+                    className={`group relative w-full rounded-none border-l-[3px] px-4 py-3.5 text-left transition-all duration-300 md:px-5 md:py-4 ${
+                      active
+                        ? "border-[#ffb800] bg-[#0f2847] text-white"
+                        : "border-transparent bg-transparent text-[#0f2847] hover:border-[#ffb800]/50 hover:bg-[#0f2847]/[0.04] dark:text-[#dbeafe]"
+                    }`}
+                  >
+                    <span
+                      className={`mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.14em] ${
+                        active ? "text-[#ffb800]" : "text-[#0f2847]/45 dark:text-white/40"
+                      }`}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="block text-base font-bold leading-snug md:text-lg">
+                      {domain.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="relative flex h-full min-h-[280px] flex-col justify-center overflow-hidden bg-[#0f2847] px-6 py-8 text-white md:min-h-[320px] md:px-8 md:py-10">
+                <div
+                  className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-[#ffb800]/15 blur-3xl"
+                  aria-hidden
+                />
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeInterv}
+                    initial={{ opacity: 0, x: 18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ duration: 0.35 }}
+                    className="relative z-10"
+                  >
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[#ffb800]">
+                      {String(activeInterv + 1).padStart(2, "0")} — {interventionDomains[activeInterv]?.title}
+                    </p>
+                    <p className="mt-4 text-justify text-base font-medium leading-relaxed text-white/85 md:text-[1.05rem] md:leading-[1.75]">
+                      {interventionDomains[activeInterv]?.description}
+                    </p>
+                    <ul className="mt-6 space-y-3">
+                      {(interventionDomains[activeInterv]?.points ?? []).map((point, pi) => (
+                        <motion.li
+                          key={`${activeInterv}-${point}`}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.12 + pi * 0.12 }}
+                          className="flex gap-3 text-[0.95rem] font-semibold leading-snug text-white md:text-base"
+                        >
+                          <span
+                            className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#ffb800]"
+                            aria-hidden
+                          />
+                          <span>{point}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </Container>
       </section>
 
-      {/* Services Section */}
-      <section className="about-section" id="services">
+      {/* Services — liste éditoriale + détail déroulant */}
+      <section className="about-section scroll-mt-28" id="services">
         <Container size="lg">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.55 }}
             viewport={{ once: true }}
-            className="section-header"
+            className="mx-auto mb-10 max-w-3xl text-center md:mb-12"
           >
-            <h2 className="section-title">
-              Nos <span style={{ color: "var(--accent-logo-blue)" }}>Services</span>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+              {t("about.servicesTitle")}{" "}
+              <span className="text-[#ffb800]">{t("about.servicesHighlight")}</span>
             </h2>
-            <p className="section-subtitle">
-              Découvrez ici nos services
+            <div className="mx-auto mt-4 h-[3px] w-14 bg-[#ffb800]" aria-hidden />
+            <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-[#0f2847]/70 dark:text-[#93c5fc]/85 md:text-lg md:leading-[1.7]">
+              {t("about.servicesDesc")}
             </p>
           </motion.div>
 
-          <div className="services-two-columns">
-            {[services.slice(0, 3), services.slice(3, 6)].map((column, columnIndex) => (
-              <div key={columnIndex} className="services-column">
-                {column.map((service, itemIndex) => {
-                  const absoluteIndex = columnIndex * 3 + itemIndex;
-                  const shortDescription =
-                    service.description.length > 110
-                      ? `${service.description.slice(0, 110)}...`
-                      : service.description;
-
-                  return (
-                    <motion.article
-                      key={absoluteIndex}
-                      initial={{ opacity: 0, y: 36 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.65,
-                        delay: 0.12 * absoluteIndex,
-                        ease: "easeOut",
-                      }}
-                      viewport={{ once: true, amount: 0.35 }}
-                      className="service-compact-card"
+          <div className="overflow-hidden rounded-none border border-[#0f2847]/12 bg-white/40 dark:border-white/10 dark:bg-white/[0.02]">
+            {services.map((service, i) => {
+              const open = selectedServiceIndex === i;
+              const contactHref = `/contact?subject=${encodeURIComponent(
+                `${t("about.serviceContactCta")}: ${service.title}`
+              )}`;
+              return (
+                <motion.article
+                  key={service.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: i * 0.04 }}
+                  viewport={{ once: true }}
+                  className={`border-b border-[#0f2847]/10 last:border-b-0 dark:border-white/10 ${
+                    open ? "bg-[#0f2847] text-white" : "bg-transparent"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleService(i)}
+                    aria-expanded={open}
+                    className="flex w-full items-start gap-4 px-4 py-5 text-left transition-colors md:gap-6 md:px-6 md:py-6"
+                  >
+                    <span
+                      className={`mt-0.5 font-display text-sm font-bold tabular-nums md:text-base ${
+                        open ? "text-[#ffb800]" : "text-[#ffb800]"
+                      }`}
                     >
-                      <div className="service-compact-media">
-                        <img
-                          src={serviceImages[absoluteIndex % serviceImages.length]}
-                          alt={service.title}
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="service-compact-content">
-                        <h3 className="service-compact-title">{service.title}</h3>
-                        <p className="service-compact-description">{shortDescription}</p>
-                      </div>
-                      <button
-                        type="button"
-                        className="service-compact-button"
-                        onClick={(event) =>
-                          openServiceDetails(
-                            absoluteIndex,
-                            event.currentTarget as HTMLButtonElement
-                          )
-                        }
-                        aria-haspopup="dialog"
-                        aria-expanded={selectedServiceIndex === absoluteIndex}
-                        aria-controls={
-                          selectedServiceIndex === absoluteIndex ? "service-popup-dialog" : undefined
-                        }
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        className={`text-lg font-bold tracking-tight md:text-xl ${
+                          open ? "text-white" : "text-[#0f2847] dark:text-white"
+                        }`}
                       >
-                        En savoir plus
-                      </button>
-                    </motion.article>
-                  );
-                })}
-              </div>
-            ))}
+                        {service.title}
+                      </h3>
+                      {!open && (
+                        <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-[#0f2847]/65 dark:text-[#93c5fc]/75 md:text-[0.95rem]">
+                          {service.description}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronDown
+                      className={`mt-1 h-5 w-5 shrink-0 transition-transform duration-300 ${
+                        open
+                          ? "rotate-180 text-[#ffb800]"
+                          : "text-[#0f2847]/45 dark:text-white/45"
+                      }`}
+                      aria-hidden
+                    />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.div
+                        key={`service-panel-${i}`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid gap-6 px-4 pb-7 md:grid-cols-12 md:gap-8 md:px-6 md:pb-8 md:pl-16">
+                          <div className="md:col-span-5">
+                            <p className="text-justify text-[0.95rem] font-medium italic leading-relaxed text-white/85 md:text-base md:leading-[1.7]">
+                              {service.intro}
+                            </p>
+                            <motion.a
+                              href={contactHref}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.35, delay: 0.35 }}
+                              className="mt-6 inline-flex items-center gap-2 border border-[#ffb800] bg-[#ffb800] px-4 py-2.5 text-sm font-bold text-[#111111] transition hover:brightness-105"
+                            >
+                              {t("about.serviceContactCta")}
+                              <ArrowRight className="h-4 w-4" aria-hidden />
+                            </motion.a>
+                          </div>
+                          <ul className="space-y-2.5 md:col-span-7">
+                            {service.points.map((point, pi) => (
+                              <motion.li
+                                key={point}
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.35, delay: 0.08 + pi * 0.08 }}
+                                className="flex gap-3 border-l-2 border-[#ffb800] bg-white/[0.06] px-3 py-2.5 text-sm font-semibold leading-snug text-white md:text-[0.95rem]"
+                              >
+                                <span className="text-[#ffb800]" aria-hidden>
+                                  →
+                                </span>
+                                <span>{point}</span>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.article>
+              );
+            })}
           </div>
         </Container>
       </section>
 
-      {selectedService && (
-        <div className="service-popup-overlay" onClick={closeServiceDetails}>
+      {/* Team — grille légère + départements (inspiration capture) */}
+      <section className="about-section scroll-mt-28" id="team">
+        <Container size="lg">
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
-            className="service-popup-card"
-            id="service-popup-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="service-popup-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="service-popup-close"
-              onClick={closeServiceDetails}
-              aria-label="Fermer les details du service"
-              ref={popupCloseButtonRef}
-            >
-              ×
-            </button>
-
-            <div className="service-popup-header">
-              <h3 id="service-popup-title" className="service-popup-title">
-                {selectedService.title}
-              </h3>
-            </div>
-
-            <p className="service-popup-intro">{selectedService.details.intro}</p>
-
-            <ul className="service-popup-list">
-              {selectedService.details.points.map((detail, index) => (
-                <li key={index}>{detail}</li>
-              ))}
-            </ul>
-
-            <div className="service-popup-actions">
-              <button type="button" className="service-popup-return" onClick={backToServices}>
-                Retourner aux services
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Team Section */}
-      <section className="about-section scroll-mt-24" id="team">
-        <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.55 }}
             viewport={{ once: true }}
-            className="section-header"
+            className="mx-auto mb-10 max-w-3xl text-center md:mb-12"
           >
-            <h2 className="section-title">
-              Notre{" "}
-              <span style={{ color: "var(--accent-logo-blue)" }}>Équipe</span>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+              {t("about.teamTitle")}{" "}
+              <span className="text-[#ffb800]">{t("about.teamTitleHighlight")}</span>
             </h2>
+            <div className="mx-auto mt-4 h-[3px] w-14 bg-[#ffb800]" aria-hidden />
+            <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-[#0f2847]/70 dark:text-[#93c5fc]/85 md:text-lg md:leading-[1.7]">
+              {t("about.teamIntro")}
+            </p>
           </motion.div>
 
-          <div className="team-grid">
-            {team.map((member, i) => {
+          <div className="grid grid-cols-2 items-stretch gap-x-4 gap-y-8 sm:gap-x-5 sm:gap-y-9 md:grid-cols-4 md:gap-x-6 md:gap-y-10">
+            {[
+              ...displayedTeam.slice(0, 3).map((member) => ({ kind: "member" as const, member })),
+              { kind: "departments" as const },
+              ...displayedTeam.slice(3).map((member) => ({ kind: "member" as const, member })),
+            ].map((item, i) => {
+              if (item.kind === "departments") {
+                return (
+                  <motion.aside
+                    key="team-departments"
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.08 }}
+                    viewport={{ once: true }}
+                    className="flex min-h-[14rem] flex-col self-stretch md:min-h-0"
+                  >
+                    <div className="flex h-full flex-col border border-[#0f2847] bg-[#0f2847] px-4 py-5 text-left text-white sm:px-5 sm:py-6">
+                      <p className="border-b border-[#ffb800]/80 pb-2.5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#ffb800]">
+                        {t("about.teamDepartments")}
+                      </p>
+                      <ul className="mt-4 flex flex-1 flex-col justify-center gap-3.5">
+                        {teamDepartments.map((dept) => {
+                          const active = activeTeamDept === dept.id;
+                          return (
+                            <li key={dept.id}>
+                              <button
+                                type="button"
+                                onClick={() => setActiveTeamDept(dept.id)}
+                                className={`group/dept inline-flex w-full items-center gap-2 text-left text-[0.82rem] font-semibold leading-snug transition sm:text-sm ${
+                                  active
+                                    ? "text-[#ffb800]"
+                                    : "text-white/80 hover:text-white"
+                                }`}
+                              >
+                                <ArrowUpRight
+                                  className={`h-3.5 w-3.5 shrink-0 transition ${
+                                    active ? "text-[#ffb800]" : "text-[#ffb800]/70 group-hover/dept:text-[#ffb800]"
+                                  }`}
+                                  aria-hidden
+                                />
+                                <span>{dept.label}</span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </motion.aside>
+                );
+              }
+
+              const member = item.member;
+              const hasImage =
+                Boolean(member.image?.trim()) &&
+                !member.image.startsWith("TO_ADD_") &&
+                !member.image.startsWith("http://TO_ADD");
               const hasX = member.social.x.startsWith("http");
               const hasTelegram = member.social.telegram.startsWith("http");
               const hasLinkedIn = member.social.linkedin.startsWith("http");
               const hasAnySocial = hasX || hasTelegram || hasLinkedIn;
 
               return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
+                <motion.article
+                  key={member.slug || member.name}
+                  initial={{ opacity: 0, y: 14 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -8 }}
-                  transition={{
-                    opacity: { duration: 0.6, delay: 0.08 * i },
-                    y: { duration: 0.6, delay: 0.08 * i },
-                  }}
+                  transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.24) }}
                   viewport={{ once: true }}
-                  className="team-card"
+                  className="group flex flex-col text-center"
                 >
-                  <div className="team-media">
-                    <div className="team-avatar">
-                      {member.image && !member.image.startsWith("TO_ADD_") ? (
-                        <img src={member.image} alt={member.name} loading="lazy" />
-                      ) : (
-                        <div className="team-avatar-placeholder">
-                          <Users
-                            className="w-10 h-10"
-                            style={{ color: "var(--accent-logo-blue)" }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#e8eef5]">
+                    {hasImage ? (
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        loading="lazy"
+                        decoding="async"
+                        sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 18vw"
+                        className="h-full w-full object-cover object-[center_18%] transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Users className="h-8 w-8 text-[#0f2847]/35" aria-hidden />
+                      </div>
+                    )}
                     {hasAnySocial && (
-                      <div className="team-overlay-socials">
+                      <div className="absolute inset-x-0 bottom-0 flex justify-center gap-2 bg-gradient-to-t from-[#0f2847]/55 to-transparent px-2 pb-2.5 pt-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
                         {hasX && (
                           <a
                             href={member.social.x}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="team-social-link"
-                            aria-label={`Compte X de ${member.name}`}
+                            className="rounded-full bg-white/95 p-1.5 text-[#0f2847]"
+                            aria-label={`X — ${member.name}`}
                           >
-                            <Share2 className="w-4 h-4" />
+                            <Share2 className="h-3.5 w-3.5" />
                           </a>
                         )}
                         {hasLinkedIn && (
@@ -785,10 +815,10 @@ const About = () => {
                             href={member.social.linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="team-social-link"
-                            aria-label={`Compte LinkedIn de ${member.name}`}
+                            className="rounded-full bg-white/95 p-1.5 text-[#0f2847]"
+                            aria-label={`LinkedIn — ${member.name}`}
                           >
-                            <Link className="w-4 h-4" />
+                            <Link className="h-3.5 w-3.5" />
                           </a>
                         )}
                         {hasTelegram && (
@@ -796,42 +826,51 @@ const About = () => {
                             href={member.social.telegram}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="team-social-link"
-                            aria-label={`Compte Telegram de ${member.name}`}
+                            className="rounded-full bg-white/95 p-1.5 text-[#0f2847]"
+                            aria-label={`Telegram — ${member.name}`}
                           >
-                            <Send className="w-4 h-4" />
+                            <Send className="h-3.5 w-3.5" />
                           </a>
                         )}
                       </div>
                     )}
                   </div>
-
-                  <div className="team-meta">
-                    <h3 className="team-name">{member.name}</h3>
-                    <p className="team-role">{member.role}</p>
-                  </div>
-                </motion.div>
+                  <h3 className="mt-3 text-sm font-bold leading-snug text-[#0f2847] dark:text-white md:text-[0.95rem]">
+                    {member.name}
+                  </h3>
+                  <p className="mt-1 text-xs font-medium text-[#0f2847]/55 dark:text-[#93c5fc]/70 md:text-[0.8rem]">
+                    {member.role}
+                  </p>
+                </motion.article>
               );
             })}
           </div>
         </Container>
       </section>
 
-      {/* Partenaires — même fond que mission / vision / objectifs */}
-      <section id="partners" className="about-section scroll-mt-24">
-        <div className="container mx-auto px-4 text-center">
-          <motion.h2
+      {/* Partenaires — marquee + CTA */}
+      <section id="partners" className="about-section scroll-mt-28">
+        <Container size="lg">
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="font-display text-3xl md:text-5xl font-bold mb-10 md:mb-12 text-foreground tracking-tight"
+            transition={{ duration: 0.55 }}
+            className="mx-auto mb-8 max-w-3xl text-center md:mb-10"
           >
-            <span className="block sm:inline">{t("partners.title")}</span>{" "}
-            <span className="block sm:inline font-extrabold text-[#ffb800]">{t("partners.titleHighlight")}</span>
-          </motion.h2>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+              <span>{t("partners.title")}</span>{" "}
+              <span className="text-[#ffb800]">{t("partners.titleHighlight")}</span>
+            </h2>
+            <div className="mx-auto mt-4 h-[3px] w-14 bg-[#ffb800]" aria-hidden />
+            <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-[#0f2847]/70 dark:text-[#93c5fc]/85 md:text-lg md:leading-[1.7]">
+              {t("partners.subtitle")}
+            </p>
+          </motion.div>
 
-          <div className="relative overflow-hidden py-6 md:py-8">
+          <div className="relative overflow-hidden py-4 md:py-6">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[var(--dark-bg,white)] to-transparent sm:w-16" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[var(--dark-bg,white)] to-transparent sm:w-16" />
             <div className="flex w-max animate-scroll gap-5 md:gap-6 pr-5 md:pr-6">
               {[...partnersList, ...partnersList].map((partner, i) => (
                 <div key={`${partner.name}-${i}`} className="flex-shrink-0">
@@ -839,23 +878,55 @@ const About = () => {
                     href={partner.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb800] focus-visible:ring-offset-2"
                     aria-label={`${t("partners.visit")} — ${partner.name}`}
                   >
-                    <div className="bg-white rounded-2xl border border-black/10 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center">
+                    <div className="flex h-[96px] w-[190px] items-center justify-center border border-[#0f2847]/10 bg-white px-4 py-3 md:h-[104px] md:w-[210px] dark:border-white/10">
                       <img
                         src={partner.logo}
-                        alt=""
-                        className="max-h-[72px] w-full object-contain"
+                        alt={partner.name}
+                        className="max-h-[64px] w-full object-contain"
                         loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          img.style.display = "none";
+                          const fallback = img.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.hidden = false;
+                        }}
                       />
+                      <span
+                        hidden
+                        className="px-2 text-center text-sm font-bold leading-snug text-[#0f2847]"
+                      >
+                        {partner.name}
+                      </span>
                     </div>
                   </a>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45, delay: 0.05 }}
+            className="mt-8 flex flex-col items-center gap-2 text-center md:mt-10"
+          >
+            <a
+              href={`/contact?subject=${encodeURIComponent(t("partners.becomeCta"))}`}
+              className="inline-flex items-center gap-2 border border-[#ffb800] bg-[#ffb800] px-5 py-2.5 text-sm font-bold text-[#111111] transition hover:brightness-105"
+            >
+              {t("partners.becomeCta")}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </a>
+            <p className="text-xs font-medium text-[#0f2847]/55 dark:text-[#93c5fc]/70">
+              {t("partners.becomeCtaHint")}
+            </p>
+          </motion.div>
+        </Container>
       </section>
 
     </div>

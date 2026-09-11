@@ -28,6 +28,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import LumaEvents from "./pages/LumaEvents";
 import Gallery from "./pages/Gallery";
+import GomaDrep from "./pages/GomaDrep";
 import Opportunities from "./pages/Opportunities";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import Presentation from "./pages/Presentation";
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/tools" element={<Tools />} />
               <Route path="/onboarding" element={<OnboardingProgram />} />
               <Route path="/gallery" element={<Gallery />} />
+              <Route path="/goma-drep" element={<GomaDrep />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/opportunities/:id" element={<OpportunityDetail />} />
               <Route path="/presentation" element={<Presentation />} />

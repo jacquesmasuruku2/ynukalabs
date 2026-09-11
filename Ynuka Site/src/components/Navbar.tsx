@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   List,
   X,
-  CaretDown,
   EnvelopeSimple,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,26 @@ type NavEntry = NavGroup | { key: string; path: string };
 const GOLD = "#ffb800";
 const EMAIL = "contact@ynukalabs.com";
 const DROPDOWN_VIEWPORT_PAD = 16;
+
+const PROJECTS_NAV_ITEMS: NavGroup["items"] = [
+  { key: "projectsAll", path: "/projects" },
+  { key: "projectsEducation", path: "/projects?cat=Education" },
+  { key: "projectsEnvironment", path: "/projects?cat=Environnement" },
+  { key: "projectsBlockchain", path: "/projects?cat=Blockchain" },
+];
+
+/** Indicateur sous-menu : + / − (discret et pro) */
+const MenuExpandHint = ({ open }: { open?: boolean }) => (
+  <span
+    className={cn(
+      "ml-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center text-[0.95rem] font-light leading-none transition-colors",
+      open ? "text-[#ffb800]" : "text-current opacity-60"
+    )}
+    aria-hidden
+  >
+    {open ? "−" : "+"}
+  </span>
+);
 
 const keepDropdownInViewport = (el: HTMLElement, preferAlignEnd: boolean) => {
   const parent = el.offsetParent as HTMLElement | null;
@@ -61,7 +80,6 @@ const NavDropdownPanel = ({
   t: (key: string) => string;
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
-  const useGrid = items.length > 3;
 
   useLayoutEffect(() => {
     const el = panelRef.current;
@@ -73,64 +91,43 @@ const NavDropdownPanel = ({
     return () => window.removeEventListener("resize", place);
   }, [items, preferAlignEnd]);
 
-  const itemClass = (path: string) =>
-    cn(
-      "flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors text-left leading-snug whitespace-nowrap",
-      isActive(path)
-        ? "bg-[#ffb800]/12 text-[#ffb800]"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-    );
-
-  if (!useGrid) {
-    return (
-      <div
-        ref={panelRef}
-        className={cn(
-          "absolute top-full z-50 mt-3 w-max min-w-[13.5rem] rounded-2xl border border-border bg-popover py-1.5",
-          preferAlignEnd ? "right-0 left-auto origin-top-right" : "left-0 origin-top-left"
-        )}
-      >
-        {items.map((sub) => (
-          <Link key={sub.path} to={sub.path} className={cn(itemClass(sub.path), "mx-1")}>
-            {t(`nav.${sub.key}`)}
-          </Link>
-        ))}
-      </div>
-    );
-  }
-
-  const columnsCount = 2;
-  const perCol = Math.ceil(items.length / columnsCount);
-  const cols = Array.from({ length: columnsCount }, (_, i) =>
-    items.slice(i * perCol, (i + 1) * perCol)
-  ).filter((c) => c.length > 0);
-
   return (
     <div
       ref={panelRef}
       className={cn(
-        "absolute top-full z-50 mt-3 w-max max-w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-1.5",
+        "absolute top-full z-50 mt-2.5 w-max min-w-[15rem] overflow-hidden rounded-none border border-[#0f2847]/12 bg-white shadow-[0_18px_40px_-18px_rgba(15,40,71,0.45)]",
+        "dark:border-white/10 dark:bg-slate-950 dark:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.65)]",
         preferAlignEnd ? "right-0 left-auto origin-top-right" : "left-0 origin-top-left"
       )}
     >
-      <div className="grid grid-cols-2 gap-x-1">
-        {cols.map((col, colIdx) => (
-          <div
-            key={colIdx}
-            className={cn(
-              "min-w-[8.75rem]",
-              colIdx === 0 && cols.length > 1 ? "border-r border-border/30 pr-1" : "pl-1"
-            )}
-          >
-            <div className="flex flex-col gap-0.5">
-              {col.map((sub) => (
-                <Link key={sub.path} to={sub.path} className={itemClass(sub.path)}>
-                  {t(`nav.${sub.key}`)}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
+      <div className="h-[3px] w-full bg-[#ffb800]" aria-hidden />
+      <div className="flex flex-col py-1.5">
+        {items.map((sub) => {
+          const active = isActive(sub.path);
+          return (
+            <Link
+              key={sub.path}
+              to={sub.path}
+              className={cn(
+                "mx-1.5 flex items-center justify-between gap-3 border-l-[3px] px-3 py-2.5 text-sm font-semibold transition-colors",
+                active
+                  ? "border-[#ffb800] bg-[#0f2847] text-white"
+                  : "border-transparent text-[#0f2847]/80 hover:border-[#ffb800]/50 hover:bg-[#0f2847]/[0.04] hover:text-[#0f2847] dark:text-slate-200 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              )}
+            >
+              <span>{t(`nav.${sub.key}`)}</span>
+              <span
+                className={cn(
+                  "text-[0.65rem] font-bold tracking-wide",
+                  active ? "text-[#ffb800]" : "text-[#ffb800]/70"
+                )}
+                aria-hidden
+              >
+                →
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -149,16 +146,16 @@ const Navbar = () => {
     {
       label: "nav.about",
       items: [
-        { key: "presentation", path: "/presentation" },
-        { key: "services", path: "/services" },
-        { key: "team", path: "/team" },
-        { key: "partners", path: "/partners" },
-        { key: "contact", path: "/contact" },
+        { key: "aboutOverview", path: "/about#presentation" },
+        { key: "domains", path: "/about#domaines" },
+        { key: "services", path: "/about#services" },
+        { key: "team", path: "/about#team" },
+        { key: "partners", path: "/about#partners" },
       ],
     },
     {
-      key: "projects",
-      path: "/projects",
+      label: "nav.projects",
+      items: PROJECTS_NAV_ITEMS,
     },
     {
       label: "nav.ecosystem",
@@ -220,38 +217,48 @@ const Navbar = () => {
         }
 
         if (
-          (normalizedLabel.includes("about") || normalizedLabel.includes("à propos") || normalizedLabel.includes("apropos")) &&
-          !items.some((item) => item.key === "contact")
+          normalizedLabel.includes("about") ||
+          normalizedLabel.includes("à propos") ||
+          normalizedLabel.includes("apropos")
         ) {
-          items = [...items, { key: "contact", path: "/contact" }];
+          items = [
+            { key: "aboutOverview", path: "/about#presentation" },
+            { key: "domains", path: "/about#domaines" },
+            { key: "services", path: "/about#services" },
+            { key: "team", path: "/about#team" },
+            { key: "partners", path: "/about#partners" },
+          ];
         }
 
         return { ...entry, items };
       });
 
-    const withoutProjectsGroup = cleaned.filter(
-      (entry) =>
-        !("items" in entry && (
-          entry.label.toLowerCase().includes("projects") || entry.label.toLowerCase().includes("projets")
-        ))
-    );
-    const hasProjectsTopLevel = withoutProjectsGroup.some(
-      (entry) => !("items" in entry) && entry.path === "/projects"
-    );
-    if (hasProjectsTopLevel) return withoutProjectsGroup;
+    // Force Projets en groupe avec sous-menus catégories
+    const withoutAnyProjects = cleaned.filter((entry) => {
+      if ("items" in entry) {
+        const l = entry.label.toLowerCase();
+        return !l.includes("project") && !l.includes("projet");
+      }
+      return entry.path !== "/projects" && entry.key !== "projects";
+    });
 
-    const aboutIndex = withoutProjectsGroup.findIndex(
+    const aboutIndex = withoutAnyProjects.findIndex(
       (entry) => "items" in entry && entry.label.toLowerCase().includes("about")
     );
 
+    const projectsGroup: NavGroup = {
+      label: "nav.projects",
+      items: PROJECTS_NAV_ITEMS,
+    };
+
     if (aboutIndex === -1) {
-      return [...withoutProjectsGroup, { key: "projects", path: "/projects" }];
+      return [...withoutAnyProjects, projectsGroup];
     }
 
     return [
-      ...withoutProjectsGroup.slice(0, aboutIndex + 1),
-      { key: "projects", path: "/projects" },
-      ...withoutProjectsGroup.slice(aboutIndex + 1),
+      ...withoutAnyProjects.slice(0, aboutIndex + 1),
+      projectsGroup,
+      ...withoutAnyProjects.slice(aboutIndex + 1),
     ];
   };
 
@@ -326,10 +333,11 @@ const Navbar = () => {
           {
             label: "nav.about",
             items: [
-              { key: "about", path: "/about" },
-              { key: "team", path: "/community#team" },
-              { key: "partners", path: "/partners" },
-              { key: "contact", path: "/contact" },
+              { key: "aboutOverview", path: "/about#presentation" },
+              { key: "domains", path: "/about#domaines" },
+              { key: "services", path: "/about#services" },
+              { key: "team", path: "/about#team" },
+              { key: "partners", path: "/about#partners" },
             ],
           },
           {
@@ -376,9 +384,24 @@ const Navbar = () => {
   useEffect(() => {
     setOpenDropdown(null);
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash, location.search]);
 
   const isActive = (path: string) => {
+    if (path.includes("?")) {
+      const [pathname, query = ""] = path.split("?");
+      if (location.pathname !== pathname) return false;
+      const want = new URLSearchParams(query);
+      const current = new URLSearchParams(location.search);
+      for (const [key, value] of want.entries()) {
+        if (current.get(key) !== value) return false;
+      }
+      return true;
+    }
+
+    if (path === "/projects") {
+      return location.pathname === "/projects" && !new URLSearchParams(location.search).get("cat");
+    }
+
     if (path.includes("#")) {
       const [pathname, hashPart] = path.split("#");
       const want = hashPart.trim();
@@ -425,7 +448,20 @@ const Navbar = () => {
     "text-neutral-950 hover:bg-black/[0.06] hover:text-black dark:text-neutral-100 dark:hover:bg-white/10 dark:hover:text-white";
 
   const TopBarSocialIcons = () => (
-    <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5 sm:gap-2 md:gap-2.5">
+    <div className="flex shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-2.5 md:gap-3">
+      <Link
+        to="/goma-drep"
+        className={cn(
+          "group relative inline-flex items-center gap-2 border-2 border-[#0f2847] bg-[#0f2847] px-2.5 py-1 text-[#ffb800] shadow-[3px_3px_0_0_rgba(17,17,17,0.25)] transition-colors sm:px-3 sm:py-1.5",
+          "hover:bg-[#163a66]",
+          isActive("/goma-drep") && "bg-[#163a66] ring-2 ring-[#111111]/20 ring-offset-1 ring-offset-[#ffb800]"
+        )}
+      >
+        <span className="hidden h-1.5 w-1.5 shrink-0 bg-[#ffb800] sm:block" aria-hidden />
+        <span className="whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.06em] sm:text-xs md:text-[0.8125rem]">
+          {t("nav.gomaDrep")}
+        </span>
+      </Link>
       {socialLinks.map(({ href, ariaLabel, Icon, iconClassName }) => (
         <a
           key={ariaLabel}
@@ -494,11 +530,7 @@ const Navbar = () => {
                     className={cn(linkBase, "flex items-center gap-1.5", isGroupActive(item) ? linkActive : linkIdle)}
                   >
                     {t(item.label)}
-                    <CaretDown
-                      weight="duotone"
-                      size={18}
-                      className={`h-4 w-4 shrink-0 md:h-[18px] md:w-[18px] ${openDropdown === item.label ? "rotate-180" : ""} transition-transform`}
-                    />
+                    <MenuExpandHint open={openDropdown === item.label} />
                   </button>
                   {openDropdown === item.label && (
                     <NavDropdownPanel
@@ -555,10 +587,10 @@ const Navbar = () => {
                     )}
                   >
                     {t(item.label)}
-                    <CaretDown weight="duotone" size={20} className={`h-5 w-5 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`} />
+                    <MenuExpandHint open={mobileExpanded === item.label} />
                   </button>
                   {mobileExpanded === item.label && (
-                    <div className="ml-3 flex flex-col gap-1 border-l-2 border-neutral-900/20 pl-4 dark:border-white/25">
+                    <div className="ml-2 mt-1 flex flex-col gap-0.5 border-l-[3px] border-[#ffb800] bg-[#0f2847]/[0.03] py-1 dark:bg-white/[0.03]">
                       {item.items.map((sub) => {
                         return (
                           <Link
@@ -566,13 +598,16 @@ const Navbar = () => {
                             to={sub.path}
                             onClick={() => setMobileOpen(false)}
                             className={cn(
-                              "rounded-lg px-3 py-3 text-base font-bold",
+                              "mx-1 flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold",
                               isActive(sub.path)
-                                ? "text-[#ffb800]"
-                                  : "text-muted-foreground"
+                                ? "bg-[#0f2847] text-white"
+                                : "text-[#0f2847]/80 dark:text-slate-200"
                             )}
                           >
-                            {t(`nav.${sub.key}`)}
+                            <span>{t(`nav.${sub.key}`)}</span>
+                            <span className="text-[#ffb800]" aria-hidden>
+                              →
+                            </span>
                           </Link>
                         );
                       })}

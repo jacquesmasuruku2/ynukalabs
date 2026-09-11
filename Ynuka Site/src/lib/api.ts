@@ -14,6 +14,8 @@ const PUBLIC_RESOURCES = [
   "team_members",
   "resource_sections",
   "partners",
+  "projects",
+  "goma_drep_actions",
 ];
 
 function pickOptionalUrl(value: unknown): string | null {
@@ -268,7 +270,8 @@ export async function fetchOpportunity(id: string) {
   };
 }
 
-// Projects API
+// Projects API — status=active = publiés (page Projets)
+// show_on_home = choisis par l'admin pour l'accueil (sous-ensemble)
 export async function fetchProjects(limit = 100) {
   const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[] }>("list", {
     resource: "projects",
@@ -277,23 +280,46 @@ export async function fetchProjects(limit = 100) {
   });
 
   const rows = result.rows ?? result.data ?? [];
-  return rows.map((item: any) => ({
-    id: String(item.id),
-    slug: item.slug || String(item.id),
-    title: item.title || "",
-    category: item.category || item.type || "",
-    description: item.description || item.excerpt || "",
-    featured_image: item.featured_image || item.image_url || item.logo_url || null,
-    repository_url: item.repository_url || null,
-    live_url: item.live_url || null,
-    created_at: item.created_at || "",
-    tags: Array.isArray(item.tags)
-      ? item.tags.map(String).filter(Boolean)
-      : String(item.tags || item.keywords || "")
-          .split(/[,|;]/)
-          .map((tag: string) => tag.trim())
-          .filter(Boolean),
-  }));
+  return rows.map((item: any) => {
+    const showOnHomeRaw =
+      item.show_on_home ??
+      item.show_on_homepage ??
+      item.featured_home ??
+      item.on_home ??
+      0;
+
+    return {
+      id: String(item.id),
+      slug: item.slug || String(item.id),
+      title: item.title || "",
+      category: item.category || item.type || "",
+      description: item.description || item.excerpt || "",
+      featured_image: item.featured_image || item.image_url || item.logo_url || null,
+      repository_url: item.repository_url || null,
+      live_url: item.live_url || null,
+      created_at: item.created_at || "",
+      show_on_home:
+        showOnHomeRaw === true ||
+        showOnHomeRaw === 1 ||
+        showOnHomeRaw === "1" ||
+        String(showOnHomeRaw).toLowerCase() === "true",
+      tags: Array.isArray(item.tags)
+        ? item.tags.map(String).filter(Boolean)
+        : String(item.tags || item.keywords || "")
+            .split(/[,|;]/)
+            .map((tag: string) => tag.trim())
+            .filter(Boolean),
+    };
+  });
+}
+
+/** Projets mis en avant sur l'accueil (uniquement ceux flagués par l'admin). */
+export async function fetchHomeProjects(limit = 4) {
+  const projects = await fetchProjects(100);
+  return projects
+    .filter((project) => project.show_on_home && project.title)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
 }
 
 // Apply for opportunity

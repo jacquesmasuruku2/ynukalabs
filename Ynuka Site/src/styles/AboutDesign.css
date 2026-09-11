@@ -268,13 +268,15 @@
   background: transparent;
 }
 
+/* Coins décoratifs : marine (footer) + jaune marque */
 .mission-visual-grid::before,
-.mission-visual-grid::after {
+.mission-visual-grid::after,
+.mission-visual-blob {
   content: "";
   position: absolute;
   z-index: 0;
-  background: linear-gradient(160deg, #2f6fff 0%, #082b86 100%);
-  opacity: 0.9;
+  opacity: 0.92;
+  pointer-events: none;
 }
 
 .mission-visual-grid::before {
@@ -283,6 +285,7 @@
   left: 6px;
   top: 2px;
   border-radius: 42px 16px 16px 16px;
+  background: #0f2847;
 }
 
 .mission-visual-grid::after {
@@ -291,6 +294,25 @@
   right: 2px;
   bottom: 0;
   border-radius: 16px 16px 42px 16px;
+  background: #0f2847;
+}
+
+.mission-visual-blob--tr {
+  width: 52%;
+  height: 42%;
+  right: 4px;
+  top: 4px;
+  border-radius: 16px 42px 16px 16px;
+  background: #ffb800;
+}
+
+.mission-visual-blob--bl {
+  width: 52%;
+  height: 42%;
+  left: 4px;
+  bottom: 2px;
+  border-radius: 16px 16px 16px 42px;
+  background: #ffb800;
 }
 
 .mission-visual-card {
@@ -324,6 +346,130 @@
 
 .mission-visual-4 {
   border-bottom-right-radius: 46px;
+}
+
+/* Cadre image Mission / Vision — formes uniquement sur 2 coins opposés */
+.mv-frame {
+  position: relative;
+  padding: 16px 18px;
+}
+
+.mv-corner {
+  position: absolute;
+  z-index: 0;
+  width: 52%;
+  height: 44%;
+  pointer-events: none;
+}
+
+.mv-corner::before,
+.mv-corner::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+}
+
+/* Base marine + décalage jaune sur le même coin */
+.mv-corner::before {
+  inset: 0;
+  background: #0f2847;
+}
+
+.mv-corner::after {
+  inset: 10px -8px -8px 10px;
+  background: #ffb800;
+}
+
+.mv-corner--tl {
+  top: 2px;
+  left: 4px;
+  border-radius: 42px 14px 14px 14px;
+}
+
+.mv-corner--br {
+  right: 2px;
+  bottom: 2px;
+  border-radius: 14px 14px 42px 14px;
+}
+
+.mv-corner--tr {
+  top: 2px;
+  right: 4px;
+  border-radius: 14px 42px 14px 14px;
+}
+
+.mv-corner--tr::after {
+  inset: 10px 10px -8px -8px;
+}
+
+.mv-corner--bl {
+  left: 4px;
+  bottom: 2px;
+  border-radius: 14px 14px 14px 42px;
+}
+
+.mv-corner--bl::after {
+  inset: -8px -8px 10px 10px;
+}
+
+.mv-frame-media {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #0f2847;
+  border: 1px solid rgba(20, 46, 88, 0.1);
+}
+
+.mv-frame-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.mv-frame--mission .mv-frame-media img {
+  object-position: center 35%;
+}
+
+.mv-frame--vision .mv-frame-media img {
+  object-position: center 40%;
+}
+
+.mv-copy {
+  margin-top: 1rem;
+  max-width: 36rem;
+  border-left: 3px solid #ffb800;
+  padding-left: 1rem;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.98rem;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  text-align: justify;
+  color: #0f2847;
+}
+
+.dark .mv-copy {
+  color: #dbeafe;
+}
+
+@media (min-width: 640px) {
+  .mv-copy {
+    font-size: 1.05rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mv-frame-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .mv-copy {
+    font-size: 1.08rem;
+  }
 }
 
 /* Intervention section (inspired cards) */
@@ -362,7 +508,7 @@
 
 .intervention-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
 }
