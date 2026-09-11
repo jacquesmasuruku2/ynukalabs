@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { Mail, MapPin, RefreshCw, Send, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/lib/api";
@@ -13,20 +14,36 @@ function makeCaptchaChallenge() {
   return { a, b, answer: a + b };
 }
 
-const ContactSection = () => {
+type ContactSectionProps = {
+  /** Sujet initial (sinon lu depuis ?subject=) */
+  initialSubject?: string;
+};
+
+const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const subjectFromUrl = (searchParams.get("subject") ?? "").trim();
+  const resolvedInitialSubject = (initialSubject || subjectFromUrl).trim();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    subject: "",
+    subject: resolvedInitialSubject,
     message: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [notRobot, setNotRobot] = useState(false);
   const [challenge, setChallenge] = useState(makeCaptchaChallenge);
   const [captchaInput, setCaptchaInput] = useState("");
+
+  useEffect(() => {
+    if (!resolvedInitialSubject) return;
+    setFormData((prev) =>
+      prev.subject === resolvedInitialSubject ? prev : { ...prev, subject: resolvedInitialSubject }
+    );
+  }, [resolvedInitialSubject]);
 
   const refreshCaptcha = () => {
     setChallenge(makeCaptchaChallenge());
@@ -70,7 +87,13 @@ const ContactSection = () => {
         message: formData.message,
       });
       toast({ title: t("contact.sent") });
-      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        subject: resolvedInitialSubject,
+        message: "",
+      });
       refreshCaptcha();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

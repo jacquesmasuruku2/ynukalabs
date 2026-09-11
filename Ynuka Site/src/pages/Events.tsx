@@ -1,89 +1,133 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { fetchEvents as fetchEventsFromApi, registerForEvent } from "@/lib/api";
-import EventVisualCard from "@/components/events/EventVisualCard";
-import { stripHtml } from "@/lib/utils";
+import EventsHomeStyleGrid from "@/components/events/EventsHomeStyleGrid";
+import SpeakerApplicationForm from "@/components/events/SpeakerApplicationForm";
+import EventProposalForm from "@/components/events/EventProposalForm";
+import { cn } from "@/lib/utils";
+import { LUMA_EMBED_URL, LUMA_PUBLIC_PAGE_URL } from "@/config/luma";
+import { registerForEvent } from "@/services/events/eventsApi";
+import {
+  filterUnifiedEvents,
+  loadMergedCarouselEvents,
+  sortUnifiedForFilter,
+  type UnifiedCarouselEvent,
+} from "@/services/events/eventsCatalog";
+import type { EventAgendaFilter } from "@/services/events/types";
 
-const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
-
-interface EventData {
-  id: string;
-  title: string;
-  title_fr: string | null;
-  description: string | null;
-  description_fr: string | null;
-  date: string;
-  location: string;
-  type: string;
-  upcoming: boolean;
-  time?: string | null;
-  imageUrl?: string | null;
-}
+type HubAction = "agenda" | "devenir-speaker" | "proposer-evenement" | "soutenir";
 
 const Events = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [events, setEvents] = useState<EventData[]>([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState<EventAgendaFilter>("All");
+  const [activeAction, setActiveAction] = useState<HubAction>("agenda");
+  const [events, setEvents] = useState<UnifiedCarouselEvent[]>([]);
+  const [lumaFailed, setLumaFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [registerEventId, setRegisterEventId] = useState<string | null>(null);
   const [regForm, setRegForm] = useState({ full_name: "", email: "", phone: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const isFr = i18n.language === "fr";
-
-  const filters = [
+  const filters: { key: EventAgendaFilter; label: string }[] = [
     { key: "All", label: t("events.all") },
     { key: "Upcoming", label: t("events.upcoming") },
     { key: "Past", label: t("events.past") },
+    { key: "InPerson", label: t("events.formatInPerson") },
+    { key: "Online", label: t("events.formatOnline") },
     { key: "Workshop", label: t("events.workshop") },
     { key: "Hackathon", label: t("events.hackathon") },
     { key: "Meetup", label: t("events.meetup") },
   ];
 
-  useEffect(() => { loadEvents(); }, []);
+  const hubActions: { id: HubAction; label: string }[] = [
+    { id: "agenda", label: t("events.navAgenda") },
+    { id: "devenir-speaker", label: t("events.navSpeaker") },
+    { id: "proposer-evenement", label: t("events.navPropose") },
+    { id: "soutenir", label: t("events.navSupport") },
+  ];
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
     try {
-      const events = await fetchEventsFromApi(100);
-      setEvents(events);
+      const result = await loadMergedCarouselEvents({
+        lang: i18n.language,
+        t,
+        lumaFutureLimit: 30,
+        lumaPastLimit: 30,
+      });
+      setEvents(result.items);
+      setLumaFailed(result.lumaFailed);
+      setLoadError(result.siteFailed && result.items.length === 0);
     } catch (error) {
       console.error("Failed to fetch events:", error);
-      // No fallback - only database data will be displayed
+      setEvents([]);
+      setLoadError(true);
+      setLumaFailed(true);
     } finally {
       setLoading(false);
     }
+  }, [i18n.language, t]);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
+
+  useEffect(() => {
+    const hash = location.hash.replace("#", "").trim();
+    if (hash === "soutenir") {
+      navigate("/soutenir", { replace: true });
+      return;
+    }
+    const allowed: HubAction[] = ["agenda", "devenir-speaker", "proposer-evenement"];
+    if (!hash) {
+      setActiveAction("agenda");
+      return;
+    }
+    if (allowed.includes(hash as HubAction)) {
+      setActiveAction(hash as HubAction);
+    }
+  }, [location.hash, navigate]);
+
+  const goAction = (id: HubAction) => {
+    if (id === "soutenir") {
+      navigate("/soutenir");
+      return;
+    }
+    setActiveAction(id);
+    const url = id === "agenda" ? "/events#agenda" : `/events#${id}`;
+    window.history.replaceState(null, "", url);
+    if (id === "agenda") {
+      document.getElementById("agenda")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
-  const isPast = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return !isNaN(d.getTime()) && d < new Date();
-    } catch { return false; }
-  };
-
-  const filtered = events.filter((e) => {
-    if (activeFilter === "All") return true;
-    if (activeFilter === "Upcoming") return e.upcoming && !isPast(e.date);
-    if (activeFilter === "Past") return !e.upcoming || isPast(e.date);
-    return e.type === activeFilter;
-  });
+  const filtered = useMemo(
+    () => sortUnifiedForFilter(filterUnifiedEvents(events, activeFilter), activeFilter),
+    [events, activeFilter]
+  );
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registerEventId) return;
+    if (!registerEventId || registerEventId.startsWith("luma-")) return;
     setSubmitting(true);
     try {
       await registerForEvent({
-        event: registerEventId,
+        event_id: registerEventId,
         full_name: regForm.full_name,
         email: regForm.email,
         phone: regForm.phone || null,
@@ -94,13 +138,9 @@ const Events = () => {
       setRegForm({ full_name: "", email: "", phone: "" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
-      const status = msg.includes("409")
-        ? 409
-        : msg.toLowerCase().includes("duplicate")
-          ? 409
-          : null;
+      const status =
+        msg.includes("409") || msg.toLowerCase().includes("duplicate") ? 409 : null;
 
-      // Sans code d'erreur Supabase, on retombe sur le message générique.
       if (status === 409) {
         toast({ title: t("events.alreadyRegistered"), variant: "destructive" });
       } else {
@@ -110,118 +150,196 @@ const Events = () => {
     setSubmitting(false);
   };
 
-  const getTitle = (e: EventData) => isFr && e.title_fr ? e.title_fr : e.title;
-  const getDesc = (e: EventData) =>
-    stripHtml((isFr && e.description_fr ? e.description_fr : e.description) || "");
-  const formatEventDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString(isFr ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" });
-  };
-
-  const displayEventsBase = filtered;
-
-  // Quand "All" est actif, on veut toujours afficher d'abord les "upcoming",
-  // ensuite les "past" (tri par date ensuite).
-  const displayEvents =
-    activeFilter === "All"
-      ? [...displayEventsBase].sort((a, b) => {
-          const aPast = isPast(a.date) || !a.upcoming;
-          const bPast = isPast(b.date) || !b.upcoming;
-          if (aPast !== bPast) return aPast ? 1 : -1; // upcoming d'abord
-
-          const ad = new Date(a.date).getTime();
-          const bd = new Date(b.date).getTime();
-          // upcoming : plus proche en premier ; past : plus récent en premier
-          if (!aPast) return ad - bd;
-          return bd - ad;
-        })
-      : displayEventsBase;
+  const showAgenda = activeAction === "agenda";
 
   return (
-    <div>
-      <section className="py-20 hero-gradient">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="typo-page-title mb-4 text-[#0f2847] dark:text-white">
-              {t("events.title")}
+    <div className="min-h-[70vh] bg-[#f7f8fa] dark:bg-[#0a1628]">
+      <header className="border-b border-[#0f2847]/15 bg-[#0f2847] text-white">
+        <div className="mx-auto max-w-[1200px] px-4 pt-4 sm:px-6 md:px-8">
+          <Link
+            to="/blockchains#events"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-white/75 transition-colors hover:text-[#ffb800]"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            {t("events.navBackEcosystem")}
+          </Link>
+          <div className="pb-4 pt-3">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              {t("events.pageTitle")}
             </h1>
-            <p className="typo-lead mx-auto max-w-2xl text-[#315795] dark:text-[#93c5fc]">{t("events.subtitle")}</p>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 flex justify-center">
-            <Button variant="outline-glow" size="lg" asChild>
-              <Link to="/luma-events">{t("events.onLuma")}</Link>
-            </Button>
+            <p className="mt-1.5 max-w-2xl text-sm font-medium text-white/75 sm:text-base">
+              {t("events.pageIntro")}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2 mb-10 justify-center">
-            {filters.map((f) => (
-              <button key={f.key} onClick={() => setActiveFilter(f.key)} className={`px-4 py-2 rounded-none text-sm font-medium transition-colors ${activeFilter === f.key ? "bg-[#ffb800] text-[#0f2847]" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
-                {f.label}
+          <div className="flex gap-1 overflow-x-auto pb-0">
+            {hubActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => goAction(action.id)}
+                className={cn(
+                  "shrink-0 border-b-2 px-3 py-2.5 text-sm font-bold transition-colors sm:px-4",
+                  activeAction === action.id
+                    ? "border-[#ffb800] text-[#ffb800]"
+                    : "border-transparent text-white/70 hover:text-white"
+                )}
+              >
+                {action.label}
               </button>
             ))}
           </div>
-
-          {loading ? (
-            <div className="text-center text-muted-foreground py-12">{t("admin.loading")}</div>
-          ) : displayEvents.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              <p>Aucun événement disponible pour le moment.</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-6">
-              {displayEvents.map((event, i) => {
-                const eventIsPast = isPast(event.date) || !event.upcoming;
-                return (
-                  <motion.div
-                    key={event.id}
-                    {...fadeUp}
-                    transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-                    className="h-full"
-                  >
-                    <EventVisualCard
-                      compact
-                      showTime={true}
-                      event={{
-                        id: event.id,
-                        title: getTitle(event),
-                        description: getDesc(event),
-                        date: formatEventDate(event.date),
-                        type: event.type,
-                        location: event.location,
-                        time: event.time ?? null,
-                        imageUrl: event.imageUrl ?? null,
-                      }}
-                      primaryLabel={t("home.registerNow")}
-                      onPrimaryClick={!eventIsPast ? () => setRegisterEventId(event.id) : undefined}
-                      secondaryHref={eventIsPast ? `/events/${event.id}` : undefined}
-                      secondaryLabel={t("events.viewDetails")}
-                      secondaryTone={eventIsPast ? "red" : "teal"}
-                      className="h-full"
-                    />
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
         </div>
-      </section>
+      </header>
+
+      <main className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 md:px-8 md:py-10">
+        {showAgenda ? (
+          <section id="agenda" className="scroll-mt-28">
+            <aside className="mb-8 overflow-hidden bg-[#0f2847] text-white">
+              <div className="flex flex-col gap-4 px-5 py-5 sm:px-6 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0 text-center md:text-left">
+                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#ffb800]/90">
+                    Luma
+                  </p>
+                  <h3 className="mt-1 text-lg font-extrabold tracking-tight">
+                    {t("events.lumaTitle")}
+                  </h3>
+                  <p className="mt-1.5 text-sm font-medium leading-snug text-white/75">
+                    {t("events.lumaInvite")}
+                  </p>
+                </div>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                  <Link
+                    to="/luma-events"
+                    className="inline-flex w-full items-center justify-center gap-2 bg-[#ffb800] px-5 py-2.5 text-sm font-bold text-[#0f2847] transition-opacity hover:opacity-90 sm:w-auto"
+                  >
+                    {t("events.lumaCta")}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                  <a
+                    href={LUMA_PUBLIC_PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center gap-2 border border-white/35 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/10 sm:w-auto"
+                  >
+                    {t("events.lumaOpenExternal")}
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  </a>
+                </div>
+              </div>
+            </aside>
+
+            <div
+              className="mb-6 flex flex-wrap justify-center gap-2"
+              role="listbox"
+              aria-label={t("events.filtersAria")}
+            >
+              {filters.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  role="option"
+                  aria-selected={activeFilter === f.key}
+                  onClick={() => setActiveFilter(f.key)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium transition-colors",
+                    activeFilter === f.key
+                      ? "bg-[#ffb800] text-[#0f2847]"
+                      : "border border-slate-200 bg-white text-[#0f2847] hover:border-[#ffb800] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <div className="border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
+                {t("admin.loading")}
+              </div>
+            ) : loadError ? (
+              <div className="border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-700 dark:bg-[#0c1a2e]">
+                <p className="font-medium text-[#0f2847] dark:text-white">{t("events.loadError")}</p>
+                <p className="mt-2 text-sm text-[#315795] dark:text-slate-400">
+                  {t("events.loadErrorHint")}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline-glow"
+                  className="mt-5"
+                  onClick={() => void loadEvents()}
+                >
+                  {t("events.retry")}
+                </Button>
+              </div>
+            ) : events.length === 0 ? (
+              <div className="border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
+                {t("events.emptyAll")}
+                {lumaFailed ? (
+                  <div className="mx-auto mt-6 max-w-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                    <iframe
+                      title={t("events.lumaPageTitle")}
+                      src={LUMA_EMBED_URL}
+                      className="block h-[420px] w-full border-0"
+                      loading="lazy"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
+                {t("events.emptyFilter")}
+              </div>
+            ) : (
+              <EventsHomeStyleGrid
+                key={activeFilter}
+                events={filtered}
+                visibleRows={2}
+                onRegister={(event) => {
+                  if (event.id && !event.id.startsWith("luma-") && !event.isPast) {
+                    setRegisterEventId(event.id);
+                  }
+                }}
+              />
+            )}
+          </section>
+        ) : activeAction === "devenir-speaker" ? (
+          <section id="devenir-speaker" className="scroll-mt-28">
+            <SpeakerApplicationForm onBackToAgenda={() => goAction("agenda")} />
+          </section>
+        ) : (
+          <section id="proposer-evenement" className="scroll-mt-28">
+            <EventProposalForm onBackToAgenda={() => goAction("agenda")} />
+          </section>
+        )}
+      </main>
 
       <Dialog open={!!registerEventId} onOpenChange={(open) => !open && setRegisterEventId(null)}>
         <DialogContent className="max-w-md bg-card">
           <DialogHeader>
             <DialogTitle>{t("events.registerTitle")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleRegister} className="space-y-4 mt-4">
-            <Input placeholder={t("events.fullName")} value={regForm.full_name} onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })} required />
-            <Input type="email" placeholder={t("events.email")} value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} required />
-            <Input placeholder={t("events.phone")} value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} />
+          <form onSubmit={handleRegister} className="mt-4 space-y-4">
+            <Input
+              placeholder={t("events.fullName")}
+              value={regForm.full_name}
+              onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
+              required
+            />
+            <Input
+              type="email"
+              placeholder={t("events.email")}
+              value={regForm.email}
+              onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+              required
+            />
+            <Input
+              placeholder={t("events.phone")}
+              value={regForm.phone}
+              onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+            />
             <Button type="submit" variant="glow" className="w-full" disabled={submitting}>
-              {submitting ? t("events.submitting") : t("events.confirmRegister")}
+              {submitting ? t("admin.loading") : t("events.submitRegistration")}
             </Button>
           </form>
         </DialogContent>

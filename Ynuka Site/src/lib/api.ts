@@ -16,6 +16,11 @@ const PUBLIC_RESOURCES = [
   "partners",
   "projects",
   "goma_drep_actions",
+  "validators",
+  /** Create public — list/get restent protégés côté backend */
+  "speaker_applications",
+  "event_proposals",
+  "event_registrations",
 ];
 
 function pickOptionalUrl(value: unknown): string | null {

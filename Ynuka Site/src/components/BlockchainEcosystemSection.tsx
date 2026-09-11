@@ -1,35 +1,15 @@
 import { useCallback, useLayoutEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, FileCode2, GitBranch, Landmark, Layers, Leaf, Sparkles } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   BLOCKCHAIN_ORDER,
-  type ActivityKind,
   type BlockchainId,
   getBlockchainCopy,
   getBlockchainIntro,
   getBlockchainUi,
 } from "@/data/blockchainEcosystem";
-
-const activityIcon = (kind: ActivityKind) => {
-  const cls = "h-4 w-4 shrink-0 text-[#ffb800]";
-  switch (kind) {
-    case "contracts":
-      return <FileCode2 className={cls} aria-hidden />;
-    case "nft":
-      return <Layers className={cls} aria-hidden />;
-    case "defi":
-      return <Landmark className={cls} aria-hidden />;
-    case "trace":
-      return <GitBranch className={cls} aria-hidden />;
-    case "sustain":
-      return <Leaf className={cls} aria-hidden />;
-    default:
-      return <Sparkles className={cls} aria-hidden />;
-  }
-};
 
 function useIsDesktop(breakpoint = 768) {
   const [ok, setOk] = useState(false);
@@ -46,12 +26,10 @@ function useIsDesktop(breakpoint = 768) {
 const ChainLogo = ({
   url,
   name,
-  accent,
   className,
 }: {
   url: string;
   name: string;
-  accent: string;
   className?: string;
 }) => {
   const [failed, setFailed] = useState(false);
@@ -59,8 +37,7 @@ const ChainLogo = ({
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-2xl bg-gradient-to-br font-display text-lg font-bold text-white shadow-inner",
-          accent,
+          "flex items-center justify-center bg-[#122033] font-display text-lg font-bold text-[#ffb800]",
           className
         )}
         aria-hidden
@@ -73,7 +50,7 @@ const ChainLogo = ({
     <img
       src={url}
       alt=""
-      className={cn("h-12 w-12 object-contain md:h-14 md:w-14", className)}
+      className={cn("object-contain", className)}
       loading="lazy"
       onError={() => setFailed(true)}
     />
@@ -94,7 +71,6 @@ const BlockchainEcosystemSection = ({
 
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState<BlockchainId | null>(null);
-
   const active = activeId ? copy[activeId] : null;
 
   const openChain = useCallback((id: BlockchainId) => {
@@ -111,89 +87,86 @@ const BlockchainEcosystemSection = ({
     <section
       id="blockchains"
       className={cn(
-        "relative scroll-mt-24 overflow-hidden bg-[#F9F8F7] py-16 dark:bg-gradient-to-b dark:from-slate-950 dark:via-[#0b1220] dark:to-slate-950 md:py-24",
-        showDivider && "border-y border-slate-200/80 dark:border-white/5"
+        "relative scroll-mt-28 overflow-hidden py-16 md:py-24",
+        "bg-[radial-gradient(900px_420px_at_0%_0%,rgba(255,184,0,0.12),transparent_55%),linear-gradient(180deg,#fbfaf7_0%,#f0eee8_100%)]",
+        "dark:bg-[radial-gradient(800px_400px_at_10%_0%,rgba(255,184,0,0.08),transparent_50%),linear-gradient(180deg,#0b1219_0%,#121a22_100%)]",
+        showDivider && "border-y border-black/[0.06] dark:border-white/10"
       )}
     >
-      <div
-        className="pointer-events-none absolute inset-0 hidden opacity-[0.12] dark:block"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, rgba(18,177,166,0.35), transparent 45%), radial-gradient(circle at 80% 60%, rgba(255,184,0,0.2), transparent 40%)",
-        }}
-      />
-
-      <div className="container relative z-10 mx-auto max-w-6xl px-4">
+      <div className="relative z-10 mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
           transition={{ duration: 0.55 }}
-          className="mx-auto mb-12 max-w-3xl text-center md:mb-14"
+          className="mx-auto mb-10 max-w-2xl text-center md:mb-14"
         >
-          <p className="typo-label mb-3 font-display text-[#12B1A6]">
-            {ui.sectionKicker}
-          </p>
-          <h2 className="typo-section-title font-display text-slate-900 dark:text-white">
+          <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#122033] md:text-4xl dark:text-white">
             {ui.sectionTitle}
           </h2>
-          <p className="typo-lead mt-4 text-slate-600 dark:text-slate-300">{intro}</p>
-          <p className="typo-support mt-2 text-slate-500 dark:text-slate-400">{ui.hint}</p>
+          <div
+            className="mx-auto mt-4 h-px w-14 bg-gradient-to-r from-transparent via-[#ffb800] to-transparent"
+            aria-hidden
+          />
+          <p className="mt-5 text-lg font-medium leading-relaxed text-[#3d4f66] dark:text-slate-300">
+            {intro}
+          </p>
+          <p className="mt-3 text-sm font-medium text-[#8a96a8]">{ui.hint}</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Rangée principale : 3 + 2 pour un rythme plus vivant */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {BLOCKCHAIN_ORDER.map((id, index) => {
             const chain = copy[id];
             const selected = open && activeId === id;
+            const span =
+              index < 3
+                ? "lg:col-span-2"
+                : index === 3
+                  ? "lg:col-span-3"
+                  : "lg:col-span-3";
+
             return (
               <motion.button
                 key={id}
                 type="button"
-                initial={{ opacity: 0, y: 22 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-20px" }}
-                transition={{ duration: 0.45, delay: index * 0.06 }}
-                whileHover={{ y: -4, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => openChain(id)}
                 className={cn(
-                  "group relative flex flex-col items-stretch rounded-2xl border p-5 text-left transition-colors duration-300",
-                  "border-slate-200/90 bg-white hover:border-[#ffb800]/45",
-                  "dark:border-white/10 dark:bg-slate-900/60 dark:hover:border-[#ffb800]/40",
-                  selected && "border-[#ffb800] ring-2 ring-[#ffb800]/40 dark:ring-[#ffb800]/50"
+                  "group relative flex min-h-[168px] flex-col items-center justify-between overflow-hidden border border-black/[0.07] bg-white p-5 text-center transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(15,40,71,0.55)] dark:border-white/10 dark:bg-[#151d27]",
+                  span,
+                  selected && "border-[#ffb800] shadow-[0_0_0_1px_#ffb800]"
                 )}
               >
-                <div
+                <span
                   className={cn(
-                    "pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-[0.08] dark:group-hover:opacity-100",
+                    "pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-gradient-to-br opacity-40 blur-2xl transition-opacity group-hover:opacity-70",
                     chain.accent
                   )}
+                  aria-hidden
                 />
-                {chain.websiteUrl ? (
-                  <a
-                    href={chain.websiteUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label={`Ouvrir le site de ${chain.name} dans un nouvel onglet`}
-                    className="absolute right-4 top-4 z-10 rounded-full bg-white/70 p-2 text-slate-900 ring-1 ring-slate-200/60 backdrop-blur transition hover:scale-105 dark:bg-slate-950/60 dark:text-white dark:ring-white/10"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : null}
-                <div className="relative flex flex-col items-center gap-3 text-center">
-                  <div className="rounded-2xl bg-[#F9F8F7] p-3 ring-1 ring-slate-200/80 transition-transform duration-300 group-hover:scale-105 dark:bg-white/5 dark:ring-white/10">
-                    <ChainLogo url={chain.logoUrl} name={chain.name} accent={chain.accent} />
+
+                <div className="relative flex w-full flex-col items-center">
+                  <div className="flex h-12 w-12 items-center justify-center bg-[#f6f4ef] p-2 dark:bg-white/5">
+                    <ChainLogo url={chain.logoUrl} name={chain.name} className="h-8 w-8" />
                   </div>
-                  <div>
-                    <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{chain.name}</h3>
-                    <p className="mt-1 line-clamp-3 text-xs leading-snug text-slate-600 dark:text-slate-400">{chain.tagline}</p>
-                  </div>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-[#12B1A6] opacity-90">
-                    <Sparkles className="h-3 w-3" />
-                    {ui.sheetEyebrow}
-                  </span>
+                  <h3 className="mt-4 font-display text-xl font-extrabold text-[#122033] dark:text-white">
+                    {chain.name}
+                  </h3>
+                  <p className="mt-1.5 line-clamp-2 text-sm font-medium leading-snug text-[#5a6b82] dark:text-slate-400">
+                    {chain.tagline}
+                  </p>
                 </div>
+
+                <span className="relative mt-4 inline-flex items-center gap-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#8a96a8] transition-colors group-hover:text-[#122033] dark:group-hover:text-[#ffb800]">
+                  {ui.openDetail}
+                  <ArrowRight className="h-3 w-3" aria-hidden />
+                </span>
               </motion.button>
             );
           })}
@@ -204,74 +177,84 @@ const BlockchainEcosystemSection = ({
         <SheetContent
           side={isDesktop ? "right" : "bottom"}
           className={cn(
-            "flex w-full flex-col border-white/10 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-0 text-slate-100",
-            isDesktop ? "max-w-full sm:max-w-lg lg:max-w-xl" : "max-h-[90vh] rounded-t-3xl"
+            "flex w-full flex-col border-black/10 bg-[#fbfaf7] p-0 text-[#122033] dark:border-white/10 dark:bg-[#121a22] dark:text-slate-100",
+            isDesktop ? "max-w-full sm:max-w-md lg:max-w-lg" : "max-h-[92vh] rounded-t-2xl"
           )}
         >
           <AnimatePresence mode="wait">
-            {active && activeId && (
+            {active && activeId ? (
               <motion.div
                 key={activeId}
-                initial={{ opacity: 0, x: isDesktop ? 24 : 0, y: isDesktop ? 0 : 24 }}
+                initial={{ opacity: 0, x: isDesktop ? 20 : 0, y: isDesktop ? 0 : 16 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
                 className="flex h-full max-h-[inherit] flex-col"
               >
-                <SheetHeader className="space-y-0 border-b border-white/10 px-6 py-5 pr-14 text-left">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-                      <ChainLogo url={active.logoUrl} name={active.name} accent={active.accent} />
+                <SheetHeader className="space-y-0 border-b border-black/[0.06] px-6 py-5 pr-14 text-left dark:border-white/10">
+                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#b8860b]">
+                    {ui.sheetEyebrow}
+                  </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="flex h-14 w-14 items-center justify-center bg-white p-2 shadow-sm ring-1 ring-black/[0.06] dark:bg-white/5 dark:ring-white/10">
+                      <ChainLogo url={active.logoUrl} name={active.name} className="h-9 w-9" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#12B1A6]">
-                        {ui.sheetEyebrow}
-                      </p>
-                      <SheetTitle className="mt-1 text-left font-display text-2xl text-white md:text-3xl">
+                    <div className="min-w-0 flex-1">
+                      <SheetTitle className="text-left font-display text-2xl font-extrabold text-[#122033] dark:text-white">
                         {active.name}
                       </SheetTitle>
+                      <p className="mt-1 text-sm font-medium text-[#5a6b82] dark:text-slate-400">
+                        {active.tagline}
+                      </p>
                     </div>
-                    {active.websiteUrl ? (
-                      <Button asChild variant="outline-glow" size="sm" className="shrink-0">
-                        <a href={active.websiteUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2">
-                          <ExternalLink className="h-4 w-4" />
-                          {ui.visitSite}
-                        </a>
-                      </Button>
-                    ) : null}
                   </div>
                 </SheetHeader>
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
-                  <p className="text-sm leading-relaxed text-slate-300 md:text-base">{active.description}</p>
+                  <p className="text-[0.95rem] font-medium leading-relaxed text-[#3d4f66] dark:text-slate-300">
+                    {active.description}
+                  </p>
 
-                  <h4 className="mt-8 font-display text-sm font-bold uppercase tracking-widest text-[#ffb800]">
+                  <h4 className="mt-8 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[#8a96a8]">
                     {ui.whatWeDo}
                   </h4>
-                  <ul className="mt-4 space-y-4">
+
+                  <ol className="mt-4 space-y-0 divide-y divide-black/[0.06] border-y border-black/[0.06] dark:divide-white/10 dark:border-white/10">
                     {active.activities.map((item, i) => (
                       <motion.li
                         key={`${item.title}-${i}`}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 * i }}
-                        className="rounded-xl border border-white/10 bg-slate-900/50 p-4"
+                        transition={{ delay: 0.04 * i }}
+                        className="grid grid-cols-[2rem_1fr] gap-3 py-4"
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ffb800]/10 ring-1 ring-[#ffb800]/25">
-                            {activityIcon(item.kind)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-white">{item.title}</p>
-                            <p className="mt-1 text-sm leading-relaxed text-slate-400">{item.body}</p>
-                          </div>
+                        <span className="font-display text-lg font-extrabold text-[#ffb800]">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <p className="font-bold text-[#122033] dark:text-white">{item.title}</p>
+                          <p className="mt-1 text-sm font-medium leading-relaxed text-[#5a6b82] dark:text-slate-400">
+                            {item.body}
+                          </p>
                         </div>
                       </motion.li>
                     ))}
-                  </ul>
+                  </ol>
+
+                  {active.websiteUrl ? (
+                    <a
+                      href={active.websiteUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-8 inline-flex w-full items-center justify-center gap-2 bg-[#122033] px-4 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 dark:bg-[#ffb800] dark:text-[#122033]"
+                    >
+                      {ui.visitSite}
+                      <ExternalLink className="h-4 w-4" aria-hidden />
+                    </a>
+                  ) : null}
                 </div>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </SheetContent>
       </Sheet>

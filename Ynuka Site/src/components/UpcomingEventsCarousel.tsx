@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, MapPin, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -16,22 +17,65 @@ export type CarouselEvent = {
   description: string;
   fullDescription: string;
   isPast?: boolean;
+  /** En cours maintenant */
+  isLive?: boolean;
+  /** Vrai résumé publié par l’organisateur (pas un simple lien de secours) */
   recapUrl?: string | null;
   youtubeUrl?: string | null;
+  /** Affiché seulement s’il est fourni (in_person / online / hybrid / libellé déjà traduit) */
+  formatLabel?: string | null;
+  timezone?: string | null;
+  /** Lien d’inscription externe ; prioritaire sur le modal si présent */
+  registrationUrl?: string | null;
+  /** Consulter l’événement passé / Luma (sans inscription) */
+  viewUrl?: string | null;
 };
 
 const FALLBACK_IMG =
   "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop";
 
-function getPastCta(event: CarouselEvent, t: (key: string) => string) {
-  if (event.recapUrl) return { href: event.recapUrl, label: t("events.readRecap") };
-  if (event.youtubeUrl) return { href: event.youtubeUrl, label: t("events.watchYoutube") };
+type PastCta = {
+  href: string;
+  label: string;
+  /** Résumé / vidéo = or ; simple consultation passé = rouge */
+  tone: "recap" | "past";
+};
+
+function getPastCta(event: CarouselEvent, t: (key: string) => string): PastCta | null {
+  // Résumé réel partagé par l’organisateur
+  if (event.recapUrl?.trim()) {
+    return { href: event.recapUrl, label: t("events.readRecap"), tone: "recap" };
+  }
+  if (event.youtubeUrl?.trim()) {
+    return { href: event.youtubeUrl, label: t("events.watchYoutube"), tone: "recap" };
+  }
+  // Pas de résumé : consultation seulement (pas une inscription)
+  if (event.viewUrl?.trim()) {
+    const isLuma =
+      event.id?.startsWith("luma-") ||
+      /luma\.com|lu\.ma/i.test(event.viewUrl);
+    return {
+      href: event.viewUrl,
+      label: isLuma ? t("events.viewOnLuma") : t("events.viewPastEvent"),
+      tone: "past",
+    };
+  }
+  if (event.id?.startsWith("luma-")) {
+    return null;
+  }
+  if (event.id && !event.id.startsWith("preview-")) {
+    return {
+      href: `/events/${event.id}`,
+      label: t("events.viewPastEvent"),
+      tone: "past",
+    };
+  }
   return null;
 }
 
 type CardVariant = "light" | "dark";
 
-function EventSlideCard({
+export function EventSlideCard({
   event,
   variant,
   isInteractive = false,
@@ -54,18 +98,57 @@ function EventSlideCard({
   );
   const isDark = variant === "dark";
   const pastCta = event.isPast ? getPastCta(event, t) : null;
-  const showRegister = !event.isPast && onRegister;
+  const canRegister = !event.isPast;
+  const externalRegisterHref = canRegister && event.registrationUrl?.trim() ? event.registrationUrl : null;
+  const showRegister = canRegister && !externalRegisterHref && onRegister;
+
+  const pastBtnClass =
+    pastCta?.tone === "past"
+      ? // Charte Ynuka : navy + or (pas de rouge hors charte)
+        "w-full !rounded-none !px-3 !py-2 text-[0.8rem] font-bold !bg-[#0f2847] !text-white hover:!bg-[#163a66] !border !border-[#ffb800] shadow-none"
+      : "w-full !rounded-none !bg-[#ffb800] !px-3 !py-2 text-[0.8rem] font-bold !text-[#0f2847] hover:!bg-[#e6a600] shadow-none";
 
   const cta = (
     pastCta ? (
       <div className="mt-auto pt-3" onClick={(e) => e.stopPropagation()}>
+        {pastCta.tone === "past" ? (
+          /^https?:\/\//i.test(pastCta.href) ? (
+            <a
+              href={pastCta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center justify-center ${pastBtnClass}`}
+            >
+              {pastCta.label}
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </a>
+          ) : (
+            <Link to={pastCta.href} className={`inline-flex items-center justify-center ${pastBtnClass}`}>
+              {pastCta.label}
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Link>
+          )
+        ) : (
+          <ModernButton
+            variant="primary"
+            size="sm"
+            href={pastCta.href}
+            className={pastBtnClass}
+          >
+            {pastCta.label}
+            <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          </ModernButton>
+        )}
+      </div>
+    ) : externalRegisterHref ? (
+      <div className="mt-auto pt-3" onClick={(e) => e.stopPropagation()}>
         <ModernButton
           variant="primary"
           size="sm"
-          href={pastCta.href}
+          href={externalRegisterHref}
           className="w-full !rounded-none bg-[#ffb800] !px-3 !py-2 text-[0.8rem] font-bold text-[#0f2847] hover:bg-[#e6a600]"
         >
-          {pastCta.label}
+          {event.isLive ? t("events.joinLive") : t("home.registerNow")}
           <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
         </ModernButton>
       </div>
@@ -77,7 +160,7 @@ function EventSlideCard({
           className="w-full !rounded-none bg-[#ffb800] !px-3 !py-2 text-[0.8rem] font-bold text-[#0f2847] hover:bg-[#e6a600]"
           onClick={onRegister}
         >
-          {t("home.registerNow")}
+          {event.isLive ? t("events.joinLive") : t("home.registerNow")}
           <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
         </ModernButton>
       </div>
@@ -115,7 +198,11 @@ function EventSlideCard({
         >
           {event.type}
         </span>
-        {event.isPast ? (
+        {event.isLive ? (
+          <span className="typo-meta absolute right-0 top-0 bg-[#ffb800] px-2.5 py-1 font-extrabold tracking-wide text-[#0f2847]">
+            {t("events.liveLabel")}
+          </span>
+        ) : event.isPast ? (
           <span
             className={cn(
               "typo-meta absolute right-0 top-0 px-2.5 py-1",
@@ -158,8 +245,12 @@ function EventSlideCard({
             <span className="line-clamp-1">
               {event.date}
               {event.time ? ` · ${event.time}` : ""}
+              {event.timezone ? ` · ${event.timezone}` : ""}
             </span>
           </p>
+          {event.formatLabel ? (
+            <p className="line-clamp-1 pl-5 text-[0.7rem] opacity-90">{event.formatLabel}</p>
+          ) : null}
           <p className="flex items-center gap-1.5">
             <MapPin
               className={cn("h-3.5 w-3.5 shrink-0", isDark ? "text-[#ffb800]" : "text-[#0f2847] dark:text-[#ffb800]")}

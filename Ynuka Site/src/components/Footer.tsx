@@ -26,6 +26,7 @@ const Footer = () => {
         { labelKey: "nav.projects", path: "/projects" },
         { labelKey: "nav.gallery", path: "/resources#gallery" },
         { labelKey: "nav.community", path: "/community" },
+        { labelKey: "nav.support", path: "/soutenir" },
       ],
     },
     {
@@ -162,6 +163,10 @@ const Footer = () => {
                 const hasGallery = quickItems.some((item) => item.path === "/resources#gallery");
                 if (!hasGallery) {
                   quickItems.push({ labelKey: "nav.gallery", path: "/resources#gallery" });
+                }
+                const hasSupport = quickItems.some((item) => item.path === "/soutenir");
+                if (!hasSupport) {
+                  quickItems.push({ labelKey: "nav.support", path: "/soutenir" });
                 }
                 return quickItems.map((item) => (
                   <Link

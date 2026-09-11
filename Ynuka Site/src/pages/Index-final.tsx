@@ -8,11 +8,16 @@ import ModernSectionWrapper from "@/components/ui/ModernSectionWrapper";
 import Container from "@/components/ui/Container";
 import { useHeroAnimations } from "@/hooks/useHeroAnimations";
 import { useCountUp } from "@/hooks/useCountUp";
-import { fetchBlogPosts, fetchEvents, fetchProjects } from "@/lib/api";
+import { fetchBlogPosts, fetchHomeProjects } from "@/lib/api";
 import { cn, withTimeout, stripHtml } from "@/lib/utils";
 import UpcomingEventsCarousel from "@/components/UpcomingEventsCarousel";
 import OpportunitiesSection from "@/components/OpportunitiesSection";
 import ContactSection from "@/components/ContactSection";
+import {
+  loadMergedCarouselEvents,
+  pickRecentPreview,
+} from "@/services/events/eventsCatalog";
+import "@/styles/AboutDesign.css";
 
 interface Event {
   id?: string;
@@ -25,8 +30,13 @@ interface Event {
   description: string;
   fullDescription: string;
   isPast?: boolean;
+  isLive?: boolean;
   recapUrl?: string | null;
   youtubeUrl?: string | null;
+  registrationUrl?: string | null;
+  viewUrl?: string | null;
+  formatLabel?: string | null;
+  timezone?: string | null;
   sortDate?: string;
 }
 
@@ -217,25 +227,15 @@ const Index = () => {
     return Array.isArray(points) ? (points as string[]) : [];
   }, [t, i18n.language]);
 
-  const homeGalleryImages = useMemo(
+  const homeMosaicImages = useMemo(
     () => [
       "/onboarding/onboarding-1.jpg",
       "/onboarding/onboarding-2.jpg",
       "/onboarding/onboarding-3.jpg",
       "/onboarding/onboarding-4.jpg",
-      "/onboarding/onboarding-5.jpg",
-      "/onboarding/onboarding-6.jpg",
     ],
     []
   );
-  const [galleryIndex, setGalleryIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setGalleryIndex((prev) => (prev + 1) % homeGalleryImages.length);
-    }, 4200);
-    return () => window.clearInterval(timer);
-  }, [homeGalleryImages.length]);
 
   const handleOpenModal = (event: Event) => {
     if (event.isPast) {
@@ -251,6 +251,22 @@ const Index = () => {
         window.open(event.youtubeUrl, "_blank", "noopener,noreferrer");
         return;
       }
+      if (event.viewUrl) {
+        if (/^https?:\/\//i.test(event.viewUrl)) {
+          window.open(event.viewUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+        navigate(event.viewUrl);
+        return;
+      }
+      return;
+    }
+    if (event.registrationUrl) {
+      window.open(event.registrationUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (event.id?.startsWith("luma-")) {
+      navigate("/luma-events");
       return;
     }
     if (event.id && !event.id.startsWith("preview-")) {
@@ -335,64 +351,41 @@ const Index = () => {
     setUpcomingEvents(fallbackEvents.slice(0, 3));
     const fetchUpcoming = async () => {
       try {
-        const events = await withTimeout(fetchEvents(100));
-        const now = Date.now();
-        const locale = i18n.language === "fr" ? "fr-FR" : "en-US";
-        const isPastEvent = (dateStr: string) => {
-          const d = new Date(dateStr);
-          return !Number.isNaN(d.getTime()) && d.getTime() < now;
-        };
-        const toCard = (event: (typeof events)[number], isPast: boolean): Event => {
-          const description =
-            i18n.language === "fr" && event.description_fr ? event.description_fr : event.description || "";
-          const hasRecap = Boolean(event.recapUrl || stripHtml(description));
-          return {
-            id: String(event.id),
-            title: i18n.language === "fr" && event.title_fr ? event.title_fr : event.title,
-            date: event.date
-              ? new Date(event.date).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })
-              : "",
-            type: event.type,
-            location: event.location,
-            time: event.time || "",
-            image: event.imageUrl || "",
-            description,
-            fullDescription: description,
-            isPast,
-            recapUrl: event.recapUrl || (hasRecap && event.id ? `/events/${event.id}` : null),
-            youtubeUrl: event.youtubeUrl || null,
-            sortDate: event.date,
-          };
-        };
-
-        const byNewest = (a: Event, b: Event) =>
-          new Date(b.sortDate || b.date).getTime() - new Date(a.sortDate || a.date).getTime();
-
-        const valid = events.filter((event) => event.title && event.date && event.type && event.location);
-        const upcoming = valid
-          .filter((event) => !isPastEvent(event.date))
-          .map((event) => toCard(event, false))
-          .sort(byNewest);
-        const past = valid
-          .filter((event) => isPastEvent(event.date))
-          .map((event) => toCard(event, true))
-          .sort(byNewest);
-
-        const usedIds = new Set(upcoming.concat(past).map((event) => event.id));
-        const needed = Math.max(0, 3 - upcoming.length - past.length);
-        const padding = fallbackEvents
-          .filter((event) => !usedIds.has(event.id))
-          .sort(byNewest)
-          .slice(0, needed);
-        const padUpcoming = padding.filter((event) => !event.isPast);
-        const padPast = padding.filter((event) => event.isPast);
-        setUpcomingEvents([...upcoming, ...padUpcoming, ...past, ...padPast].slice(0, 3));
+        const result = await withTimeout(
+          loadMergedCarouselEvents({
+            lang: i18n.language,
+            t,
+            lumaFutureLimit: 10,
+            lumaPastLimit: 10,
+          })
+        );
+        const preview = pickRecentPreview(result.items, 3).map((event) => ({
+          id: event.id,
+          title: event.title,
+          date: event.date,
+          type: event.type,
+          location: event.location,
+          time: event.time,
+          image: event.image,
+          description: event.description,
+          fullDescription: event.fullDescription,
+          isPast: event.isPast,
+          isLive: event.isLive,
+          recapUrl: event.recapUrl,
+          youtubeUrl: event.youtubeUrl,
+          registrationUrl: event.registrationUrl,
+          viewUrl: event.viewUrl,
+          formatLabel: event.formatLabel,
+          timezone: event.timezone,
+          sortDate: event.sortDate,
+        }));
+        setUpcomingEvents(preview.length > 0 ? preview : fallbackEvents.slice(0, 3));
       } catch {
         setUpcomingEvents(fallbackEvents.slice(0, 3));
       }
     };
-    fetchUpcoming();
-  }, [i18n.language, fallbackEvents]);
+    void fetchUpcoming();
+  }, [i18n.language, fallbackEvents, t]);
 
   const hardcodedProjects: HomeProject[] = useMemo(
     () => [
@@ -428,8 +421,8 @@ const Index = () => {
     [t]
   );
 
-  const [projectsList, setProjectsList] = useState<HomeProject[]>(hardcodedProjects.slice(0, 4));
-  const [usedFallbackProjects, setUsedFallbackProjects] = useState(true);
+  const [projectsList, setProjectsList] = useState<HomeProject[]>([]);
+  const [usedFallbackProjects, setUsedFallbackProjects] = useState(false);
 
   useEffect(() => {
     if (usedFallbackProjects) setProjectsList(hardcodedProjects.slice(0, 4));
@@ -477,37 +470,28 @@ const Index = () => {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const items = await withTimeout(fetchProjects(100));
-        const mapped: HomeProject[] = items
-          .filter((project) => project.title)
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .map((project) => {
-            const description = stripHtml(project.description);
-            return {
-              name: project.title,
-              category: project.category || t("home.projFallbackCategory"),
-              description,
-              tags: tagsFromText(project.tags, project.category, description),
-              logoUrl: project.featured_image,
-              href: project.live_url || project.repository_url || `/projects#${project.slug}`,
-            };
-          });
+        const items = await withTimeout(fetchHomeProjects(4));
+        const mapped: HomeProject[] = items.map((project) => {
+          const description = stripHtml(project.description);
+          return {
+            name: project.title,
+            category: project.category || t("home.projFallbackCategory"),
+            description,
+            tags: tagsFromText(project.tags, project.category, description),
+            logoUrl: project.featured_image,
+            href: project.live_url || project.repository_url || `/projects#${project.slug}`,
+          };
+        });
 
-        if (!mapped.length) return;
-
-        const usedNames = new Set(mapped.map((project) => project.name.trim().toLowerCase()));
-        const padding = hardcodedProjects.filter(
-          (project) => !usedNames.has(project.name.trim().toLowerCase())
-        );
-        setProjectsList([...mapped, ...padding].slice(0, 4));
+        setProjectsList(mapped);
         setUsedFallbackProjects(false);
       } catch {
-        // fallback: hardcodedProjects
+        setUsedFallbackProjects(true);
       }
     };
 
     loadProjects();
-  }, [hardcodedProjects, t]);
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-white text-foreground transition-colors duration-300 dark:bg-background">
@@ -578,29 +562,18 @@ const Index = () => {
         >
           <div className="lg:col-span-6">
             <div className="relative w-full">
-              <div className="pointer-events-none absolute -bottom-4 -left-4 z-0 hidden h-24 w-24 grid-cols-5 gap-1.5 opacity-60 sm:grid">
-                {Array.from({ length: 25 }).map((_, idx) => (
-                  <span key={idx} className="h-1.5 w-1.5 rounded-full bg-slate-400/70" />
+              <div className="mission-visual-grid">
+                <span className="mission-visual-blob mission-visual-blob--tr" aria-hidden />
+                <span className="mission-visual-blob mission-visual-blob--bl" aria-hidden />
+                {homeMosaicImages.map((src, i) => (
+                  <div key={src} className={`mission-visual-card mission-visual-${i + 1}`}>
+                    <img
+                      src={src}
+                      alt={t("home.innovationPhotoAlt")}
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
+                  </div>
                 ))}
-              </div>
-
-              <div className="relative z-10 aspect-[16/10] overflow-hidden rounded-none bg-[#0f2847]/10 md:aspect-[16/9]">
-                {homeGalleryImages.map((src, i) => (
-                  <motion.img
-                    key={src}
-                    src={src}
-                    alt={t("home.innovationPhotoAlt")}
-                    initial={false}
-                    animate={{
-                      opacity: i === galleryIndex ? 1 : 0,
-                      scale: i === galleryIndex ? 1 : 1.03,
-                    }}
-                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    loading={i === 0 ? "eager" : "lazy"}
-                  />
-                ))}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f2847]/20 via-transparent to-transparent" />
               </div>
 
               <div className="absolute right-3 top-3 z-20 inline-flex items-center gap-2 rounded-none bg-[#0f2847] px-3 py-2.5 text-white sm:right-4 sm:top-4 sm:px-3.5 sm:py-3">
@@ -608,21 +581,6 @@ const Index = () => {
                 <span className="max-w-[5.5rem] text-[0.65rem] font-semibold uppercase leading-tight tracking-wide text-white/95 sm:text-[0.7rem]">
                   {t("home.yearsOfExistence")}
                 </span>
-              </div>
-
-              <div className="absolute bottom-3 left-3 z-20 flex gap-1.5">
-                {homeGalleryImages.map((src, i) => (
-                  <button
-                    key={src}
-                    type="button"
-                    aria-label={`Image ${i + 1}`}
-                    onClick={() => setGalleryIndex(i)}
-                    className={cn(
-                      "h-1.5 rounded-full transition-all",
-                      i === galleryIndex ? "w-5 bg-[#ffb800]" : "w-1.5 bg-white/70 hover:bg-white"
-                    )}
-                  />
-                ))}
               </div>
             </div>
           </div>
@@ -747,7 +705,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Projects — 4 flagship cards under impacts */}
+      {/* Projects — uniquement ceux flagués show_on_home par l'admin */}
+      {displayHomeProjects.length > 0 && (
       <ModernSectionWrapper className="py-16 md:py-20">
         <div id="home-projects">
           <motion.div
@@ -783,6 +742,7 @@ const Index = () => {
           </div>
         </div>
       </ModernSectionWrapper>
+      )}
 
       {/* Events — compact editorial carousel */}
       <ModernSectionWrapper className="py-16 md:py-20">

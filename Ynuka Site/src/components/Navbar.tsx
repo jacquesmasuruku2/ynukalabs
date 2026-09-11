@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
+  CaretDown,
   List,
   X,
   EnvelopeSimple,
@@ -32,17 +33,16 @@ const PROJECTS_NAV_ITEMS: NavGroup["items"] = [
   { key: "projectsBlockchain", path: "/projects?cat=Blockchain" },
 ];
 
-/** Indicateur sous-menu : + / − (discret et pro) */
+/** Indicateur sous-menu : chevron (pattern dropdown standard) */
 const MenuExpandHint = ({ open }: { open?: boolean }) => (
-  <span
+  <CaretDown
+    weight="bold"
     className={cn(
-      "ml-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center text-[0.95rem] font-light leading-none transition-colors",
-      open ? "text-[#ffb800]" : "text-current opacity-60"
+      "ml-0.5 h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+      open ? "rotate-180 text-[#ffb800]" : "text-current opacity-55"
     )}
     aria-hidden
-  >
-    {open ? "−" : "+"}
-  </span>
+  />
 );
 
 const keepDropdownInViewport = (el: HTMLElement, preferAlignEnd: boolean) => {
@@ -109,7 +109,7 @@ const NavDropdownPanel = ({
               key={sub.path}
               to={sub.path}
               className={cn(
-                "mx-1.5 flex items-center justify-between gap-3 border-l-[3px] px-3 py-2.5 text-sm font-semibold transition-colors",
+                "mx-1.5 flex items-center justify-between gap-3 border-l-[3px] px-3 py-2.5 font-nav text-[0.9375rem] font-semibold tracking-[-0.01em] transition-colors",
                 active
                   ? "border-[#ffb800] bg-[#0f2847] text-white"
                   : "border-transparent text-[#0f2847]/80 hover:border-[#ffb800]/50 hover:bg-[#0f2847]/[0.04] hover:text-[#0f2847] dark:text-slate-200 dark:hover:bg-white/[0.06] dark:hover:text-white"
@@ -163,8 +163,8 @@ const Navbar = () => {
         { key: "blockchains", path: "/blockchains#blockchains" },
         { key: "validators", path: "/blockchains#validators" },
         { key: "events", path: "/blockchains#events" },
-        { key: "community", path: "/community" },
-        { key: "opportunity", path: "/opportunities" },
+        { key: "opportunity", path: "/blockchains#opportunities" },
+        { key: "community", path: "/blockchains#community" },
       ],
     },
     {
@@ -202,8 +202,8 @@ const Navbar = () => {
             { key: "blockchains", path: "/blockchains#blockchains" },
             { key: "validators", path: "/blockchains#validators" },
             { key: "events", path: "/blockchains#events" },
-            { key: "community", path: "/community" },
-            { key: "opportunity", path: "/opportunities" },
+            { key: "opportunity", path: "/blockchains#opportunities" },
+            { key: "community", path: "/blockchains#community" },
           ];
         }
 
@@ -343,11 +343,11 @@ const Navbar = () => {
           {
             label: "nav.ecosystem",
             items: [
-              { key: "blockchains", path: "/blockchains" },
-              { key: "validators", path: "/validators" },
-              { key: "events", path: "/events" },
-              { key: "community", path: "/community" },
-              { key: "opportunity", path: "/opportunities" },
+              { key: "blockchains", path: "/blockchains#blockchains" },
+              { key: "validators", path: "/blockchains#validators" },
+              { key: "events", path: "/blockchains#events" },
+              { key: "opportunity", path: "/blockchains#opportunities" },
+              { key: "community", path: "/blockchains#community" },
             ],
           },
           {
@@ -440,12 +440,12 @@ const Navbar = () => {
 
   const isGroupActive = (group: NavGroup) => group.items.some((item) => isActive(item.path));
 
-  /* Liens menu : inactifs en noir, actifs en or Ynuka */
+  /* Liens menu : Plus Jakarta Sans, poids lisible, chevron pour les groupes */
   const linkBase =
-    "px-4 py-2.5 text-base font-bold rounded-xl transition-colors whitespace-nowrap lg:px-5 lg:py-3 lg:text-[1.0625rem]";
+    "px-3.5 py-2 font-nav text-[0.9375rem] font-semibold tracking-[-0.015em] rounded-lg transition-colors whitespace-nowrap lg:px-4 lg:py-2.5 lg:text-[1rem]";
   const linkActive = "text-[#ffb800] bg-[#ffb800]/12";
   const linkIdle =
-    "text-neutral-950 hover:bg-black/[0.06] hover:text-black dark:text-neutral-100 dark:hover:bg-white/10 dark:hover:text-white";
+    "text-[#1a2332] hover:bg-black/[0.05] hover:text-[#0f2847] dark:text-neutral-100 dark:hover:bg-white/10 dark:hover:text-white";
 
   const TopBarSocialIcons = () => (
     <div className="flex shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-2.5 md:gap-3">
@@ -511,7 +511,7 @@ const Navbar = () => {
         >
           <Link to="/" className="flex shrink-0 items-center gap-3 md:gap-3.5">
             <img src={logo} alt="Ynuka Labs" className="h-11 w-11 md:h-14 md:w-14" />
-            <span className="font-display text-xl font-bold tracking-tight text-slate-800 dark:text-white md:text-2xl">
+            <span className="font-nav text-xl font-bold tracking-[-0.03em] text-slate-800 dark:text-white md:text-2xl">
               Ynuka <span style={{ color: GOLD }}>Labs</span>
             </span>
           </Link>
@@ -527,7 +527,9 @@ const Navbar = () => {
                 >
                   <button
                     type="button"
-                    className={cn(linkBase, "flex items-center gap-1.5", isGroupActive(item) ? linkActive : linkIdle)}
+                    className={cn(linkBase, "flex items-center gap-1", isGroupActive(item) ? linkActive : linkIdle)}
+                    aria-expanded={openDropdown === item.label}
+                    aria-haspopup="menu"
                   >
                     {t(item.label)}
                     <MenuExpandHint open={openDropdown === item.label} />
@@ -582,9 +584,10 @@ const Navbar = () => {
                     type="button"
                     onClick={() => setMobileExpanded(mobileExpanded === item.label ? null : item.label)}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-xl px-4 py-4 text-base font-bold",
-                      isGroupActive(item) ? "bg-[#ffb800]/12 text-[#ffb800]" : "text-neutral-950 dark:text-neutral-100"
+                      "flex w-full items-center justify-between rounded-xl px-4 py-4 font-nav text-base font-semibold tracking-[-0.015em]",
+                      isGroupActive(item) ? "bg-[#ffb800]/12 text-[#ffb800]" : "text-[#1a2332] dark:text-neutral-100"
                     )}
+                    aria-expanded={mobileExpanded === item.label}
                   >
                     {t(item.label)}
                     <MenuExpandHint open={mobileExpanded === item.label} />
@@ -598,7 +601,7 @@ const Navbar = () => {
                             to={sub.path}
                             onClick={() => setMobileOpen(false)}
                             className={cn(
-                              "mx-1 flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold",
+                              "mx-1 flex items-center justify-between gap-2 px-3 py-2.5 font-nav text-[0.9375rem] font-semibold tracking-[-0.01em]",
                               isActive(sub.path)
                                 ? "bg-[#0f2847] text-white"
                                 : "text-[#0f2847]/80 dark:text-slate-200"
@@ -620,8 +623,8 @@ const Navbar = () => {
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "rounded-xl px-4 py-4 text-base font-bold",
-                    isActive(item.path) ? "bg-[#ffb800]/12 text-[#ffb800]" : "text-neutral-950 dark:text-neutral-100"
+                    "rounded-xl px-4 py-4 font-nav text-base font-semibold tracking-[-0.015em]",
+                    isActive(item.path) ? "bg-[#ffb800]/12 text-[#ffb800]" : "text-[#1a2332] dark:text-neutral-100"
                   )}
                 >
                   {t(`nav.${item.key}`)}

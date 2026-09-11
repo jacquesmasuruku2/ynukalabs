@@ -290,7 +290,13 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
   ) : (
     <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 md:grid-rows-1 lg:gap-4">
       {displayList.map((opportunity, i) => {
-        const featured = showHeading && displayList.length >= 3 ? i === 1 : false;
+        const featured = showHeading
+          ? displayList.length >= 3
+            ? i === 1
+            : i === 0
+          : displayList.length >= 3
+            ? i % 3 === 1
+            : false;
         return (
           <motion.div
             key={opportunity.id}
@@ -338,7 +344,7 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
 
   if (!showHeading) {
     return (
-      <section id="opportunities" className="scroll-mt-24 py-16 sm:py-20">
+      <section id="opportunities" className="scroll-mt-28 py-16 sm:py-20">
         <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
           {body}
         </div>
@@ -348,7 +354,7 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
 
   return (
     <ModernSectionWrapper className="py-16 md:py-20">
-      <div id="opportunities" className="scroll-mt-24">
+      <div id="opportunities" className="scroll-mt-28">
         {heading}
         {body}
         {cta}

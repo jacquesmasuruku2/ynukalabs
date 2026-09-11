@@ -24,6 +24,7 @@ import Validators from "./pages/Validators";
 import Documentation from "./pages/Documentation";
 import Tools from "./pages/Tools";
 import OnboardingProgram from "./pages/OnboardingProgram";
+import Soutenir from "./pages/Soutenir";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import LumaEvents from "./pages/LumaEvents";
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/documentation" element={<Documentation />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/onboarding" element={<OnboardingProgram />} />
+              <Route path="/soutenir" element={<Soutenir />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/goma-drep" element={<GomaDrep />} />
               <Route path="/opportunities" element={<Opportunities />} />
