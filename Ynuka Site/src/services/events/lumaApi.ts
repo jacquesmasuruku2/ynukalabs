@@ -29,6 +29,12 @@ type LumaApiEntry = {
   event?: LumaApiEvent;
 };
 
+type LumaApiPage = {
+  entries?: LumaApiEntry[];
+  has_more?: boolean;
+  next_cursor?: string | null;
+};
+
 function mapLumaEntries(entries: LumaApiEntry[]): LumaCalendarEvent[] {
   return entries
     .map((entry) => {
@@ -63,31 +69,60 @@ async function fetchLumaPeriod(
     (import.meta.env.VITE_LUMA_CALENDAR_ID as string | undefined)?.trim() ||
     LUMA_CALENDAR_ID;
 
-  const qs = new URLSearchParams({
-    calendar_api_id: calId,
-    pagination_limit: String(Math.min(Math.max(limit, 1), 50)),
-    period,
-  });
+  const target = Math.min(Math.max(limit, 1), 100);
+  const pageSize = Math.min(target, 50);
+  const out: LumaCalendarEvent[] = [];
+  let cursor: string | null = null;
+  let guard = 0;
 
-  const res = await fetch(`/luma-api/calendar/get-items?${qs.toString()}`, {
-    headers: { Accept: "application/json" },
-  });
+  while (out.length < target && guard < 6) {
+    guard += 1;
+    const qs = new URLSearchParams({
+      calendar_api_id: calId,
+      pagination_limit: String(pageSize),
+      period,
+    });
+    if (cursor) qs.set("pagination_cursor", cursor);
 
-  if (!res.ok) {
-    throw new Error(`Luma calendar HTTP ${res.status}`);
+    const res = await fetch(`/luma-api/calendar/get-items?${qs.toString()}`, {
+      headers: { Accept: "application/json" },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Luma calendar HTTP ${res.status}`);
+    }
+
+    const raw = await res.text();
+    // Si le rewrite Vercel rate, on reçoit le HTML du SPA au lieu du JSON Luma
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+      throw new Error("Luma proxy returned HTML instead of JSON");
+    }
+
+    let data: LumaApiPage;
+    try {
+      data = JSON.parse(raw) as LumaApiPage;
+    } catch {
+      throw new Error("Luma calendar invalid JSON");
+    }
+
+    const batch = mapLumaEntries(Array.isArray(data.entries) ? data.entries : []);
+    out.push(...batch);
+
+    if (!data.has_more || !data.next_cursor || batch.length === 0) break;
+    cursor = data.next_cursor;
   }
 
-  const data = (await res.json()) as { entries?: LumaApiEntry[] };
-  return mapLumaEntries(Array.isArray(data.entries) ? data.entries : []);
+  return out.slice(0, target);
 }
 
-/** Événements Luma à venir. */
-export async function listLumaUpcoming(limit = 5): Promise<LumaCalendarEvent[]> {
+/** Événements Luma à venir (calendrier Goma Hub). */
+export async function listLumaUpcoming(limit = 50): Promise<LumaCalendarEvent[]> {
   return fetchLumaPeriod("future", limit);
 }
 
-/** Événements Luma passés (les plus récents d’abord côté API). */
-export async function listLumaPast(limit = 10): Promise<LumaCalendarEvent[]> {
+/** Événements Luma passés (calendrier Goma Hub). */
+export async function listLumaPast(limit = 50): Promise<LumaCalendarEvent[]> {
   return fetchLumaPeriod("past", limit);
 }
 

@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import EventsHomeStyleGrid from "@/components/events/EventsHomeStyleGrid";
-import { LUMA_EMBED_URL } from "@/config/luma";
 import { cn } from "@/lib/utils";
 import {
   loadMergedCarouselEvents,
@@ -20,14 +19,14 @@ const fadeUp = {
 };
 
 /**
- * Aperçu Events sur l’écosystème (#events) :
- * message clair + 3 plus récents (Luma + site) + redirection.
+ * Aperçu Events écosystème (#events) :
+ * jusqu’à 3 cartes (API site + Luma) — jamais d’iframe Luma scrollable.
+ * (Le fallback iframe après merge cassait l’affichage en prod.)
  */
 export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: boolean }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState<UnifiedCarouselEvent[]>([]);
-  const [lumaFailed, setLumaFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -38,18 +37,16 @@ export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: b
         const result = await loadMergedCarouselEvents({
           lang: i18n.language,
           t,
-          lumaFutureLimit: 10,
-          lumaPastLimit: 10,
+          lumaFutureLimit: 50,
+          lumaPastLimit: 50,
         });
         if (cancelled) return;
         setItems(result.items);
-        setLumaFailed(result.lumaFailed);
         setFailed(result.siteFailed && result.items.length === 0);
       } catch {
         if (!cancelled) {
           setItems([]);
           setFailed(true);
-          setLumaFailed(true);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -102,13 +99,6 @@ export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: b
             <p className="mt-1 text-sm text-[#315795] dark:text-slate-400">
               {t("events.ecosystemFallbackHint")}
             </p>
-            <Link
-              to="/events"
-              className="mt-5 inline-flex items-center gap-2 bg-[#0f2847] px-4 py-2.5 text-sm font-bold text-white"
-            >
-              {t("home.viewAllEvents")}
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
           </div>
         ) : preview.length === 0 ? (
           <div className="border border-[#0f2847]/12 bg-white px-5 py-12 text-center dark:border-slate-700 dark:bg-[#0c1a2e]">
@@ -119,24 +109,6 @@ export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: b
             <p className="mt-1 text-sm text-[#315795] dark:text-slate-400">
               {t("events.ecosystemEmptyHint")}
             </p>
-            {lumaFailed ? (
-              <div className="mx-auto mt-6 max-w-2xl overflow-hidden border border-[#0f2847]/10">
-                <iframe
-                  title={t("events.ecosystemLumaLive")}
-                  src={LUMA_EMBED_URL}
-                  className="block h-[360px] w-full border-0 bg-white"
-                  loading="lazy"
-                  allowFullScreen
-                />
-              </div>
-            ) : null}
-            <Link
-              to="/events"
-              className="mt-5 inline-flex items-center gap-2 bg-[#ffb800] px-4 py-2.5 text-sm font-bold text-[#0f2847]"
-            >
-              {t("home.viewAllEvents")}
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
           </div>
         ) : (
           <>
@@ -153,22 +125,6 @@ export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: b
                 }
               }}
             />
-            {lumaFailed ? (
-              <div className="mt-4 overflow-hidden border border-[#0f2847]/12 bg-white dark:border-slate-700">
-                <div className="border-b border-[#0f2847]/10 px-4 py-2.5 dark:border-slate-700">
-                  <p className="text-sm font-bold text-[#0f2847] dark:text-white">
-                    {t("events.ecosystemLumaLive")}
-                  </p>
-                </div>
-                <iframe
-                  title={t("events.ecosystemLumaLive")}
-                  src={LUMA_EMBED_URL}
-                  className="block h-[320px] w-full border-0 bg-white"
-                  loading="lazy"
-                  allowFullScreen
-                />
-              </div>
-            ) : null}
           </>
         )}
 

@@ -195,8 +195,8 @@ export async function loadMergedCarouselEvents(opts: {
     lang,
     t,
     siteLimit = 100,
-    lumaFutureLimit = 20,
-    lumaPastLimit = 20,
+    lumaFutureLimit = 50,
+    lumaPastLimit = 50,
   } = opts;
 
   const [siteResult, lumaFutureResult, lumaPastResult] = await Promise.allSettled([
@@ -226,8 +226,8 @@ export async function loadMergedCarouselEvents(opts: {
       ? lumaPastResult.value.map((e) => lumaToCarousel(e, true, lang, t))
       : [];
 
-  // Luma d’abord dans le merge pour prioriser les actifs, puis site
-  const items = sortUnified(mergeUnique([lumaFuture, siteItems, lumaPast]));
+  // Luma Goma Hub en premier (future + past) pour ne pas être écrasé par des events site / fake
+  const items = sortUnified(mergeUnique([lumaFuture, lumaPast, siteItems]));
 
   return { items, siteFailed, lumaFailed };
 }

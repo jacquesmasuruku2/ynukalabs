@@ -67,8 +67,8 @@ const Events = () => {
       const result = await loadMergedCarouselEvents({
         lang: i18n.language,
         t,
-        lumaFutureLimit: 30,
-        lumaPastLimit: 30,
+        lumaFutureLimit: 50,
+        lumaPastLimit: 50,
       });
       setEvents(result.items);
       setLumaFailed(result.lumaFailed);
@@ -294,7 +294,7 @@ const Events = () => {
               <EventsHomeStyleGrid
                 key={activeFilter}
                 events={filtered}
-                visibleRows={2}
+                visibleRows={4}
                 onRegister={(event) => {
                   if (event.id && !event.id.startsWith("luma-") && !event.isPast) {
                     setRegisterEventId(event.id);
