@@ -355,8 +355,8 @@ const Index = () => {
           loadMergedCarouselEvents({
             lang: i18n.language,
             t,
-            lumaFutureLimit: 10,
-            lumaPastLimit: 10,
+            lumaFutureLimit: 50,
+            lumaPastLimit: 50,
           })
         );
         const preview = pickRecentPreview(result.items, 3).map((event) => ({

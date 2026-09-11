@@ -5,7 +5,11 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/luma-api/:path*",
+      "destination": "https://api.luma.com/:path*"
+    },
+    {
+      "source": "/((?!luma-api/).*)",
       "destination": "/index.html"
     }
   ]
