@@ -1,20 +1,23 @@
 import { useState, useEffect, useMemo } from "react";
-import type { ElementType } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Users, Calendar, Rocket, Trees, Star, Zap, Globe } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import ModernButton from "@/components/ui/ModernButton";
-import ModernCard from "@/components/ui/ModernCard";
 import ModernSectionWrapper from "@/components/ui/ModernSectionWrapper";
 import Container from "@/components/ui/Container";
 import { useHeroAnimations } from "@/hooks/useHeroAnimations";
 import { useCountUp } from "@/hooks/useCountUp";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
-import { fetchBlogPosts, fetchEvents } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { fetchBlogPosts, fetchHomeProjects } from "@/lib/api";
+import { cn, withTimeout, stripHtml } from "@/lib/utils";
 import UpcomingEventsCarousel from "@/components/UpcomingEventsCarousel";
 import OpportunitiesSection from "@/components/OpportunitiesSection";
+import ContactSection from "@/components/ContactSection";
+import {
+  loadMergedCarouselEvents,
+  pickRecentPreview,
+} from "@/services/events/eventsCatalog";
+import "@/styles/AboutDesign.css";
 
 interface Event {
   id?: string;
@@ -26,6 +29,15 @@ interface Event {
   image: string;
   description: string;
   fullDescription: string;
+  isPast?: boolean;
+  isLive?: boolean;
+  recapUrl?: string | null;
+  youtubeUrl?: string | null;
+  registrationUrl?: string | null;
+  viewUrl?: string | null;
+  formatLabel?: string | null;
+  timezone?: string | null;
+  sortDate?: string;
 }
 
 interface HomeBlogPost {
@@ -35,258 +47,419 @@ interface HomeBlogPost {
   excerpt: string | null;
   excerpt_fr: string | null;
   category: string;
+  cover_url: string | null;
   created_at: string;
 }
 
-interface HomeBlogPost {
-  id: string;
-  title: string;
-  title_fr: string | null;
-  excerpt: string | null;
-  excerpt_fr: string | null;
-  category: string;
-  created_at: string;
-}
+const BLOG_FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=800&fit=crop";
 
-type StatItem = {
-  icon: ElementType;
+type ImpactStatCardProps = {
   value: number;
-  label: string;
   suffix: string;
+  label: string;
+  points?: string[];
+  delay?: number;
+  locale: string;
 };
 
-const StatBentoTile = ({
-  stat,
+const ImpactStatCard = ({
+  value,
+  suffix,
+  label,
+  points,
   delay = 0,
-  className,
-  variant = "default",
-}: {
-  stat: StatItem;
-  delay?: number;
-  className?: string;
-  variant?: "default" | "wide" | "tall";
-}) => {
-  const { count, barProgress, elementRef } = useCountUp({
-    end: stat.value,
-    duration: 2500,
+  locale,
+}: ImpactStatCardProps) => {
+  const { count, elementRef } = useCountUp({
+    end: value,
+    duration: 2200,
     startOnView: true,
   });
-  const Icon = stat.icon;
-  const isLargeValue = stat.value >= 1000;
-
-  const numberClass = cn(
-    "font-display font-extrabold tabular-nums tracking-[-0.035em] text-[#111111] leading-[0.95]",
-    variant === "default" &&
-      (isLargeValue
-        ? "text-[clamp(1.35rem,3.8vw,2rem)] md:text-[clamp(1.5rem,3.2vw,2.15rem)]"
-        : "text-[clamp(1.5rem,4.2vw,2.2rem)] md:text-[clamp(1.65rem,3.5vw,2.45rem)]"),
-    variant === "wide" &&
-      (isLargeValue
-        ? "text-[clamp(1.45rem,3.8vw,2.1rem)] md:text-[clamp(1.6rem,3.2vw,2.35rem)]"
-        : "text-[clamp(1.65rem,4.2vw,2.35rem)] md:text-[clamp(1.85rem,3.5vw,2.65rem)]"),
-    variant === "tall" &&
-      (isLargeValue
-        ? "text-[clamp(1.3rem,3.4vw,1.85rem)] md:text-[clamp(1.45rem,2.9vw,2.1rem)] lg:text-[clamp(1.55rem,2.6vw,2.25rem)]"
-        : "text-[clamp(1.55rem,4vw,2.15rem)] md:text-[clamp(1.75rem,3.2vw,2.45rem)]")
-  );
-
-  const suffixClass = cn(
-    "font-display font-bold text-[#ffb800] tabular-nums",
-    variant === "default" && "text-[clamp(0.8rem,2vw,1.1rem)] md:text-[clamp(0.85rem,1.7vw,1.2rem)]",
-    variant === "wide" && "text-[clamp(0.85rem,2.1vw,1.15rem)] md:text-[clamp(0.9rem,1.8vw,1.25rem)]",
-    variant === "tall" && "text-[clamp(0.8rem,1.9vw,1.1rem)] md:text-[clamp(0.85rem,1.65vw,1.2rem)]"
-  );
-
-  const bar = (
-    <div
-      className={cn(
-        "w-full overflow-hidden rounded-full border border-[#111111]/10 bg-[#111111]/[0.07]",
-        variant === "default" && "mt-2 h-1 max-w-none",
-        variant === "wide" && "mt-2 h-1 md:max-w-none",
-        variant === "tall" && "mt-2 h-1.5"
-      )}
-      aria-hidden
-    >
-      <div
-        className="h-full rounded-full bg-gradient-to-r from-[#0f6be8] via-[#12B1A6] to-[#ffb800]"
-        style={{
-          width: `${Math.max(0, Math.min(100, Math.round(barProgress * 100)))}%`,
-          minWidth: barProgress > 0 ? "4px" : undefined,
-        }}
-      />
-    </div>
-  );
-
-  const labelClass = cn(
-    "font-semibold leading-snug text-[#111111]",
-    variant === "default" && "mt-2 text-[0.75rem] leading-snug md:mt-auto md:text-[0.8125rem]",
-    variant === "wide" &&
-      "mt-2 max-w-[22ch] text-[0.75rem] md:mt-0 md:flex-1 md:text-[0.8125rem] md:leading-snug lg:max-w-none lg:text-sm",
-    variant === "tall" && "mt-2 text-[0.75rem] md:mt-0 md:text-[0.8125rem] lg:max-w-[16ch]"
-  );
+  const isWide = Boolean(points?.length);
+  const formatted = count.toLocaleString(locale.startsWith("fr") ? "fr-FR" : "en-US");
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
       viewport={{ once: true, margin: "-40px" }}
-      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-      role="group"
-      aria-label={stat.label}
-      className={cn("w-full min-w-0 text-left", className)}
+      aria-label={`${formatted}${suffix} ${label}`}
+      className="h-full"
     >
       <div
+        style={{ animationDelay: `${0.4 + delay}s` }}
         className={cn(
-          "relative flex h-full flex-col overflow-hidden rounded-2xl bg-[#fff8f0] p-4 text-left text-[#111111] shadow-[0_6px_24px_rgba(0,0,0,0.07)] ring-1 ring-black/[0.06] transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.1)] dark:bg-[#fff8f0] dark:ring-black/10",
-          variant === "tall" && "md:justify-between md:py-4",
-          variant === "wide" && "md:flex-row md:items-center md:gap-4 md:p-5 lg:gap-5 lg:p-5",
-          variant === "default" && "md:p-5"
+          "impact-card h-full rounded-2xl border border-white/20 bg-white/[0.04] px-6 py-6 md:px-7 md:py-7",
+          isWide
+            ? "flex flex-col justify-center gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+            : "flex flex-col justify-center"
         )}
       >
-        <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-[0.88]"
-          aria-hidden
-          style={{
-            backgroundImage: [
-              "linear-gradient(135deg, hsl(230 42% 58% / 0.11) 0%, transparent 46%)",
-              "linear-gradient(315deg, hsl(43 100% 50% / 0.09) 0%, transparent 42%)",
-              "linear-gradient(to right, transparent 49.5%, rgba(255,184,0,0.16) 50%, transparent 50.5%)",
-              "linear-gradient(to bottom, transparent 49.5%, rgba(255,184,0,0.16) 50%, transparent 50.5%)",
-            ].join(","),
-          }}
-        />
-        <div
-          className={cn(
-            "relative z-[1] flex min-h-0 flex-1 flex-col",
-            variant === "wide" && "md:flex-row md:items-center md:gap-4",
-            variant === "tall" && "md:justify-between"
-          )}
-        >
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col",
-              variant === "wide" && "md:flex md:shrink-0 md:flex-col md:items-start",
-              variant === "tall" && "md:justify-between"
-            )}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="inline-flex shrink-0 rounded-lg bg-[#111111]/[0.05] p-1.5 text-[#111111] ring-1 ring-black/[0.05]">
-                <Icon className="h-6 w-6 text-[#111111] md:h-7 md:w-7" strokeWidth={2} aria-hidden />
-              </div>
-            </div>
-
-            <div
-              ref={elementRef}
-              className={cn(
-                "mt-2 min-w-0 flex-1 md:mt-3",
-                variant === "tall" && "flex flex-col md:mt-3 md:justify-center",
-                variant === "wide" && "md:mt-3"
-              )}
-            >
-              <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0">
-                <span className={numberClass}>
-                  {count}
-                  <span className={suffixClass}>{stat.suffix}</span>
-                </span>
-              </div>
-              {bar}
-            </div>
-          </div>
-
-          <p className={labelClass}>{stat.label}</p>
+        <div ref={elementRef} className="min-w-0">
+          <p className="font-display text-[2rem] font-bold leading-none tracking-tight text-white tabular-nums md:text-[2.35rem]">
+            {formatted}
+            <span>{suffix}</span>
+          </p>
+          <p className="typo-support mt-2.5 max-w-[18ch] text-pretty leading-snug text-white/75">
+            {label}
+          </p>
         </div>
+        {isWide ? (
+          <ul className="flex min-w-0 flex-col gap-1.5 border-white/15 sm:border-l sm:pl-6">
+            {points!.map((point) => (
+              <li key={point} className="typo-support leading-snug text-white/90">
+                {point}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
-    </motion.div>
+    </motion.article>
   );
 };
+
+type HomeProject = {
+  name: string;
+  category: string;
+  description: string;
+  tags: string[];
+  logoUrl?: string | null;
+  href?: string;
+};
+
+const TAG_STOPWORDS = new Set([
+  "de", "la", "le", "les", "et", "pour", "du", "des", "aux", "au", "en", "un", "une",
+  "the", "of", "and", "a", "an", "for", "to", "in",
+]);
+
+function tagsFromText(...parts: Array<string | string[] | null | undefined>) {
+  const collected: string[] = [];
+  parts.forEach((part) => {
+    if (!part) return;
+    const values = Array.isArray(part) ? part : String(part).split(/[,|;/]+|\s+/);
+    values.forEach((value) => {
+      const tag = value.trim();
+      if (tag.length < 2) return;
+      if (TAG_STOPWORDS.has(tag.toLowerCase())) return;
+      if (collected.some((item) => item.toLowerCase() === tag.toLowerCase())) return;
+      collected.push(tag);
+    });
+  });
+  return collected.slice(0, 4);
+}
+
+function HomeProjectCard({ project, delay }: { project: HomeProject; delay: number }) {
+  const inner = (
+    <>
+      <div className="flex items-start justify-between gap-4">
+        {project.logoUrl ? (
+          <img
+            src={project.logoUrl}
+            alt=""
+            className="h-10 max-w-[160px] object-contain object-left"
+          />
+        ) : (
+          <span className="font-display text-[1.65rem] font-bold leading-none tracking-tight text-[#0f2847] dark:text-white">
+            {project.name}
+          </span>
+        )}
+        <span className="shrink-0 pt-1 text-sm font-medium text-slate-300 dark:text-white/30">
+          {project.name}
+        </span>
+      </div>
+      <p className="mt-4 flex-1 text-[0.95rem] leading-relaxed text-slate-600 dark:text-[#93c5fc]/80">
+        {project.description}
+      </p>
+      {project.tags.length ? (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {project.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.72rem] font-medium text-slate-500 dark:border-white/15 dark:bg-transparent dark:text-[#93c5fc]/80"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+
+  const cardClass =
+    "flex h-full min-h-[180px] flex-col rounded-2xl border border-slate-200 bg-white px-6 py-5 transition-colors hover:border-[#ffb800]/50 dark:border-[#3b82f6]/25 dark:bg-[#152a48]";
+  const isExternal = Boolean(project.href && /^https?:\/\//i.test(project.href));
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      viewport={{ once: true }}
+      className="h-full"
+    >
+      {project.href ? (
+        isExternal ? (
+          <a href={project.href} target="_blank" rel="noopener noreferrer" className={cardClass}>
+            {inner}
+          </a>
+        ) : (
+          <Link to={project.href} className={cardClass}>
+            {inner}
+          </Link>
+        )
+      ) : (
+        <div className={cardClass}>{inner}</div>
+      )}
+    </motion.article>
+  );
+}
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { heroRef, titleRef, buttonsRef, navigationRef } = useHeroAnimations(isLoading);
-  const innovationSentenceWords = useMemo(() => t("home.innovationMission").split(/\s+/).filter(Boolean), [t, i18n.language]);
+  const { heroRef, titleRef, buttonsRef } = useHeroAnimations(isLoading);
+  const innovationPoints = useMemo(() => {
+    const points = t("home.innovationPoints", { returnObjects: true });
+    return Array.isArray(points) ? (points as string[]) : [];
+  }, [t, i18n.language]);
+
+  const homeMosaicImages = useMemo(
+    () => [
+      "/onboarding/onboarding-1.jpg",
+      "/onboarding/onboarding-2.jpg",
+      "/onboarding/onboarding-3.jpg",
+      "/onboarding/onboarding-4.jpg",
+    ],
+    []
+  );
 
   const handleOpenModal = (event: Event) => {
-    if (event.id) {
-      navigate(`/events/${event.id}`);
+    if (event.isPast) {
+      if (event.recapUrl) {
+        if (/^https?:\/\//i.test(event.recapUrl)) {
+          window.open(event.recapUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+        navigate(event.recapUrl);
+        return;
+      }
+      if (event.youtubeUrl) {
+        window.open(event.youtubeUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+      if (event.viewUrl) {
+        if (/^https?:\/\//i.test(event.viewUrl)) {
+          window.open(event.viewUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+        navigate(event.viewUrl);
+        return;
+      }
+      return;
     }
+    if (event.registrationUrl) {
+      window.open(event.registrationUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (event.id?.startsWith("luma-")) {
+      navigate("/luma-events");
+      return;
+    }
+    if (event.id && !event.id.startsWith("preview-")) {
+      navigate(`/events/${event.id}`);
+      return;
+    }
+    navigate("/events");
   };
 
-  const stats: StatItem[] = useMemo(() => [
-    { icon: Users, value: 500, label: "Membres Actifs", suffix: "+" },
-    { icon: Calendar, value: 30, label: "Événements Organisés", suffix: "+" },
-    { icon: Rocket, value: 15, label: "Projets Lancés", suffix: "+" },
-    { icon: Trees, value: 10000, label: t("stats.treesPlanted"), suffix: "+" },
-  ], [t]);
+  const fallbackEvents = useMemo<Event[]>(() => {
+    const locale = i18n.language === "fr" ? "fr-FR" : "en-US";
+    const formatDate = (iso: string) =>
+      new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+    return [
+      {
+        id: "preview-1",
+        title: t("events.event1Title"),
+        date: formatDate("2026-10-18"),
+        type: t("events.workshop"),
+        location: "Goma Innovation Center",
+        time: "14:00 - 18:00",
+        image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop",
+        description: t("events.event1Desc"),
+        fullDescription: t("events.event1Desc"),
+        isPast: false,
+        recapUrl: null,
+        youtubeUrl: null,
+        sortDate: "2026-10-18",
+      },
+      {
+        id: "preview-2",
+        title: t("events.event2Title"),
+        date: formatDate("2026-11-08"),
+        type: t("events.hackathon"),
+        location: "Virunga Tech Park",
+        time: "09:00 - 20:00",
+        image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=600&fit=crop",
+        description: t("events.event2Desc"),
+        fullDescription: t("events.event2Desc"),
+        isPast: false,
+        recapUrl: null,
+        youtubeUrl: null,
+        sortDate: "2026-11-08",
+      },
+      {
+        id: "preview-3",
+        title: t("events.event3Title"),
+        date: formatDate("2026-12-05"),
+        type: t("events.meetup"),
+        location: "Ynuka Labs, Goma",
+        time: "17:00 - 19:00",
+        image: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&h=600&fit=crop",
+        description: t("events.event3Desc"),
+        fullDescription: t("events.event3Desc"),
+        isPast: false,
+        recapUrl: null,
+        youtubeUrl: null,
+        sortDate: "2026-12-05",
+      },
+    ];
+  }, [t, i18n.language]);
+
+  const impactLocale = i18n.language || "fr";
+  const projectPoints = useMemo(
+    () => [t("home.proj1Category"), t("home.proj2Category"), t("home.proj3Category")],
+    [t]
+  );
+  const memberPoints = useMemo(
+    () => [t("home.statsMemberBuilders"), t("home.statsMemberLearners"), t("home.statsMemberMentors")],
+    [t]
+  );
+  const treePoints = useMemo(
+    () => [t("home.statsSiteBweremana"), t("home.statsSiteShaha"), t("home.statsSiteMukwija")],
+    [t]
+  );
+  const eventPoints = useMemo(
+    () => [t("events.workshop"), t("events.hackathon"), t("events.meetup")],
+    [t]
+  );
 
   useEffect(() => {
+    setUpcomingEvents(fallbackEvents.slice(0, 3));
     const fetchUpcoming = async () => {
       try {
-        const events = await fetchEvents(12);
-        const mapped: Event[] = events
-          .filter((event) => event.upcoming !== false)
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-          .slice(0, 6)
-          .map((event) => ({
-            id: String(event.id),
-            title: i18n.language === "fr" && event.title_fr ? event.title_fr : event.title,
-            date: event.date ? new Date(event.date).toLocaleDateString(i18n.language === "fr" ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" }) : "",
-            type: event.type,
-            location: event.location,
-            time: event.time || "",
-            image: event.imageUrl || "",
-            description: i18n.language === "fr" && event.description_fr ? event.description_fr : event.description || "",
-            fullDescription: i18n.language === "fr" && event.description_fr ? event.description_fr : event.description || "",
-          }))
-          .filter((event) => event.title && event.date && event.type && event.location);
-        setUpcomingEvents(mapped);
+        const result = await withTimeout(
+          loadMergedCarouselEvents({
+            lang: i18n.language,
+            t,
+            lumaFutureLimit: 10,
+            lumaPastLimit: 10,
+          })
+        );
+        const preview = pickRecentPreview(result.items, 3).map((event) => ({
+          id: event.id,
+          title: event.title,
+          date: event.date,
+          type: event.type,
+          location: event.location,
+          time: event.time,
+          image: event.image,
+          description: event.description,
+          fullDescription: event.fullDescription,
+          isPast: event.isPast,
+          isLive: event.isLive,
+          recapUrl: event.recapUrl,
+          youtubeUrl: event.youtubeUrl,
+          registrationUrl: event.registrationUrl,
+          viewUrl: event.viewUrl,
+          formatLabel: event.formatLabel,
+          timezone: event.timezone,
+          sortDate: event.sortDate,
+        }));
+        setUpcomingEvents(preview.length > 0 ? preview : fallbackEvents.slice(0, 3));
       } catch {
-        setUpcomingEvents([]);
+        setUpcomingEvents(fallbackEvents.slice(0, 3));
       }
     };
-    fetchUpcoming();
-  }, [i18n.language]);
+    void fetchUpcoming();
+  }, [i18n.language, fallbackEvents, t]);
 
-  type HomeProject = { name: string; category: string; description: string };
-  const hardcodedProjects: HomeProject[] = [
-    { 
-      name: "KivuPay", 
-      category: "DeFi", 
-      description: "Plateforme de paiement décentralisée pour la région des Grands Lacs"
-    },
-    { 
-      name: "EduChain", 
-      category: "Éducation", 
-      description: "Système éducatif basé sur la blockchain pour les écoles congolaises"
-    },
-    { 
-      name: "VolcanoDAO", 
-      category: "Impact Social", 
-      description: "Organisation autonome pour le développement durable autour du Virunga"
-    },
-  ];
+  const hardcodedProjects: HomeProject[] = useMemo(
+    () => [
+      {
+        name: t("home.proj1Name"),
+        category: t("home.proj1Category"),
+        description: t("home.proj1Desc"),
+        tags: tagsFromText(t("home.proj1Tags", { returnObjects: true }) as string[]),
+        href: "/projects",
+      },
+      {
+        name: t("home.proj2Name"),
+        category: t("home.proj2Category"),
+        description: t("home.proj2Desc"),
+        tags: tagsFromText(t("home.proj2Tags", { returnObjects: true }) as string[]),
+        href: "/projects",
+      },
+      {
+        name: t("home.proj3Name"),
+        category: t("home.proj3Category"),
+        description: t("home.proj3Desc"),
+        tags: tagsFromText(t("home.proj3Tags", { returnObjects: true }) as string[]),
+        href: "/projects",
+      },
+      {
+        name: t("home.proj4Name"),
+        category: t("home.proj4Category"),
+        description: t("home.proj4Desc"),
+        tags: tagsFromText(t("home.proj4Tags", { returnObjects: true }) as string[]),
+        href: "/projects",
+      },
+    ],
+    [t]
+  );
 
-  const [projectsList, setProjectsList] = useState<HomeProject[]>(hardcodedProjects);
+  const [projectsList, setProjectsList] = useState<HomeProject[]>([]);
+  const [usedFallbackProjects, setUsedFallbackProjects] = useState(false);
+
+  useEffect(() => {
+    if (usedFallbackProjects) setProjectsList(hardcodedProjects.slice(0, 4));
+  }, [hardcodedProjects, usedFallbackProjects]);
+
+  const displayHomeProjects = projectsList.slice(0, 4);
 
   const [latestBlogPosts, setLatestBlogPosts] = useState<HomeBlogPost[]>([]);
   const [blogPostsLoading, setBlogPostsLoading] = useState(true);
+  const [blogPostsError, setBlogPostsError] = useState(false);
 
-  const displayHomeBlogPosts = latestBlogPosts.slice(0, 3);
+  const displayHomeBlogPosts = latestBlogPosts.slice(0, 4);
+  const featuredBlogPost = displayHomeBlogPosts[0] ?? null;
+  const sideBlogPosts = displayHomeBlogPosts.slice(1, 4);
 
   useEffect(() => {
     const fetchLatestBlog = async () => {
       try {
-        const posts = await fetchBlogPosts(100);
+        const posts = await withTimeout(fetchBlogPosts(100));
         setLatestBlogPosts(
           posts
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 3)
+            .slice(0, 4)
+            .map((post) => ({
+              id: post.id,
+              title: post.title,
+              title_fr: post.title_fr,
+              excerpt: post.excerpt,
+              excerpt_fr: post.excerpt_fr,
+              category: post.category,
+              cover_url: post.cover_url,
+              created_at: post.created_at,
+            }))
         );
       } catch {
         setLatestBlogPosts([]);
+        setBlogPostsError(true);
       } finally {
         setBlogPostsLoading(false);
       }
@@ -295,82 +468,64 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const loadProjects = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/projects?sort=createdAt:desc&pagination[pageSize]=100"
-        );
-        const items = res.data || [];
-        const mapped: HomeProject[] = items
-          .map((item) => {
-            const it = item as { attributes?: Record<string, unknown>; id?: string | number };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const name = String(attrs.name ?? "");
-            const category = String(attrs.category ?? "");
-            const description = String(attrs.description ?? "");
-            if (!name || !category) return null;
-            return { name, category, description };
-          })
-          .filter((p): p is HomeProject => p !== null);
+        const items = await withTimeout(fetchHomeProjects(4));
+        const mapped: HomeProject[] = items.map((project) => {
+          const description = stripHtml(project.description);
+          return {
+            name: project.title,
+            category: project.category || t("home.projFallbackCategory"),
+            description,
+            tags: tagsFromText(project.tags, project.category, description),
+            logoUrl: project.featured_image,
+            href: project.live_url || project.repository_url || `/projects#${project.slug}`,
+          };
+        });
 
-        if (mapped.length) setProjectsList(mapped);
+        setProjectsList(mapped);
+        setUsedFallbackProjects(false);
       } catch {
-        // fallback: hardcodedProjects
+        setUsedFallbackProjects(true);
       }
     };
 
-    fetchProjects();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    loadProjects();
+  }, [t]);
 
   return (
-    <div className="min-h-screen text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-white text-foreground transition-colors duration-300 dark:bg-background">
       {/* Hero : même fond que la section Mission/Vision (À propos) = --background ; voile au-dessus de la vidéo */}
       <section
-        className="relative min-h-[90vh] flex items-center overflow-hidden bg-background pt-6 md:pt-10 dark:bg-transparent"
+        className="relative min-h-[90vh] flex items-center overflow-hidden bg-white pt-6 md:pt-10 dark:bg-transparent"
         ref={heroRef}
       >
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden">
           <iframe
             src="https://www.youtube.com/embed/3Lp9Zj2tSRo?autoplay=1&mute=1&loop=1&controls=0&playlist=3Lp9Zj2tSRo&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1&rel=0&fs=0"
-            className="absolute inset-0 w-full h-full"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '100vw',
-              height: '56.25vw',
-              minHeight: '100vh',
-              minWidth: '177.77vh',
-              transform: 'translateX(-50%) translateY(-50%)',
-              pointerEvents: 'none'
-            }}
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[130%] min-h-full w-[177.78%] min-w-full max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[140%] md:w-[180%]"
             allow="autoplay; encrypted-media"
-            allowFullScreen
-            title="Ynuka Labs Background Video"
-            frameBorder="0"
+            title="Ynuka Labs"
+            tabIndex={-1}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-950/35 dark:from-blue-900/80 dark:via-blue-800/70 dark:to-indigo-900/60" />
         </div>
         
         <Container className="relative z-10 text-center">
-          <div className="hero-decoration inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium mb-8 bg-white/20 backdrop-blur-md border border-white/30">
-            <Star className="h-4 w-4 text-blue-400" />
-            <span className="text-blue-300">Innovation Web3 par Ynuka Labs</span>
+          <div className="hero-decoration mb-8 inline-flex items-center rounded-full border border-white/30 bg-white/20 px-6 py-3 text-sm font-medium backdrop-blur-md">
+            <span className="text-blue-300">{t("hero.badge")}</span>
           </div>
           
           <h1 
             ref={titleRef}
-            className="text-4xl md:text-6xl lg:text-8xl font-bold leading-tight mb-6 text-white overflow-hidden"
+            className="typo-display mb-6 overflow-hidden text-white"
           >
-            <div>
-              <span className="text-white">Ynuka </span>
-              <span className="text-[#ffb800]">Labs</span>
-            </div>
+            <span className="text-white">Ynuka </span>
+            <span className="text-[#ffb800]">Labs</span>
           </h1>
           
-          <p className="text-xl md:text-2xl mb-10 max-w-4xl mx-auto leading-relaxed text-white/90">
-            <div className="text-blue-300">Le centre d'innovation blockchain pour le développement de la RD Congo</div>
+          <p className="typo-lead mx-auto mb-10 max-w-4xl text-white/90">
+            <span className="text-blue-300">{t("hero.subtitle")}</span>
           </p>
           
           <div 
@@ -383,14 +538,12 @@ const Index = () => {
               href="/about"
               className="!bg-[#ffb800] !text-[#111111] shadow-none hover:shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[#ffb800]/60"
             >
-              <Zap className="mr-2 h-5 w-5" />
-              Découvrir Ynuka Labs
+              {t("home.discoverCta")}
               <ArrowRight className="ml-2 h-5 w-5" />
             </ModernButton>
             
             <ModernButton variant="outline" size="lg" href="/community" className="bg-white/20 border-white/30 text-white hover:bg-white/30">
-              <Users className="mr-2 h-5 w-5" />
-              Rejoindre la communauté
+              {t("hero.joinBtn")}
             </ModernButton>
           </div>
         </Container>
@@ -399,165 +552,229 @@ const Index = () => {
       {/* Un seul fond continu (thème) : mission / visuels → impacts → blog */}
       <div>
       {/* About */}
-      <ModernSectionWrapper className="py-24">
-        <Container size="lg">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="grid lg:grid-cols-12 gap-10 items-center"
-          >
-            <div className="lg:col-span-5">
-              <div className="relative max-w-[520px] mx-auto lg:mx-0">
-                <div className="absolute -left-6 top-2 w-[78%] h-[88%] rounded-[34px] bg-[#e8f8f7]" />
-                <div className="absolute -left-8 -bottom-8 grid grid-cols-5 gap-2 opacity-90 z-0 pointer-events-none">
-                  {Array.from({ length: 35 }).map((_, idx) => (
-                    <span key={idx} className="h-2 w-2 rounded-full bg-slate-500/80" />
-                  ))}
-                </div>
+      <ModernSectionWrapper className="py-16 md:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="grid items-center gap-8 lg:grid-cols-12 lg:gap-10"
+        >
+          <div className="lg:col-span-6">
+            <div className="relative w-full">
+              <div className="mission-visual-grid">
+                <span className="mission-visual-blob mission-visual-blob--tr" aria-hidden />
+                <span className="mission-visual-blob mission-visual-blob--bl" aria-hidden />
+                {homeMosaicImages.map((src, i) => (
+                  <div key={src} className={`mission-visual-card mission-visual-${i + 1}`}>
+                    <img
+                      src={src}
+                      alt={t("home.innovationPhotoAlt")}
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
+                  </div>
+                ))}
+              </div>
 
-                <div className="relative z-10 rounded-[34px] overflow-hidden shadow-2xl w-[78%]">
-                  <img
-                    src="/onboarding/onboarding-2.jpg"
-                    alt="Innovation technologique locale"
-                    className="w-full h-[300px] md:h-[360px] object-cover"
-                    loading="lazy"
-                  />
-                </div>
-
-                <div className="absolute z-20 right-3 top-3 h-[72px] w-[146px] rounded-2xl bg-gradient-to-br from-[#0f6be8] to-[#0a3f95] text-white shadow-xl inline-flex items-center gap-1 px-2">
-                  <span className="text-[30px] leading-none font-extrabold">+5</span>
-                  <span className="text-[9.5px] font-semibold leading-[1.06] uppercase tracking-wide opacity-95 text-right max-w-[78px]">
-                    YEARS OF
-                    <br />
-                    EXISTENCE
-                  </span>
-                </div>
-
-                <div className="absolute z-20 -right-6 bottom-8 w-[44%] h-[230px] rounded-[22px] overflow-hidden border-[8px] border-white shadow-xl bg-white">
-                  <img
-                    src="/onboarding/onboarding-4.jpg"
-                    alt="Programme d'innovation Ynuka Labs"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
+              <div className="absolute right-3 top-3 z-20 inline-flex items-center gap-2 rounded-none bg-[#0f2847] px-3 py-2.5 text-white sm:right-4 sm:top-4 sm:px-3.5 sm:py-3">
+                <span className="text-[1.6rem] font-extrabold leading-none sm:text-[1.85rem]">+5</span>
+                <span className="max-w-[5.5rem] text-[0.65rem] font-semibold uppercase leading-tight tracking-wide text-white/95 sm:text-[0.7rem]">
+                  {t("home.yearsOfExistence")}
+                </span>
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-col items-center justify-center gap-6 lg:col-span-7">
-              <motion.div
-                initial={{ opacity: 0, y: 22 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="w-full max-w-2xl"
-              >
-                <p className="text-justify text-pretty hyphens-auto text-base font-bold leading-relaxed text-foreground sm:text-lg md:text-xl md:leading-relaxed lg:text-[1.35rem]">
-                  <span className="text-[#ffb800]">
-                    {innovationSentenceWords.slice(0, 2).join(" ")}
+          <div className="flex flex-col items-start justify-center gap-5 lg:col-span-6">
+            <motion.ul
+              initial={{ opacity: 0, y: 22 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="w-full space-y-3"
+            >
+              {innovationPoints.map((point, i) => (
+                <motion.li
+                  key={point}
+                  initial={{ opacity: 0, x: 12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: i * 0.06 }}
+                  viewport={{ once: true }}
+                  className="flex gap-3 text-[0.95rem] font-semibold leading-relaxed text-[#0f2847] dark:text-[#dbeafe] sm:text-base md:text-[1.05rem]"
+                >
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#ffb800]" aria-hidden />
+                  <span>
+                    {i === 0 ? (
+                      <>
+                        <span className="text-[#ffb800]">Ynuka Labs</span>
+                        {point.replace(/^Ynuka Labs/, "")}
+                      </>
+                    ) : (
+                      point
+                    )}
                   </span>
-                  {innovationSentenceWords.length > 2
-                    ? ` ${innovationSentenceWords.slice(2).join(" ")}`
-                    : null}
-                </p>
-              </motion.div>
-              <ModernButton variant="primary" href="/about" className="!bg-[#ffb800] !text-[#111111] hover:brightness-105 mx-auto">
-                <Globe className="mr-2 h-5 w-5" />
-                {t("home.learnMore")}
-              </ModernButton>
-            </div>
-          </motion.div>
-        </Container>
+                </motion.li>
+              ))}
+            </motion.ul>
+            <ModernButton
+              variant="primary"
+              href="/about"
+              className="!rounded-none !bg-[#ffb800] !text-[#111111] hover:brightness-105"
+            >
+              {t("home.learnMore")}
+            </ModernButton>
+          </div>
+        </motion.div>
       </ModernSectionWrapper>
 
-      {/* Stats — message fort à gauche, grille bento à droite */}
-      <ModernSectionWrapper className="py-16 md:py-20">
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-14">
-          <motion.div
-            initial={{ opacity: 0, x: -28 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            viewport={{ once: true, margin: "-60px" }}
-            className="relative lg:col-span-5"
-          >
-            <div
-              className="absolute -left-1 top-2 h-20 w-1 rounded-full bg-gradient-to-b from-[#ffb800] via-[#12B1A6] to-[#ffb800]/30 md:h-28 lg:top-3 lg:h-32"
-              aria-hidden
-            />
-            <h2 className="max-w-[16ch] pl-5 font-display text-[clamp(1.85rem,4.5vw,3.15rem)] font-extrabold leading-[1.06] tracking-[-0.02em] text-foreground md:max-w-[18ch] md:pl-6 lg:max-w-none lg:text-[clamp(2rem,2.8vw,3.35rem)]">
-              <span className="block text-balance">{t("home.statsImpactPart1")}</span>
-              <span className="mt-2 block bg-gradient-to-r from-[#ffb800] via-[#e6a600] to-[#ffb800] bg-clip-text text-balance text-transparent dark:from-[#ffd54d] dark:via-[#ffb800] dark:to-[#e6a600]">
-                {t("home.statsImpactPart2")}
-              </span>
-            </h2>
-            <div
-              className="mt-8 hidden h-px max-w-[200px] bg-gradient-to-r from-[#ffb800]/80 to-transparent md:block"
-              aria-hidden
-            />
-          </motion.div>
+      {/* Impacts — bandeau marine, grille type réalisations */}
+      <section className="bg-[#0f2847] py-16 text-white md:py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:grid-rows-2 md:auto-rows-fr md:min-h-[24rem] md:gap-5">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, margin: "-40px" }}
+              className="flex items-center md:col-span-5"
+            >
+              <h2 className="impact-title max-w-[18ch] font-display text-white">
+                <span className="block">{t("home.statsImpactPart1")}</span>
+                <span className="mt-2 block text-[#ffb800]">{t("home.statsImpactPart2")}</span>
+              </h2>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 28 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            viewport={{ once: true, margin: "-60px" }}
-            className="min-w-0 lg:col-span-7"
-          >
-            <div className="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-3 md:grid-rows-2 md:gap-3 lg:gap-4 md:min-h-[220px] lg:min-h-[250px]">
-              <StatBentoTile
-                stat={stats[0]}
-                delay={0}
-                className="md:col-start-1 md:row-start-1"
+            <div className="grid grid-cols-1 gap-4 md:col-span-7 md:grid-cols-2 md:gap-5">
+              <ImpactStatCard
+                value={15}
+                suffix="+"
+                label={t("stats.projects")}
+                points={projectPoints}
+                delay={0.05}
+                locale={impactLocale}
               />
-              <StatBentoTile
-                stat={stats[1]}
-                delay={0.06}
-                className="md:col-start-2 md:row-start-1"
-              />
-              <StatBentoTile
-                stat={stats[2]}
-                delay={0.12}
-                variant="wide"
-                className="md:col-span-2 md:row-start-2"
-              />
-              <StatBentoTile
-                stat={stats[3]}
-                delay={0.18}
-                variant="tall"
-                className="md:col-start-3 md:row-start-1 md:row-span-2"
+              <ImpactStatCard
+                value={500}
+                suffix="+"
+                label={t("stats.members")}
+                points={memberPoints}
+                delay={0.1}
+                locale={impactLocale}
               />
             </div>
+
+            <div className="md:col-span-4">
+              <ImpactStatCard
+                value={10000}
+                suffix="+"
+                label={t("stats.treesPlanted")}
+                points={treePoints}
+                delay={0.12}
+                locale={impactLocale}
+              />
+            </div>
+
+            <div className="md:col-span-4">
+              <ImpactStatCard
+                value={30}
+                suffix="+"
+                label={t("stats.events")}
+                points={eventPoints}
+                delay={0.16}
+                locale={impactLocale}
+              />
+            </div>
+
+            <motion.article
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, margin: "-40px" }}
+              className="h-full md:col-span-4"
+            >
+              <div
+                style={{ animationDelay: "0.85s" }}
+                className="impact-card flex h-full items-center justify-center rounded-2xl border border-[#ffb800]/40 bg-[#ffb800]/[0.08] px-6 py-6 text-center md:px-7 md:py-7"
+              >
+                <p className="typo-lead mx-auto max-w-[20ch] text-pretty text-center leading-snug text-white">
+                  {t("home.statsTagline")}
+                </p>
+              </div>
+            </motion.article>
+          </div>
+        </div>
+      </section>
+
+      {/* Projects — uniquement ceux flagués show_on_home par l'admin */}
+      {displayHomeProjects.length > 0 && (
+      <ModernSectionWrapper className="py-16 md:py-20">
+        <div id="home-projects">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+            viewport={{ once: true }}
+            className="mb-10 text-center md:mb-12"
+          >
+            <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+              {t("home.projectsTitle")}
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-[#93c5fc]/80 md:text-lg">
+              {t("home.projectsSubtitle")}
+            </p>
           </motion.div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {displayHomeProjects.map((project, i) => (
+              <HomeProjectCard key={`${project.name}-${i}`} project={project} delay={i * 0.06} />
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <ModernButton
+              variant="primary"
+              href="/projects"
+              className="!rounded-none bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
+            >
+              {t("home.viewAllProjects")}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </ModernButton>
+          </div>
         </div>
       </ModernSectionWrapper>
+      )}
 
-      {/* Events — carrousel type maquette (carte centrale mise en avant) */}
-      <ModernSectionWrapper className="py-24">
-        <div className="relative">
+      {/* Events — compact editorial carousel */}
+      <ModernSectionWrapper className="py-16 md:py-20">
+        <div id="upcoming-events" className="relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="mb-4 text-center text-4xl font-bold md:text-5xl">
-              <span className="text-[#ffb800]">{t("home.upcomingTitle")}</span>
-            </h2>
-            <p className="mx-auto mb-12 max-w-2xl text-center text-lg text-[#315795] dark:text-[#93c5fc] md:mb-16">
-              {t("home.upcomingSubtitle")}
-            </p>
+            <div className="mb-10 text-left md:mb-12">
+              <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+                {t("home.upcomingTitle")}
+              </h2>
+              <p className="mt-3 max-w-3xl text-justify text-base font-semibold leading-relaxed text-[#1e3a5f] dark:text-[#93c5fc] md:text-lg">
+                {t("home.upcomingSubtitle")}
+              </p>
+            </div>
 
             <UpcomingEventsCarousel events={upcomingEvents} onRegister={handleOpenModal} />
+            {upcomingEvents.length === 0 && (
+              <p className="text-center text-muted-foreground">{t("home.noEvents")}</p>
+            )}
 
-            <div className="mt-12 text-center">
+            <div className="mt-10 text-center">
               <ModernButton
-                variant="outline"
+                variant="primary"
                 href="/events"
-                className="border-[#2563eb]/50 text-[#1e40af] hover:border-[#2563eb] hover:bg-[#e8eef9] dark:border-[#3b82f6]/45 dark:text-[#93c5fc] dark:hover:bg-[#1a3055]/50"
+                className="!rounded-none bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
               >
                 {t("home.viewAllEvents")}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </ModernButton>
             </div>
           </motion.div>
@@ -567,133 +784,164 @@ const Index = () => {
       {/* Opportunities from the published database content */}
       <OpportunitiesSection />
 
-      {/* Projects */}
-      <ModernSectionWrapper className="py-24">
+      {/* Actualités & Publications */}
+      <ModernSectionWrapper className="py-16 md:py-20">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.55 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-foreground">
-            <div className="text-[#ffb800]">Projets Innovants</div>
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {projectsList.map((project, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <ModernCard className="p-8">
-                  <div className={`inline-block px-4 py-2 rounded-full text-xs font-bold mb-4 ${
-                    i === 0 ? 'bg-[#ffb800] text-[#111111]' :
-                    i === 1 ? 'bg-[#ffb800] text-[#111111]' :
-                    'bg-[#ffb800] text-[#111111]'
-                  }`}>
-                    {project.category}
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4 text-card-foreground">{project.name}</h3>
-                  <p className="leading-relaxed text-muted-foreground">{project.description}</p>
-                </ModernCard>
-              </motion.div>
-            ))}
+          <div className="mb-10 text-left md:mb-12">
+            <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+              {t("home.latestBlogTitle")}
+            </h2>
+            <p className="mt-3 max-w-3xl text-justify text-base font-semibold leading-relaxed text-[#1e3a5f] dark:text-[#93c5fc] md:text-lg">
+              {t("home.latestBlogSubtitle")}
+            </p>
           </div>
+
+          {blogPostsLoading && latestBlogPosts.length === 0 ? (
+            <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+              <div className="h-[420px] animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+              <div className="space-y-4">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-28 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+                ))}
+              </div>
+            </div>
+          ) : !featuredBlogPost ? (
+            <div className="py-12 text-center text-muted-foreground">
+              {blogPostsError ? t("home.loadError") : t("home.noBlogPosts")}
+            </div>
+          ) : (
+            (() => {
+              const isFr = i18n.language.startsWith("fr");
+              const locale = isFr ? "fr-FR" : "en-US";
+              const getTitle = (post: HomeBlogPost) =>
+                (isFr && post.title_fr ? post.title_fr : post.title) || "";
+              const getExcerpt = (post: HomeBlogPost) =>
+                stripHtml((isFr && post.excerpt_fr ? post.excerpt_fr : post.excerpt) || "");
+              const getDate = (post: HomeBlogPost, long = false) =>
+                post.created_at
+                  ? new Date(post.created_at).toLocaleDateString(locale, {
+                      day: "numeric",
+                      month: long ? "long" : "short",
+                      year: "numeric",
+                    })
+                  : "";
+              const getTags = (post: HomeBlogPost) =>
+                String(post.category || "")
+                  .split(/[,|;/]+/)
+                  .map((tag) => tag.trim())
+                  .filter(Boolean)
+                  .slice(0, 3);
+              const cover = (post: HomeBlogPost) =>
+                post.cover_url?.trim() ? post.cover_url : BLOG_FALLBACK_IMG;
+
+              return (
+                <div className="grid items-start gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8">
+                  <motion.article
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    viewport={{ once: true }}
+                    className="min-w-0"
+                  >
+                    <Link to={`/blog/${featuredBlogPost.id}`} className="group block">
+                      <div className="relative overflow-hidden rounded-2xl">
+                        <img
+                          src={cover(featuredBlogPost)}
+                          alt=""
+                          className="aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                          <span className="rounded-full bg-[#ffb800] px-3 py-1 text-[0.7rem] font-bold text-[#0f2847]">
+                            {t("home.blogFeatured")}
+                          </span>
+                          {getTags(featuredBlogPost).map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full bg-white/90 px-3 py-1 text-[0.7rem] font-semibold text-[#0f2847] backdrop-blur-sm"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <h3 className="mt-5 text-2xl font-bold leading-snug tracking-tight text-[#0f2847] transition-colors group-hover:text-[#0a3f95] dark:text-white md:text-[1.7rem]">
+                        {getTitle(featuredBlogPost)}
+                      </h3>
+                      <p className="mt-3 line-clamp-3 text-[0.95rem] leading-relaxed text-slate-500 dark:text-[#93c5fc]/80">
+                        {getExcerpt(featuredBlogPost)}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-100 pt-4 dark:border-white/10">
+                        <span className="text-sm text-slate-400 dark:text-[#93c5fc]/65">
+                          {t("home.blogPublishedOn")} {getDate(featuredBlogPost, true)}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0f2847] dark:text-[#ffb800]">
+                          {t("home.blogReadArticle")}
+                          <ArrowUpRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </Link>
+                  </motion.article>
+
+                  <div className="flex min-w-0 flex-col gap-4">
+                    {sideBlogPosts.map((post, i) => (
+                      <motion.article
+                        key={post.id}
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.45, delay: 0.06 * (i + 1) }}
+                        viewport={{ once: true }}
+                      >
+                        <Link
+                          to={`/blog/${post.id}`}
+                          className="group flex gap-3.5 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 transition-colors hover:border-[#ffb800]/40 hover:bg-white dark:border-[#3b82f6]/20 dark:bg-[#152a48]/70 dark:hover:bg-[#152a48]"
+                        >
+                          <div className="h-[92px] w-[108px] shrink-0 overflow-hidden rounded-xl sm:h-[100px] sm:w-[118px]">
+                            <img
+                              src={cover(post)}
+                              alt=""
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <h3 className="line-clamp-2 text-[0.95rem] font-bold leading-snug text-[#0f2847] transition-colors group-hover:text-[#0a3f95] dark:text-white">
+                              {getTitle(post)}
+                            </h3>
+                            <p className="mt-1.5 text-xs text-slate-400 dark:text-[#93c5fc]/65">
+                              {getDate(post)}
+                            </p>
+                            <span className="mt-auto inline-flex items-center gap-1 self-end pt-2 text-xs font-semibold text-[#0f2847] dark:text-[#ffb800]">
+                              {t("home.blogReadArticle")}
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </span>
+                          </div>
+                        </Link>
+                      </motion.article>
+                    ))}
+
+                    <div className="pt-1">
+                      <ModernButton
+                        variant="primary"
+                        href="/blog"
+                        className="!rounded-full bg-[#ffb800] px-7 py-3 font-bold text-white hover:bg-[#e6a600]"
+                      >
+                        {t("home.viewAllBlog")}
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </ModernButton>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          )}
         </motion.div>
       </ModernSectionWrapper>
 
-      {/* Derniers articles blog */}
-      <ModernSectionWrapper className="py-24">
-        <Container size="lg">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-foreground">
-              <span className="text-[#ffb800]">{t("home.latestBlogTitle")}</span>
-            </h2>
-            <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12 text-lg">
-              {t("home.latestBlogSubtitle")}
-            </p>
-
-            {blogPostsLoading && latestBlogPosts.length === 0 ? (
-              <div className="grid md:grid-cols-3 gap-6">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-64 rounded-xl bg-muted/50 animate-pulse" />
-                ))}
-              </div>
-            ) : displayHomeBlogPosts.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                Aucun article publié pour le moment.
-              </div>
-            ) : (
-              <>
-                <div className="grid md:grid-cols-3 gap-6">
-                  {displayHomeBlogPosts.map((post, i) => {
-                    const isFr = i18n.language.startsWith("fr");
-                    const title = (isFr && post.title_fr ? post.title_fr : post.title) || "";
-                    const excerpt = (isFr && post.excerpt_fr ? post.excerpt_fr : post.excerpt) || "";
-                    const dateStr = post.created_at
-                      ? new Date(post.created_at).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : "";
-                    return (
-                      <motion.div
-                        key={`${post.id}-${i}`}
-                        initial={{ opacity: 0, y: 24 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: i * 0.08 }}
-                        viewport={{ once: true }}
-                      >
-                        <Link to={`/blog/${post.id}`} className="group block h-full">
-                          <ModernCard className="h-full p-6 flex flex-col border-border/80 hover:border-[#ffb800]/40 transition-colors">
-                            <span className="text-xs font-medium text-[#ffb800] bg-[#ffb800]/10 px-3 py-1 rounded-full self-start">
-                              {post.category}
-                            </span>
-                            <h3 className="font-semibold text-lg mt-4 mb-2 text-card-foreground line-clamp-2 group-hover:text-[#ffb800] transition-colors">
-                              {title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground flex-1 line-clamp-3">{excerpt}</p>
-                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/60">
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Calendar className="h-3.5 w-3.5 shrink-0" />
-                                {dateStr}
-                              </span>
-                              <span className="text-sm font-medium text-[#ffb800] flex items-center gap-1">
-                                {t("blog.readMore")}
-                                <ArrowRight className="h-4 w-4" />
-                              </span>
-                            </div>
-                          </ModernCard>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-center mt-12">
-                  <ModernButton
-                    variant="primary"
-                    href="/resources#blog"
-                    size="lg"
-                    className="!bg-[#ffb800] !text-[#111111] hover:brightness-105"
-                  >
-                    {t("home.viewAllBlog")}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </ModernButton>
-                </div>
-              </>
-            )}
-          </motion.div>
-        </Container>
-      </ModernSectionWrapper>
+      <ContactSection />
       </div>
 
     </div>

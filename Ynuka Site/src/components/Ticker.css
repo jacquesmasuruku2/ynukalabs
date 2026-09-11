@@ -30,11 +30,11 @@
 }
 
 .ticker-text {
-  font-family: "SN Pro", system-ui, "Segoe UI", sans-serif;
-  font-size: 14px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.06em;
   padding-right: 50px;
   color: #00ff88;
   text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);

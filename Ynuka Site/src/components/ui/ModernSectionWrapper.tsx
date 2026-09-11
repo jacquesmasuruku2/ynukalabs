@@ -12,14 +12,14 @@ const ModernSectionWrapper: React.FC<SectionWrapperProps> = ({
   background = "white" 
 }) => {
   const backgroundClasses = {
-    white: "bg-background",
-    gray: "bg-secondary",
-    light: "bg-muted",
+    white: "bg-white dark:bg-background",
+    gray: "bg-white dark:bg-background",
+    light: "bg-white dark:bg-background",
   };
 
   return (
     <section className={`${backgroundClasses[background]} transition-colors duration-300 ${className}`}>
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
         {children}
       </div>
     </section>

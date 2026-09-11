@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
-  const currentLang = (i18n.resolvedLanguage || i18n.language || "en").toLowerCase();
+  const currentLang = (i18n.resolvedLanguage || i18n.language || "fr").toLowerCase();
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -25,7 +25,7 @@ const LanguageSwitcher = () => {
   return (
     <button
       onClick={toggle}
-      className="px-3 py-1.5 rounded-lg text-xs font-display font-semibold bg-secondary text-secondary-foreground hover:bg-primary/20 hover:text-primary transition-colors tracking-wider uppercase"
+      className="typo-label rounded-lg border border-black/10 bg-white px-3 py-1.5 text-foreground transition-colors hover:border-[#ffb800]/50 hover:text-primary dark:border-white/20 dark:bg-transparent"
     >
       {currentLang.startsWith("en") ? "FR" : "EN"}
     </button>

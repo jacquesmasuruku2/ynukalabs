@@ -12,6 +12,24 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/luma-api": {
+        target: "https://api.luma.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/luma-api/, ""),
+      },
+    },
+  },
+  preview: {
+    proxy: {
+      "/luma-api": {
+        target: "https://api.luma.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/luma-api/, ""),
+      },
+    },
   },
   plugins: [
     react(),

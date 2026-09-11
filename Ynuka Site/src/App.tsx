@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,10 +24,12 @@ import Validators from "./pages/Validators";
 import Documentation from "./pages/Documentation";
 import Tools from "./pages/Tools";
 import OnboardingProgram from "./pages/OnboardingProgram";
+import Soutenir from "./pages/Soutenir";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import LumaEvents from "./pages/LumaEvents";
 import Gallery from "./pages/Gallery";
+import GomaDrep from "./pages/GomaDrep";
 import Opportunities from "./pages/Opportunities";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import Presentation from "./pages/Presentation";
@@ -41,9 +44,10 @@ const queryClient = new QueryClient();
 
 const AdminRoute = ({ children }: { children: ReactElement }) => {
   const { user, isAdmin, loading } = useStrapiAuth();
+  const { t } = useTranslation();
 
   if (loading) {
-    return <div className="min-h-[70vh] flex items-center justify-center text-muted-foreground">Loading...</div>;
+    return <div className="min-h-[70vh] flex items-center justify-center text-muted-foreground">{t("common.loading")}</div>;
   }
 
   if (!user || !isAdmin) {
@@ -79,7 +83,9 @@ const App = () => (
               <Route path="/documentation" element={<Documentation />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/onboarding" element={<OnboardingProgram />} />
+              <Route path="/soutenir" element={<Soutenir />} />
               <Route path="/gallery" element={<Gallery />} />
+              <Route path="/goma-drep" element={<GomaDrep />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/opportunities/:id" element={<OpportunityDetail />} />
               <Route path="/presentation" element={<Presentation />} />

@@ -99,6 +99,7 @@ $allowed_tables = [
     'contact_messages', 'donations', 'events', 'event_registrations',
     'gallery_images', 'gallery_events', 'newsletter_subscribers', 'projects',
     'resource_items', 'resource_sections', 'team_members', 'admin_users',
+    'goma_drep_actions',
 ];
 
 // ============ ROUTES ============

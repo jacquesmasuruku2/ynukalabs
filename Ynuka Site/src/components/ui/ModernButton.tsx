@@ -26,7 +26,7 @@ const Button: React.FC<ButtonProps> = ({
   const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2";
   
   const variantClasses = {
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-none",
     secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/85",
     outline: "border border-border text-foreground bg-background hover:bg-accent hover:text-accent-foreground",
   };
@@ -42,6 +42,14 @@ const Button: React.FC<ButtonProps> = ({
   const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className}`;
 
   if (href) {
+    const isExternal = /^https?:\/\//i.test(href);
+    if (isExternal) {
+      return (
+        <a href={href} className={classes} target="_blank" rel="noopener noreferrer">
+          {children}
+        </a>
+      );
+    }
     return (
       <Link to={href} className={classes}>
         {children}

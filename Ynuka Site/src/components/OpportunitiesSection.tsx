@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Calendar, ArrowRight, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Calendar, ArrowRight } from "lucide-react";
 import { fetchOpportunities } from "@/lib/api";
+import { cn, stripHtml, withTimeout } from "@/lib/utils";
+import ModernButton from "@/components/ui/ModernButton";
+import ModernSectionWrapper from "@/components/ui/ModernSectionWrapper";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -12,6 +14,9 @@ const fadeUp = {
   viewport: { once: true },
   transition: { duration: 0.6 },
 };
+
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop";
 
 export interface Opportunity {
   id: string;
@@ -24,25 +29,155 @@ export interface Opportunity {
   content_fr: string | null;
   created_at: string;
   cover_url: string | null;
+  deadline?: string | null;
+  status?: string | null;
+  published?: boolean;
+  href?: string;
+}
+
+function isOpportunityPast(opportunity: Opportunity) {
+  if (opportunity.deadline) {
+    const d = new Date(opportunity.deadline);
+    if (!Number.isNaN(d.getTime()) && d.getTime() < Date.now()) return true;
+  }
+  const status = String(opportunity.status || "").toLowerCase();
+  return ["closed", "expired", "past", "ended", "inactive"].includes(status);
 }
 
 type OpportunitiesSectionProps = {
   showHeading?: boolean;
 };
 
+function OpportunityCard({
+  opportunity,
+  featured = false,
+  title,
+  excerpt,
+  dateLabel,
+  ctaLabel,
+  isPast,
+  liveLabel,
+  pastLabel,
+}: {
+  opportunity: Opportunity;
+  featured?: boolean;
+  title: string;
+  excerpt: string;
+  dateLabel: string;
+  ctaLabel: string;
+  isPast: boolean;
+  liveLabel: string;
+  pastLabel: string;
+}) {
+  const img = opportunity.cover_url?.trim() ? opportunity.cover_url : FALLBACK_IMG;
+  const to =
+    opportunity.href ||
+    (opportunity.id.startsWith("preview-") ? "/opportunities" : `/opportunities/${opportunity.id}`);
+
+  return (
+    <article
+      className={cn(
+        "flex h-full min-h-[300px] w-full flex-col overflow-hidden rounded-none border transition-colors md:min-h-[320px]",
+        featured
+          ? "border-[#ffb800]/45 bg-[#0f2847] text-white"
+          : "border-black/[0.08] bg-white text-[#0f2847] dark:border-[#3b82f6]/30 dark:bg-[#152a48] dark:text-[#dbeafe]"
+      )}
+    >
+      <Link to={to} className="flex h-full min-h-0 w-full flex-col">
+        <div className="relative h-[112px] shrink-0 overflow-hidden md:h-[120px]">
+          <img src={img} alt="" className="h-full w-full object-cover" aria-hidden />
+          <div
+            className={cn("absolute inset-0", featured ? "bg-[#0f2847]/25" : "bg-[#0f2847]/10")}
+            aria-hidden
+          />
+          {opportunity.category ? (
+            <span
+              className={cn(
+                "typo-meta absolute left-0 top-0 px-2.5 py-1",
+                featured ? "bg-[#ffb800] text-[#0f2847]" : "bg-[#0f2847] text-white"
+              )}
+            >
+              {opportunity.category}
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              "typo-meta absolute right-0 top-0 px-2.5 py-1",
+              isPast
+                ? featured
+                  ? "bg-white text-[#0f2847]"
+                  : "bg-[#0f2847] text-white"
+                : "bg-[#ffb800] text-[#0f2847]"
+            )}
+          >
+            {isPast ? pastLabel : liveLabel}
+          </span>
+        </div>
+
+        <div className="flex flex-1 flex-col px-3.5 py-3 md:px-4 md:py-3.5">
+          <h3
+            className={cn(
+              "line-clamp-2 min-h-[2.4rem] text-[0.95rem] font-bold leading-snug tracking-tight md:text-base",
+              featured ? "text-white" : "text-[#0f2847] dark:text-[#93c5fc]"
+            )}
+          >
+            {title}
+          </h3>
+          <p
+            className={cn(
+              "mt-1.5 line-clamp-2 min-h-[2.5rem] text-[0.8rem] leading-relaxed",
+              featured ? "text-white/75" : "text-[#315795] dark:text-[#93c5fc]/80"
+            )}
+          >
+            {excerpt || "\u00a0"}
+          </p>
+
+          <div
+            className={cn(
+              "space-y-1 pt-3 text-[0.72rem]",
+              featured ? "text-white/85" : "text-[#315795] dark:text-[#93c5fc]/85"
+            )}
+          >
+            <p className="flex items-center gap-1.5">
+              <Calendar
+                className={cn(
+                  "h-3.5 w-3.5 shrink-0",
+                  featured ? "text-[#ffb800]" : "text-[#0f2847] dark:text-[#ffb800]"
+                )}
+              />
+              <span className="line-clamp-1">{dateLabel}</span>
+            </p>
+          </div>
+
+          <div className="mt-auto pt-3">
+            <span className="inline-flex w-full items-center justify-center bg-[#ffb800] px-3 py-2 text-[0.8rem] font-bold text-[#0f2847] hover:bg-[#e6a600]">
+              {ctaLabel}
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </span>
+          </div>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
 const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps) => {
   const { t, i18n } = useTranslation();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const isFr = i18n.language === "fr";
+  const locale = isFr ? "fr-FR" : "en-US";
 
   useEffect(() => {
     const loadOpportunities = async () => {
       try {
-        const data = await fetchOpportunities(100);
+        const data = await withTimeout(fetchOpportunities(100));
         setOpportunities(data);
+        setLoadError(false);
       } catch (error) {
         console.error("Failed to fetch opportunities:", error);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -51,91 +186,180 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
   }, []);
 
   const getTitle = (p: Opportunity) => (isFr && p.title_fr ? p.title_fr : p.title);
-  const getExcerpt = (p: Opportunity) => (isFr && p.excerpt_fr ? p.excerpt_fr : p.excerpt);
+  const getExcerpt = (p: Opportunity) =>
+    stripHtml((isFr && p.excerpt_fr ? p.excerpt_fr : p.excerpt) || "");
+
+  const fallbacks: Opportunity[] = [
+    {
+      id: "preview-1",
+      title: t("opportunities.fallback1Title"),
+      title_fr: t("opportunities.fallback1Title"),
+      excerpt: t("opportunities.fallback1Excerpt"),
+      excerpt_fr: t("opportunities.fallback1Excerpt"),
+      category: t("opportunities.fallback1Category"),
+      content: null,
+      content_fr: null,
+      created_at: "2026-09-01T00:00:00",
+      cover_url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop",
+      href: "/onboarding",
+    },
+    {
+      id: "preview-2",
+      title: t("opportunities.fallback2Title"),
+      title_fr: t("opportunities.fallback2Title"),
+      excerpt: t("opportunities.fallback2Excerpt"),
+      excerpt_fr: t("opportunities.fallback2Excerpt"),
+      category: t("opportunities.fallback2Category"),
+      content: null,
+      content_fr: null,
+      created_at: "2026-08-15T00:00:00",
+      cover_url: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=600&fit=crop",
+      href: "/validators",
+    },
+    {
+      id: "preview-3",
+      title: t("opportunities.fallback3Title"),
+      title_fr: t("opportunities.fallback3Title"),
+      excerpt: t("opportunities.fallback3Excerpt"),
+      excerpt_fr: t("opportunities.fallback3Excerpt"),
+      category: t("opportunities.fallback3Category"),
+      content: null,
+      content_fr: null,
+      created_at: "2026-03-10T00:00:00",
+      cover_url: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=600&fit=crop",
+      deadline: "2026-04-30",
+      status: "closed",
+      href: "/opportunities",
+    },
+  ];
+
+  const byNewest = (a: Opportunity, b: Opportunity) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  const live = opportunities.filter((item) => !isOpportunityPast(item)).sort(byNewest);
+  const past = opportunities.filter((item) => isOpportunityPast(item)).sort(byNewest);
+  const ranked = [...live, ...past];
+  const available = fallbacks.filter((item) => !ranked.some((opp) => opp.id === item.id));
+  const paddingPool: Opportunity[] = [];
+  if (showHeading) {
+    if (live.length === 0) {
+      paddingPool.push(...available.filter((item) => !isOpportunityPast(item)));
+    }
+    if (past.length === 0) {
+      paddingPool.push(...available.filter((item) => isOpportunityPast(item)));
+    }
+    paddingPool.push(...available.filter((item) => !paddingPool.includes(item)));
+  }
+  const padding = paddingPool.slice(0, Math.max(0, 3 - ranked.length));
+  const displayList = showHeading
+    ? [
+        ...live,
+        ...padding.filter((item) => !isOpportunityPast(item)),
+        ...past,
+        ...padding.filter((item) => isOpportunityPast(item)),
+      ].slice(0, 3)
+    : ranked;
+
+  const heading = showHeading ? (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="mb-10 text-left md:mb-12"
+    >
+      <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+        {t("opportunities.title")}
+      </h2>
+      <p className="mt-3 max-w-3xl text-justify text-base font-semibold leading-relaxed text-[#1e3a5f] dark:text-[#93c5fc] md:text-lg">
+        {t("opportunities.subtitle")}
+      </p>
+    </motion.div>
+  ) : null;
+
+  const body = loading ? (
+    <div className="flex min-h-[220px] items-center justify-center border border-dashed border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+      {t("common.loading")}
+    </div>
+  ) : loadError && displayList.length === 0 ? (
+    <div className="border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+      <p className="text-lg font-medium">{t("common.loadError")}</p>
+    </div>
+  ) : displayList.length === 0 ? (
+    <div className="border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+      <p className="text-lg font-medium">{t("opportunities.empty")}</p>
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 md:grid-rows-1 lg:gap-4">
+      {displayList.map((opportunity, i) => {
+        const featured = showHeading
+          ? displayList.length >= 3
+            ? i === 1
+            : i === 0
+          : displayList.length >= 3
+            ? i % 3 === 1
+            : false;
+        return (
+          <motion.div
+            key={opportunity.id}
+            {...fadeUp}
+            transition={{ ...fadeUp.transition, delay: i * 0.08 }}
+            className="flex h-full min-h-0 w-full"
+          >
+            <OpportunityCard
+              opportunity={opportunity}
+              featured={featured}
+              title={getTitle(opportunity)}
+              excerpt={getExcerpt(opportunity)}
+              dateLabel={
+                opportunity.created_at
+                  ? new Date(opportunity.created_at).toLocaleDateString(locale, {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : ""
+              }
+              ctaLabel={t("opportunities.viewMore")}
+              isPast={isOpportunityPast(opportunity)}
+              liveLabel={t("opportunities.liveLabel")}
+              pastLabel={t("opportunities.pastLabel")}
+            />
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+
+  const cta = showHeading ? (
+    <div className="mt-10 text-center">
+      <ModernButton
+        variant="primary"
+        href="/opportunities"
+        className="!rounded-none bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
+      >
+        {t("opportunities.seeMore")}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </ModernButton>
+    </div>
+  ) : null;
+
+  if (!showHeading) {
+    return (
+      <section id="opportunities" className="scroll-mt-28 py-16 sm:py-20">
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
+          {body}
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section id="opportunities" className="scroll-mt-24 py-16 sm:py-20">
-      <div className="container mx-auto px-4">
-        {showHeading && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-12 text-center"
-          >
-            <span className="inline-flex items-center rounded-full border border-[#ffb800]/40 bg-[#ffb800]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#b77900] dark:text-[#f6c453]">
-              Opportunities
-            </span>
-            <h2 className="mt-5 font-display text-3xl font-black md:text-4xl lg:text-5xl">
-              <span className="gradient-text">{t("opportunities.title")}</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 dark:text-slate-300 md:text-lg">
-              {t("opportunities.subtitle")}
-            </p>
-          </motion.div>
-        )}
-        {loading ? (
-          <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
-            Loading...
-          </div>
-        ) : opportunities.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
-            <p className="text-lg font-medium">Aucune opportunité disponible pour le moment.</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {opportunities.map((opportunity, i) => (
-              <motion.article
-                key={opportunity.id}
-                {...fadeUp}
-                transition={{ ...fadeUp.transition, delay: i * 0.08 }}
-                className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/40 hover:shadow-[0_18px_45px_rgba(255,184,0,0.12)] dark:border-slate-700 dark:bg-slate-900"
-              >
-                {opportunity.cover_url && (
-                  <Link to={`/opportunities/${opportunity.id}`} className="block overflow-hidden">
-                    <div className="relative aspect-[16/10] overflow-hidden">
-                      <img
-                        src={opportunity.cover_url}
-                        alt={getTitle(opportunity)}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent" />
-                    </div>
-                  </Link>
-                )}
-
-                <div className="flex flex-1 flex-col p-6">
-                  <span className="inline-flex w-fit rounded-full bg-[#ffb800]/12 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#b77900] dark:text-[#f6c453]">
-                    {opportunity.category}
-                  </span>
-
-                  <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-white">
-                    {getTitle(opportunity)}
-                  </h3>
-
-                  <p className="mt-3 flex-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {getExcerpt(opportunity)}
-                  </p>
-
-                  <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-                    <span className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                      <Calendar className="h-3.5 w-3.5 text-[#ffb800]" />
-                      {new Date(opportunity.created_at).toLocaleDateString()}
-                    </span>
-
-                    <Button variant="link" className="h-auto p-0 text-sm font-semibold text-[#0f172a] hover:text-[#b77900] dark:text-white dark:hover:text-[#f6c453]" asChild>
-                      <Link to={`/opportunities/${opportunity.id}`}>
-                        {t("opportunities.viewMore")} <ArrowRight className="ml-1 h-3 w-3" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
-        )}
+    <ModernSectionWrapper className="py-16 md:py-20">
+      <div id="opportunities" className="scroll-mt-28">
+        {heading}
+        {body}
+        {cta}
       </div>
-    </section>
+    </ModernSectionWrapper>
   );
 };
 

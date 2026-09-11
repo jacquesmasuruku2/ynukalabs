@@ -30,7 +30,7 @@ const CustomButton = ({
   
   const variants = {
     primary:
-      "bg-primary text-primary-foreground hover:bg-primary/92 shadow-md hover:shadow-lg focus:ring-primary border border-black/[0.06]",
+      "bg-primary text-primary-foreground hover:bg-primary/92 shadow-none focus:ring-primary border border-black/[0.06]",
     secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 focus:ring-secondary",
     outline: "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-border"
   };

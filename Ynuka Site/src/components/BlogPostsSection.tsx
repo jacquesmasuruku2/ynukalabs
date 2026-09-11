@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchBlogPosts } from "@/lib/api";
+import { withTimeout } from "@/lib/utils";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -33,16 +34,18 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
   const { t, i18n } = useTranslation();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const isFr = i18n.language === "fr";
 
   useEffect(() => {
     const loadPosts = async () => {
       try {
-        const posts = await fetchBlogPosts(100);
+        const posts = await withTimeout(fetchBlogPosts(100));
         setPosts(posts);
+        setLoadError(false);
       } catch (error) {
         console.error("Failed to fetch blog posts:", error);
-        // No fallback - only database data will be displayed
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -68,14 +71,18 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
             <h2 className="font-display text-3xl font-bold md:text-4xl">
               <span className="gradient-text">{t("blog.title")}</span>
             </h2>
-            <p className="mt-3 text-muted-foreground max-w-2xl mx-auto text-lg">{t("blog.subtitle")}</p>
+            <p className="typo-lead mx-auto mt-3 max-w-2xl text-muted-foreground">{t("blog.subtitle")}</p>
           </motion.div>
         )}
         {loading ? (
-          <div className="text-center text-muted-foreground py-12">Loading...</div>
+          <div className="text-center text-muted-foreground py-12">{t("common.loading")}</div>
+        ) : loadError ? (
+          <div className="text-center text-muted-foreground py-12">
+            <p>{t("common.loadError")}</p>
+          </div>
         ) : displayPosts.length === 0 ? (
           <div className="text-center text-muted-foreground py-12">
-            <p>Aucun article de blog disponible pour le moment.</p>
+            <p>{t("home.noBlogPosts")}</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

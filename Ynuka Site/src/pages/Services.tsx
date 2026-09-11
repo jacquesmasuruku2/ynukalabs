@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import {
-  GraduationCap,
-  ServerCog,
-  Code2,
-  FileText,
-  ClipboardList,
-  Leaf,
-} from "lucide-react";
 import Container from "@/components/ui/Container";
 import "@/styles/AboutDesign.css";
 
@@ -19,37 +11,31 @@ const Services = () => {
     {
       title: t("about.service1Title"),
       description: t("about.service1Desc"),
-      icon: <GraduationCap className="w-8 h-8" />,
       color: "#0f6be8",
     },
     {
       title: t("about.service2Title"),
       description: t("about.service2Desc"),
-      icon: <ServerCog className="w-8 h-8" />,
       color: "#ffb800",
     },
     {
       title: t("about.service3Title"),
       description: t("about.service3Desc"),
-      icon: <Code2 className="w-8 h-8" />,
       color: "#22c55e",
     },
     {
       title: t("about.service4Title"),
       description: t("about.service4Desc"),
-      icon: <FileText className="w-8 h-8" />,
       color: "#60a5fa",
     },
     {
       title: t("about.service5Title"),
       description: t("about.service5Desc"),
-      icon: <ClipboardList className="w-8 h-8" />,
       color: "#a78bfa",
     },
     {
       title: t("about.service6Title"),
       description: t("about.service6Desc"),
-      icon: <Leaf className="w-8 h-8" />,
       color: "#34d399",
     },
   ], [t]);
@@ -281,7 +267,6 @@ const Services = () => {
             </button>
 
             <div className="service-popup-header">
-              <span className="service-popup-icon">{selectedService.icon}</span>
               <h3 id="service-popup-title" className="service-popup-title">
                 {selectedService.title}
               </h3>

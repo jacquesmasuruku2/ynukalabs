@@ -108,8 +108,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "SN Pro", system-ui, sans-serif;
-  font-weight: 300;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 400;
   font-size: clamp(4.5rem, 14vw, 7.5rem);
   letter-spacing: -0.04em;
   line-height: 1;
@@ -182,10 +182,10 @@
 
 .preloader-loading-label {
   margin: 0;
-  font-family: "SN Pro", system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
-  letter-spacing: 0.45em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: hsl(42 25% 96% / 0.72);
   animation: preloader-pulse 2.5s ease-in-out infinite;

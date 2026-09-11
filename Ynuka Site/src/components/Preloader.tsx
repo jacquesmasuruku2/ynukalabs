@@ -8,22 +8,22 @@ const Preloader = ({ onComplete }: { onComplete: () => void }) => {
 
   useEffect(() => {
     const overlay = overlayRef.current;
+    if (!overlay) {
+      onComplete();
+      return;
+    }
 
     const tl = gsap.timeline({
       onComplete: () => {
-        if (overlay) {
-          overlay.classList.add("preloader-overlay--done");
-        }
+        overlay.classList.add("preloader-overlay--done");
         onComplete();
       },
     });
-    if (overlay) {
-      tl.to(overlay, {
-        yPercent: -100,
-        duration: 0.3,
-        ease: "power4.inOut",
-      });
-    }
+    tl.to(overlay, {
+      yPercent: -100,
+      duration: 0.3,
+      ease: "power4.inOut",
+    });
 
     return () => {
       tl.kill();

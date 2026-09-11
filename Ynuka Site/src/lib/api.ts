@@ -14,7 +14,27 @@ const PUBLIC_RESOURCES = [
   "team_members",
   "resource_sections",
   "partners",
+  "projects",
+  "goma_drep_actions",
+  "validators",
+  /** Create public — list/get restent protégés côté backend */
+  "speaker_applications",
+  "event_proposals",
+  "event_registrations",
 ];
+
+function pickOptionalUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const url = value.trim();
+  return url ? url : null;
+}
+
+function extractYoutubeUrl(text: string): string | null {
+  const match = text.match(
+    /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[\w-]+[^\s"'<>]*|youtu\.be\/[\w-]+)/i
+  );
+  return match ? match[0] : null;
+}
 
 export async function fetchFromApi<T = unknown>(
   action: string,
@@ -119,6 +139,10 @@ export async function fetchEvents(limit = 100) {
     time: item.time || null,
     imageUrl: item.image_url || null,
     capacity: item.capacity || null,
+    recapUrl: pickOptionalUrl(item.recap_url || item.recapUrl || item.summary_url || item.summaryUrl),
+    youtubeUrl: pickOptionalUrl(
+      item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl || extractYoutubeUrl(`${item.description || ""} ${item.description_fr || ""}`)
+    ),
   }));
 }
 
@@ -143,6 +167,10 @@ export async function fetchEvent(id: string) {
     time: item.time || null,
     imageUrl: item.image_url || null,
     capacity: item.capacity || null,
+    recapUrl: pickOptionalUrl(item.recap_url || item.recapUrl || item.summary_url || item.summaryUrl),
+    youtubeUrl: pickOptionalUrl(
+      item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl || extractYoutubeUrl(`${item.description || ""} ${item.description_fr || ""}`)
+    ),
   };
 }
 
@@ -218,6 +246,9 @@ export async function fetchOpportunities(limit = 100) {
     content_fr: item.content_fr || null,
     cover_url: item.cover_url || null,
     created_at: item.created_at || "",
+    deadline: item.deadline || item.end_date || item.closes_at || item.expiry_date || null,
+    status: item.status || null,
+    published: item.published == null ? true : Boolean(Number(item.published)),
   }));
 }
 
@@ -244,26 +275,56 @@ export async function fetchOpportunity(id: string) {
   };
 }
 
-// Projects API
+// Projects API — status=active = publiés (page Projets)
+// show_on_home = choisis par l'admin pour l'accueil (sous-ensemble)
 export async function fetchProjects(limit = 100) {
   const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[] }>("list", {
     resource: "projects",
     limit,
-    search: "status=active",
+    filter: "status=active",
   });
 
   const rows = result.rows ?? result.data ?? [];
-  return rows.map((item: any) => ({
-    id: String(item.id),
-    slug: item.slug || String(item.id),
-    title: item.title || "",
-    category: item.category || "General",
-    description: item.description || "",
-    featured_image: item.featured_image || null,
-    repository_url: item.repository_url || null,
-    live_url: item.live_url || null,
-    created_at: item.created_at || "",
-  }));
+  return rows.map((item: any) => {
+    const showOnHomeRaw =
+      item.show_on_home ??
+      item.show_on_homepage ??
+      item.featured_home ??
+      item.on_home ??
+      0;
+
+    return {
+      id: String(item.id),
+      slug: item.slug || String(item.id),
+      title: item.title || "",
+      category: item.category || item.type || "",
+      description: item.description || item.excerpt || "",
+      featured_image: item.featured_image || item.image_url || item.logo_url || null,
+      repository_url: item.repository_url || null,
+      live_url: item.live_url || null,
+      created_at: item.created_at || "",
+      show_on_home:
+        showOnHomeRaw === true ||
+        showOnHomeRaw === 1 ||
+        showOnHomeRaw === "1" ||
+        String(showOnHomeRaw).toLowerCase() === "true",
+      tags: Array.isArray(item.tags)
+        ? item.tags.map(String).filter(Boolean)
+        : String(item.tags || item.keywords || "")
+            .split(/[,|;]/)
+            .map((tag: string) => tag.trim())
+            .filter(Boolean),
+    };
+  });
+}
+
+/** Projets mis en avant sur l'accueil (uniquement ceux flagués par l'admin). */
+export async function fetchHomeProjects(limit = 4) {
+  const projects = await fetchProjects(100);
+  return projects
+    .filter((project) => project.show_on_home && project.title)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
 }
 
 // Apply for opportunity

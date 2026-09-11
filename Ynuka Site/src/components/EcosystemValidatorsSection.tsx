@@ -1,76 +1,160 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ArrowUpRight, ExternalLink, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getBlockchainCopy } from "@/data/blockchainEcosystem";
+import { cn } from "@/lib/utils";
+import { listValidators } from "@/services/validators/validatorsApi";
+import type { YnukaValidator } from "@/services/validators/types";
 
 const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 28 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
-  transition: { duration: 0.6 },
+  transition: { duration: 0.55 },
 };
 
-const ChainLogoSmall = ({
-  url,
-  name,
-  accent,
-}: {
-  url: string;
-  name: string;
-  accent: string;
-}) => {
-  const [failed, setFailed] = useState(false);
+const ACCENTS = [
+  {
+    wash: "from-[#ffb800]/25 via-transparent to-transparent",
+    bar: "bg-[#ffb800]",
+    chip: "bg-[#0f2847] text-[#ffb800]",
+  },
+  {
+    wash: "from-[#12B1A6]/20 via-transparent to-transparent",
+    bar: "bg-[#12B1A6]",
+    chip: "bg-[#0f2847] text-[#7dfff3]",
+  },
+] as const;
 
-  if (!url?.trim() || failed) {
-    return (
-      <div
-        className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br font-display text-sm font-bold text-white shadow-inner",
-          accent
-        )}
-        aria-hidden
-      >
-        {name.slice(0, 2).toUpperCase()}
-      </div>
-    );
-  }
+function ValidatorCard({
+  validator,
+  index,
+}: {
+  validator: YnukaValidator;
+  index: number;
+}) {
+  const { t, i18n } = useTranslation();
+  const isFr = i18n.language.startsWith("fr");
+  const accent = ACCENTS[index % ACCENTS.length];
+  const description =
+    (isFr && validator.descriptionFr ? validator.descriptionFr : validator.description) ||
+    t("validators.defaultDesc", { chain: validator.chain });
+
+  const metrics = [
+    validator.rank ? { label: t("validators.rank"), value: validator.rank } : null,
+    validator.votingPower
+      ? {
+          label: t("validators.votingPower"),
+          value: validator.votingPower,
+          hint: validator.votingPowerPct,
+        }
+      : null,
+    validator.tokensStaked
+      ? { label: t("validators.tokensStaked"), value: validator.tokensStaked }
+      : null,
+    validator.commission
+      ? { label: t("validators.commission"), value: validator.commission }
+      : null,
+    validator.delegators
+      ? { label: t("validators.delegators"), value: validator.delegators }
+      : null,
+    validator.uptime ? { label: t("validators.uptime"), value: validator.uptime } : null,
+  ].filter(Boolean) as { label: string; value: string; hint?: string | null }[];
+
+  const isActive = String(validator.status).toLowerCase() === "active";
 
   return (
-    <img
-      src={url}
-      alt={name}
-      className="h-10 w-10 object-contain drop-shadow-md"
-      loading="lazy"
-      onError={() => setFailed(true)}
-    />
+    <motion.article
+      {...fadeUp}
+      transition={{ ...fadeUp.transition, delay: index * 0.1 }}
+      className="group relative flex h-full flex-col overflow-hidden bg-white shadow-[0_12px_40px_-24px_rgba(15,40,71,0.45)] ring-1 ring-black/[0.06] dark:bg-[#101820] dark:ring-white/10"
+    >
+      <span className={cn("absolute inset-x-0 top-0 h-1.5", accent.bar)} aria-hidden />
+      <div
+        className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br opacity-90", accent.wash)}
+        aria-hidden
+      />
+
+      <div className="relative aspect-[16/10] overflow-hidden bg-[#111]">
+        {validator.imageUrl ? (
+          <img
+            src={validator.imageUrl}
+            alt={t("validators.imageAlt", { name: validator.name, chain: validator.chain })}
+            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a]">
+            <span className="font-display text-4xl font-extrabold text-white/20">
+              {validator.name.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
+        )}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent p-4 pt-16">
+          <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#ffb800]">
+            {validator.chain}
+          </p>
+          <h3 className="mt-0.5 font-display text-2xl font-extrabold text-white">{validator.name}</h3>
+        </div>
+        {isActive ? (
+          <span
+            className={cn(
+              "absolute right-3 top-3 px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide",
+              accent.chip
+            )}
+          >
+            {t("validators.active")}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="relative flex flex-1 flex-col p-5 sm:p-6">
+        <p className="text-sm font-medium leading-relaxed text-[#3d4f66] dark:text-slate-300">
+          {description}
+        </p>
+
+        {validator.address ? (
+          <p className="mt-3 break-all border-l-2 border-[#ffb800]/70 pl-3 font-mono text-[0.62rem] leading-relaxed text-[#5a6b82] dark:text-slate-500">
+            {validator.address}
+          </p>
+        ) : null}
+
+        {metrics.length > 0 ? (
+          <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+            {metrics.map((m) => (
+              <div key={m.label}>
+                <dt className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#8a96a8]">
+                  {m.label}
+                </dt>
+                <dd className="mt-0.5 text-sm font-extrabold text-[#122033] dark:text-white">{m.value}</dd>
+                {m.hint ? (
+                  <p className="text-[0.65rem] font-medium text-[#6b7c94]">{m.hint}</p>
+                ) : null}
+              </div>
+            ))}
+          </dl>
+        ) : null}
+
+        {validator.explorerUrl ? (
+          <a
+            href={validator.explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-1.5 self-start text-sm font-bold text-[#122033] underline decoration-[#ffb800] decoration-2 underline-offset-4 transition-colors hover:text-[#0f2847] dark:text-white"
+          >
+            {t("validators.viewOnExplorer")}
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          </a>
+        ) : null}
+      </div>
+    </motion.article>
   );
-};
+}
 
-type DashboardMetric = {
-  label: string;
-  value: string;
-};
-
-type ValidatorDashboard = {
-  title: string;
-  titleColorClass: string;
-  subtitle?: string;
-  delegations?: number | string;
-  totalStake?: { value: string; unit: string };
-  metrics: DashboardMetric[];
-  blocks?: string;
-  epoch?: string;
-  timeLeft?: string;
-  nextBlock?: string;
-  progressLabel?: string;
-  progressKnobLeftPct?: number;
-};
-
-/** Section ancrable #validators — réutilisée sur /validators et page Écosystème unifiée */
+/**
+ * Section #validators — nos validateurs + invitation à en savoir plus.
+ */
 export const EcosystemValidatorsSection = ({
   showHeading = true,
   showDivider = true,
@@ -78,219 +162,105 @@ export const EcosystemValidatorsSection = ({
   showHeading?: boolean;
   showDivider?: boolean;
 }) => {
-  const { t, i18n } = useTranslation();
-  const copy = getBlockchainCopy(i18n.language);
+  const { t } = useTranslation();
+  const [validators, setValidators] = useState<YnukaValidator[]>([]);
+  const [loading, setLoading] = useState(true);
+  const contactHref = `/contact?subject=${encodeURIComponent(t("validators.contactSubject"))}`;
 
-  const validators = [
-    {
-      id: "cardano" as const,
-      name: "Cardano",
-      logoUrl: copy.cardano.logoUrl,
-      accent: copy.cardano.accent,
-      description: t("validators.cardanoDesc"),
-      dashboard: {
-        title: "Goma pool at ISDR-GL",
-        titleColorClass: "text-primary",
-        subtitle: "Goma pool at lsdrgin in DRC",
-        delegations: 104,
-        totalStake: { value: "753,8411", unit: "A" },
-        metrics: [
-          { label: t("validators.saturation"), value: "1%" },
-          { label: t("validators.margin"), value: "0%" },
-          { label: t("validators.pledge"), value: "25K A" },
-          { label: t("validators.fixedCost"), value: "340 A" },
-        ],
-        blocks: "130",
-        progressLabel: t("validators.delegationProgress"),
-        epoch: "62",
-        timeLeft: t("validators.timeLeft"),
-        nextBlock: t("validators.nextBlock"),
-        progressKnobLeftPct: 62,
-      } satisfies ValidatorDashboard,
-      stats: [
-        { label: t("validators.poolTicker"), value: "GOMA" },
-        { label: t("validators.status"), value: t("validators.active") },
-        { label: t("validators.pledge"), value: "50K ADA" },
-      ],
-      cta: {
-        label: t("nav.stakepoolGoma"),
-        href: "https://pool.pm/9021035ba7bf0b5ecb49aba303fe9bd4b80d99f7b4519854f24f71a1",
-        external: true,
-      },
-    },
-    {
-      id: "apexFusion" as const,
-      name: "Apex Fusion",
-      logoUrl: copy.apexFusion.logoUrl,
-      accent: copy.apexFusion.accent,
-      description: t("validators.apexDesc"),
-      dashboard: {
-        title: "Blocs of Hope",
-        titleColorClass: "text-primary",
-        subtitle: "Goma pool at lsdrgin in DRC",
-        delegations: 560,
-        totalStake: { value: "500,000 000", unit: "APEX" },
-        metrics: [
-          { label: t("validators.saturation"), value: "1%" },
-          { label: t("validators.margin"), value: "0%" },
-          { label: t("validators.pledge"), value: "25K A" },
-          { label: t("validators.fixedCost"), value: "340 A" },
-        ],
-        blocks: "130",
-        epoch: "62",
-        timeLeft: t("validators.timeLeft"),
-        nextBlock: t("validators.nextBlock"),
-        progressLabel: t("validators.delegationProgress"),
-        progressKnobLeftPct: 62,
-      } satisfies ValidatorDashboard,
-      stats: [],
-      cta: {
-        label: "Ynuka Labs",
-        href: "/contact",
-        external: false,
-      },
-    },
-    {
-      id: "safrochain" as const,
-      name: "Safrochain",
-      logoUrl: copy.safrochain.logoUrl,
-      accent: copy.safrochain.accent,
-      description: t("validators.safroDesc"),
-      dashboard: {
-        title: "Blocs of Hope",
-        titleColorClass: "text-primary",
-        subtitle: "Goma pool at lsdrgin in DRC",
-        delegations: 104,
-        totalStake: { value: "753,8411", unit: "A" },
-        metrics: [
-          { label: t("validators.saturation"), value: "1%" },
-          { label: t("validators.margin"), value: "0%" },
-          { label: t("validators.pledge"), value: "25K A" },
-          { label: t("validators.fixedCost"), value: "340 A" },
-        ],
-        blocks: "130",
-        epoch: "62",
-        timeLeft: t("validators.timeLeft"),
-        nextBlock: t("validators.nextBlock"),
-        progressLabel: t("validators.delegationProgress"),
-        progressKnobLeftPct: 62,
-      } satisfies ValidatorDashboard,
-      stats: [],
-      cta: {
-        label: "Ynuka Labs",
-        href: "/contact",
-        external: false,
-      },
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await listValidators(50);
+        if (!cancelled) setValidators(rows);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section
       id="validators"
-      className={cn("scroll-mt-24 bg-background py-16 md:py-20", showDivider && "border-t border-border")}
+      className={cn(
+        "scroll-mt-28 relative overflow-hidden py-16 md:py-24",
+        "bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(255,184,0,0.14),transparent_55%),radial-gradient(900px_500px_at_90%_0%,rgba(18,177,166,0.10),transparent_50%),linear-gradient(180deg,#fbfaf7_0%,#f3f1eb_100%)]",
+        "dark:bg-[radial-gradient(1000px_500px_at_15%_0%,rgba(255,184,0,0.12),transparent_50%),linear-gradient(180deg,#0b1219_0%,#101820_100%)]",
+        showDivider && "border-t border-black/[0.06] dark:border-white/10"
+      )}
     >
-      <div className="container mx-auto px-4">
-        <div className={cn(showHeading ? "mx-auto mb-10 max-w-2xl text-center md:mb-12" : "mb-6")}>
-          {showHeading ? (
-            <>
-              <h2 className="font-display text-3xl font-bold md:text-4xl">
-                <span className="gradient-text">{t("validators.title")}</span>
+      <div className="relative mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
+        {showHeading ? (
+          <motion.div
+            {...fadeUp}
+            className="mb-10 grid items-end gap-6 md:mb-14 md:grid-cols-[1.2fr_0.8fr]"
+          >
+            <div>
+              <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[#b8860b]">
+                {t("validators.eyebrow")}
+              </p>
+              <h2 className="mt-2 max-w-xl font-display text-3xl font-extrabold tracking-tight text-[#122033] md:text-4xl dark:text-white">
+                {t("validators.title")}
               </h2>
-              <p className="mt-3 text-lg text-muted-foreground">{t("validators.subtitle")}</p>
-            </>
-          ) : null}
-          <p className={cn(showHeading ? "mt-4 text-sm text-muted-foreground" : "text-sm text-muted-foreground")}>
-            {t("validators.delegateHelp")}
+            </div>
+            <p className="max-w-md text-base font-medium leading-relaxed text-[#4a5c73] md:justify-self-end md:text-right dark:text-slate-300">
+              {t("validators.subtitle")}
+            </p>
+          </motion.div>
+        ) : (
+          <p className="mb-8 max-w-2xl text-sm font-medium text-[#4a5c73] dark:text-slate-400">
+            {t("validators.subtitle")}
           </p>
-        </div>
+        )}
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {validators.map((v, i) => (
-            <motion.div
-              key={v.id}
-              {...fadeUp}
-              transition={{ ...fadeUp.transition, delay: i * 0.15 }}
-              className={cn(
-                "relative overflow-hidden rounded-2xl border p-7 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-colors",
-                "border-slate-200/90 bg-white hover:border-primary/40",
-                "dark:border-white/10 dark:bg-slate-950/35",
-                v.id === "cardano" ? "dark:hover:border-[#ff4da6]/30" : null
-              )}
-            >
-              <div
-                aria-hidden
-                className={cn(
-                  "pointer-events-none absolute -top-14 -right-14 h-44 w-44 rounded-full blur-2xl opacity-25 bg-gradient-to-br",
-                  v.id === "cardano" ? "from-[#ff4da6] to-[#ffb800]" : v.accent
-                )}
-              />
+        <p className="mb-6 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[#8a96a8]">
+          {t("validators.ourValidators")}
+        </p>
 
-              <div className="relative flex items-center gap-4">
-                <div className="rounded-2xl bg-white/5 p-2 ring-1 ring-white/10">
-                  <ChainLogoSmall url={v.logoUrl} name={v.name} accent={v.accent} />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className={cn("font-display text-2xl font-extrabold leading-none", v.dashboard.titleColorClass)}>
-                    {v.dashboard.title}
-                  </h3>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-[#ffb800] opacity-95">
-                    {t("validators.activeOn", { chain: v.name })}
-                  </p>
-                </div>
-              </div>
+        {loading ? (
+          <div className="grid gap-5 md:grid-cols-2">
+            {[0, 1].map((i) => (
+              <div key={i} className="h-[440px] animate-pulse bg-white/70 dark:bg-white/5" />
+            ))}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "grid gap-5",
+              validators.length === 1 ? "mx-auto max-w-2xl" : "md:grid-cols-2"
+            )}
+          >
+            {validators.map((v, i) => (
+              <ValidatorCard key={v.id} validator={v} index={i} />
+            ))}
+          </div>
+        )}
 
-              <div className="relative mt-5 rounded-2xl border border-white/10 bg-black/70 p-5 dark:bg-black/45">
-                <div className="text-center">
-                  {v.dashboard.delegations != null ? (
-                    <p className="text-[11px] text-white/70">
-                      {v.dashboard.delegations} {t("validators.delegations")}
-                    </p>
-                  ) : null}
-
-                  {v.dashboard.totalStake ? (
-                    <div className="mt-1 font-display text-3xl font-extrabold tracking-tight text-white md:text-[2.1rem]">
-                      {v.dashboard.totalStake.value}
-                      {v.dashboard.totalStake.unit ? (
-                        <span className="ml-2 text-lg font-display font-semibold text-white/70 md:text-xl">
-                          {v.dashboard.totalStake.unit}
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                    {v.dashboard.metrics.slice(0, 4).map((m) => (
-                      <div key={m.label}>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/60">
-                          {m.label}
-                        </p>
-                        <p className="mt-1 text-base font-semibold text-white md:text-lg">{m.value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* On n'affiche volontairement que les éléments visibles sur la capture */}
-                </div>
-              </div>
-
-              <p className="relative mt-4 text-sm text-muted-foreground">{v.description}</p>
-
-              <div className="relative mt-7">
-                {v.cta.external ? (
-                  <Button asChild variant="glow" size="lg" className="w-full">
-                    <a href={v.cta.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2">
-                      {t("validators.exploreDelegate")} <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
-                ) : (
-                  <Button asChild variant="glow" size="lg" className="w-full">
-                    <Link to={v.cta.href}>{t("validators.exploreDelegate")}</Link>
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          {...fadeUp}
+          transition={{ ...fadeUp.transition, delay: 0.12 }}
+          className="mt-12 flex flex-col items-start gap-4 border-t border-[#122033]/10 pt-8 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="max-w-xl">
+            <p className="flex items-center gap-2 text-sm font-bold text-[#122033] dark:text-white">
+              <MessageCircle className="h-4 w-4 text-[#12B1A6]" aria-hidden />
+              {t("validators.learnMoreTitle")}
+            </p>
+            <p className="mt-1.5 text-sm font-medium leading-relaxed text-[#4a5c73] dark:text-slate-400">
+              {t("validators.learnMoreDesc")}
+            </p>
+          </div>
+          <Link
+            to={contactHref}
+            className="inline-flex items-center gap-2 border border-[#122033]/20 bg-transparent px-4 py-2.5 text-sm font-bold text-[#122033] transition-colors hover:border-[#ffb800] hover:bg-[#ffb800]/15 dark:border-white/25 dark:text-white"
+          >
+            {t("validators.learnMoreCta")}
+            <ArrowUpRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

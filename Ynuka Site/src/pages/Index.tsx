@@ -336,7 +336,7 @@ const Index = () => {
                   key={`${partner.name}-${i}`}
                   className="flex flex-col items-center min-w-[200px] max-w-[220px] flex-shrink-0"
                 >
-                  <div className="w-full bg-white rounded-2xl border border-white/95 p-4 md:p-5 shadow-[0_12px_40px_rgba(15,55,80,0.12)] flex items-center justify-center min-h-[100px] mb-3">
+                  <div className="w-full bg-white rounded-2xl border border-black/10 p-4 md:p-5 flex items-center justify-center min-h-[100px] mb-3">
                     <img
                       src={partner.logo}
                       alt={partner.name}
@@ -378,7 +378,7 @@ const Index = () => {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder={t("home.emailPlaceholder")}
-              className="flex-1 px-4 py-3 rounded-lg bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent shadow-sm"
+              className="flex-1 px-4 py-3 rounded-lg bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent"
             />
             <CustomButton type="submit" disabled={subscribing} loading={subscribing}>
               {subscribing ? "..." : t("home.subscribe")}

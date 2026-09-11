@@ -131,7 +131,7 @@ const Partners = () => {
                     className="block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/90"
                     aria-label={partner.name}
                   >
-                    <div className="bg-white rounded-2xl border border-white/95 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center shadow-[0_12px_40px_rgba(15,55,80,0.12)]">
+                    <div className="bg-white rounded-2xl border border-black/10 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center">
                       <img
                         src={partner.logo}
                         alt=""
@@ -187,7 +187,7 @@ const Partners = () => {
               </Button>
             </div>
             {showForm && (
-              <Card className="shadow-xl border-none animate-fade-in">
+              <Card className="border border-border animate-fade-in">
                 <CardHeader>
                   <CardTitle className="text-center text-2xl font-bold mb-2">
                     Become a partner at Ynuka Labs
@@ -234,73 +234,73 @@ const Partners = () => {
                     }}
                   >
                     <div>
-                      <Label htmlFor="companyName">Company Name <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="companyName">{t("partners.companyName")} <span className="text-red-500">*</span></Label>
                       <Input
                         id="companyName"
                         name="companyName"
                         required
-                        placeholder="Company Name"
+                        placeholder={t("partners.companyName")}
                         className="mt-1"
                         value={form.companyName}
                         onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="companyWebsite">Company Website <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="companyWebsite">{t("partners.companyWebsite")} <span className="text-red-500">*</span></Label>
                       <Input
                         id="companyWebsite"
                         name="companyWebsite"
                         required
-                        placeholder="Company Website"
+                        placeholder={t("partners.companyWebsite")}
                         className="mt-1"
                         value={form.companyWebsite}
                         onChange={(e) => setForm({ ...form, companyWebsite: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="industry">Industry <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="industry">{t("partners.industry")} <span className="text-red-500">*</span></Label>
                       <Input
                         id="industry"
                         name="industry"
                         required
-                        placeholder="Industry"
+                        placeholder={t("partners.industry")}
                         className="mt-1"
                         value={form.industry}
                         onChange={(e) => setForm({ ...form, industry: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="contactPerson">Contact Person (Full Name) <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="contactPerson">{t("partners.contactPerson")} <span className="text-red-500">*</span></Label>
                       <Input
                         id="contactPerson"
                         name="contactPerson"
                         required
-                        placeholder="Contact Person (Full Name)"
+                        placeholder={t("partners.contactPerson")}
                         className="mt-1"
                         value={form.contactPerson}
                         onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="email">{t("partners.emailAddress")} <span className="text-red-500">*</span></Label>
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         required
-                        placeholder="Email Address"
+                        placeholder={t("partners.emailAddress")}
                         className="mt-1"
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="phone">{t("partners.phoneNumber")} <span className="text-red-500">*</span></Label>
                       <Input
                         id="phone"
                         name="phone"
                         required
-                        placeholder="Phone Number"
+                        placeholder={t("partners.phoneNumber")}
                         className="mt-1"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}

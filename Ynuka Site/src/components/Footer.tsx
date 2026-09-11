@@ -26,6 +26,7 @@ const Footer = () => {
         { labelKey: "nav.projects", path: "/projects" },
         { labelKey: "nav.gallery", path: "/resources#gallery" },
         { labelKey: "nav.community", path: "/community" },
+        { labelKey: "nav.support", path: "/soutenir" },
       ],
     },
     {
@@ -108,17 +109,17 @@ const Footer = () => {
   )}`;
 
   return (
-    <footer className="border-t border-border bg-gradient-to-b from-muted/40 to-background text-foreground transition-colors duration-300">
+    <footer className="border-t border-white/15 bg-[#0f2847] text-white">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="font-display text-xl font-bold text-foreground">
+            <h3 className="font-display text-xl font-bold text-white">
               Ynuka <span className="text-[#ffb800]">Labs</span>
             </h3>
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-2 text-white/75">
               <MapPin className="h-4 w-4" />
-              <span className="text-sm">Goma, North Kivu, DR Congo</span>
+              <span>{t("footer.location")}</span>
             </div>
             <div className="flex flex-col gap-4 pt-1">
               <div className="flex flex-wrap gap-3">
@@ -127,7 +128,7 @@ const Footer = () => {
                     key={ariaLabel}
                     href={href}
                     {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className={`inline-flex h-10 w-10 items-center justify-center rounded-lg shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:ring-white/20 ${iconClassName}`}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-lg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb800] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f2847] ${iconClassName}`}
                     aria-label={ariaLabel}
                   >
                     <Icon className={ariaLabel === "X" ? "h-[18px] w-[18px]" : "h-[22px] w-[22px]"} />
@@ -135,11 +136,11 @@ const Footer = () => {
                 ))}
               </div>
               <div className="space-y-2">
-                <a href="mailto:contact@ynukalabs.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
+                <a href="mailto:contact@ynukalabs.com" className="flex items-center gap-2 text-sm text-white/75 hover:text-[#ffb800] transition-colors">
                   <Mail className="h-4 w-4" />
                   contact@ynukalabs.com
                 </a>
-                <a href="tel:+243974973061" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#ffb800] transition-colors">
+                <a href="tel:+243974973061" className="flex items-center gap-2 text-sm text-white/75 hover:text-[#ffb800] transition-colors">
                   <Phone className="h-4 w-4" />
                   +243974973061
                 </a>
@@ -149,7 +150,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-display font-semibold mb-6 text-sm uppercase tracking-wider text-foreground">
+            <h4 className="typo-label font-display mb-6 text-white">
               {(() => {
                 const gQuick = footerMenuGroups.find((g) => g.labelKey === "footer.quickLinks") ?? footerMenuGroups[0];
                 return resolveLabel(gQuick?.labelKey ?? "footer.quickLinks");
@@ -163,11 +164,15 @@ const Footer = () => {
                 if (!hasGallery) {
                   quickItems.push({ labelKey: "nav.gallery", path: "/resources#gallery" });
                 }
+                const hasSupport = quickItems.some((item) => item.path === "/soutenir");
+                if (!hasSupport) {
+                  quickItems.push({ labelKey: "nav.support", path: "/soutenir" });
+                }
                 return quickItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className="text-sm text-muted-foreground hover:text-[#ffb800] transition-colors"
+                    className="text-sm text-white/75 hover:text-[#ffb800] transition-colors"
                   >
                     {resolveLabel(item.labelKey)}
                   </Link>
@@ -178,7 +183,7 @@ const Footer = () => {
 
           {/* Resources */}
           <div>
-            <h4 className="font-display font-semibold mb-6 text-sm uppercase tracking-wider text-foreground">
+            <h4 className="typo-label font-display mb-6 text-white">
               {(() => {
                 const gRes =
                   footerMenuGroups.find((g) => g.labelKey === "footer.resources") ?? footerMenuGroups[1] ?? footerMenuGroups[0];
@@ -193,7 +198,7 @@ const Footer = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className="text-sm text-muted-foreground hover:text-[#ffb800] transition-colors"
+                    className="text-sm text-white/75 hover:text-[#ffb800] transition-colors"
                   >
                     {resolveLabel(item.labelKey)}
                   </Link>
@@ -204,10 +209,10 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div>
-            <h4 className="font-display font-semibold mb-6 text-sm uppercase tracking-wider text-foreground">
+            <h4 className="typo-label font-display mb-6 text-white">
               {t("footer.newsletter")}
             </h4>
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-sm text-white/75 mb-3">
               {t("footer.newsletterCta")}
             </p>
             <form
@@ -254,14 +259,14 @@ const Footer = () => {
                 value={newsletterName}
                 onChange={(e) => setNewsletterName(e.target.value)}
                 placeholder={t("footer.newsletterNamePlaceholder")}
-                className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-lg border border-white/20 bg-white/[0.06] px-3.5 py-2 text-sm text-white placeholder:text-white/45 focus:outline-none focus:ring-2 focus:ring-[#ffb800]"
               />
               <input
                 type="email"
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
                 placeholder={t("footer.newsletterEmailPlaceholder")}
-                className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-lg border border-white/20 bg-white/[0.06] px-3.5 py-2 text-sm text-white placeholder:text-white/45 focus:outline-none focus:ring-2 focus:ring-[#ffb800]"
               />
               <button
                 type="submit"
@@ -274,17 +279,17 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-border">
-          <p className="text-sm text-muted-foreground flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between sm:items-center sm:text-left">
+        <div className="mt-16 pt-8 border-t border-white/15">
+          <p className="text-sm text-white/70 flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between sm:items-center sm:text-left">
             <span className="w-full sm:w-auto">© {new Date().getFullYear()} Ynuka Labs. {t("footer.rights")}</span>
             <span className="w-full sm:w-auto sm:text-right">
-              Developped by{" "}
+              {t("footer.developedBy")}{" "}
               <a
                 href={devMailto}
-                className="text-foreground hover:text-[#ffb800] transition-colors hover:underline underline-offset-4"
-                title="Envoyer une demande de création de site web moderne"
+                className="text-white hover:text-[#ffb800] transition-colors hover:underline underline-offset-4"
+                title={t("footer.developersTeam")}
               >
-                Ynuka Labs Developpers Team
+                {t("footer.developersTeam")}
               </a>
             </span>
           </p>

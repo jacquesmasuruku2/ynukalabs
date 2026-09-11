@@ -12,20 +12,17 @@ const Opportunities = () => {
         <div className="absolute -left-16 top-10 h-44 w-44 rounded-full bg-[#ffb800]/15 blur-3xl" />
         <div className="absolute -right-16 bottom-0 h-52 w-52 rounded-full bg-sky-400/10 blur-3xl" />
 
-        <div className="container relative mx-auto px-4 text-center">
+        <div className="relative mx-auto w-full max-w-[1200px] px-4 text-left sm:px-6 md:px-8 lg:px-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mx-auto max-w-4xl"
+            className="max-w-4xl"
           >
-            <span className="inline-flex items-center rounded-full border border-[#ffb800]/40 bg-[#ffb800]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#b77900] dark:text-[#f6c453]">
-              Ynuka Labs
-            </span>
-            <h1 className="mt-6 font-display text-4xl font-black tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
-              <span className="gradient-text">{t("opportunities.title")}</span>
+            <h1 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+              {t("opportunities.title")}
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-slate-600 dark:text-slate-300 md:text-lg">
+            <p className="mt-3 max-w-3xl text-justify text-base font-semibold leading-relaxed text-[#1e3a5f] dark:text-[#93c5fc] md:text-lg">
               {t("opportunities.subtitle")}
             </p>
           </motion.div>

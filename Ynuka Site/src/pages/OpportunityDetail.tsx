@@ -273,7 +273,7 @@ const OpportunityDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Chargement...</div>
+        <div className="text-muted-foreground">{t("common.loading")}</div>
       </div>
     );
   }
@@ -282,9 +282,9 @@ const OpportunityDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Opportunité non trouvée</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("opportunities.noContent")}</h1>
           <Button asChild>
-            <Link to="/opportunities">Retour aux opportunités</Link>
+            <Link to="/opportunities">{t("opportunities.backToOpportunities")}</Link>
           </Button>
         </div>
       </div>
@@ -316,7 +316,7 @@ const OpportunityDetail = () => {
               {title}
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-6">
+            <p className="typo-lead mb-6 text-muted-foreground">
               {desc}
             </p>
             

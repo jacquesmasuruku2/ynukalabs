@@ -12,6 +12,7 @@
   <url><loc>https://ynukalabs.com/partners</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ynukalabs.com/blockchains</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ynukalabs.com/validators</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ynukalabs.com/goma-drep</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ynukalabs.com/documentation</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ynukalabs.com/tools</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ynukalabs.com/gallery</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
