@@ -48,8 +48,8 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
   }, []);
 
   return (
-    <section id="documentation" className="scroll-mt-24 border-t border-border py-16">
-      <div className="container mx-auto px-4">
+    <section id="education" className="scroll-mt-24 border-t border-border py-16">
+      <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
         {showHeading && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -64,17 +64,17 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
           </motion.div>
         )}
         {loading ? (
-          <div className="text-center text-muted-foreground py-12">{t("common.loading")}</div>
+          <div className="py-12 text-center text-muted-foreground">{t("common.loading")}</div>
         ) : loadError ? (
-          <div className="text-center text-muted-foreground py-12">
+          <div className="py-12 text-center text-muted-foreground">
             <p>{t("docs.empty")}</p>
           </div>
         ) : docs.length === 0 ? (
-          <div className="text-center text-muted-foreground py-12">
+          <div className="py-12 text-center text-muted-foreground">
             <p>{t("docs.empty")}</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
             {docs.map((doc, i) => (
             <motion.div
               key={i}

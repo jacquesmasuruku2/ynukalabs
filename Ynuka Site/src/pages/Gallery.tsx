@@ -2,104 +2,78 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ZoomIn, X } from "lucide-react";
-import { fetchGalleryEvents } from "@/lib/api";
+import { fetchGalleryEvents, type GalleryImageItem } from "@/lib/api";
 
 const RESOURCES_GALLERY_BASE_PATH = "/assets-resources/gallery";
+
+type FlatGalleryImage = {
+  key: string;
+  imageUrl: string;
+  alt: string;
+  title: string;
+  description: string;
+  category: string;
+};
 
 const Gallery = () => {
   const { t } = useTranslation();
 
-  type GalleryImage = { alt: string; imageUrl: string };
-  type GalleryEvent = {
-    title: string;
-    subtitle: string;
-    date: string;
-    description: string;
-    images: GalleryImage[];
-  };
-
-  const hardcodedGalleryEvents: GalleryEvent[] = [
-    {
-      title: "Images Onboarding Program",
-      subtitle: "Nos images de l'Onboarding Program",
-      date: "2022-2025",
-      description:
-        "Voici les images de l'Onboarding Program de Ynuka Labs Web3 qui est un programme de formation sur le Web3 pour les nouveaux membres de la communauté.",
-      images: Array.from({ length: 6 }).map((_, i) => ({
-        alt: `Wada Burkina Faso Hub — photo ${i + 1}`,
+  const fallbackImages: FlatGalleryImage[] = useMemo(
+    () => [
+      ...Array.from({ length: 6 }).map((_, i) => ({
+        key: `onboarding-${i}`,
         imageUrl: `${RESOURCES_GALLERY_BASE_PATH}/cardano-summit-2022/photo-${i + 1}.jpg`,
+        alt: `Formation Onboarding — photo ${i + 1}`,
+        title: "Formation Onboarding",
+        description: "Session de formation Web3 pour les nouveaux membres de la communauté.",
+        category: "Formation",
       })),
-    },
-    {
-      title: "Hackathons et Evénements",
-      subtitle: "Les Hackathons et les événements de Ynuka Labs Web3",
-      date: "2026",
-      description:
-        "Voici les images des Hackathons et des événements de Ynuka Labs Web3 et les projets Cardano, Ynuka Labs et les autres projets de la communauté a participé à des Hackathons et des événements organisés localement à Goma et à Nairobi, Kenya.",
-      images: Array.from({ length: 6 }).map((_, i) => ({
-        alt: `Inauguration — photo ${i + 1}`,
+      ...Array.from({ length: 6 }).map((_, i) => ({
+        key: `hackathon-${i}`,
         imageUrl: `${RESOURCES_GALLERY_BASE_PATH}/cardano-africa-tech-summit/photo-${i + 1}.jpg`,
+        alt: `Hackathon & événement — photo ${i + 1}`,
+        title: "Hackathon & événement",
+        description: "Moments forts des hackathons et événements organisés avec la communauté.",
+        category: "Événement",
       })),
-    },
-  ];
+    ],
+    []
+  );
 
-  const [galleryEvents, setGalleryEvents] = useState<GalleryEvent[]>(hardcodedGalleryEvents);
-  const [selectedImage, setSelectedImage] = useState<{ imageUrl: string; alt: string } | null>(null);
+  const [galleryImages, setGalleryImages] = useState<FlatGalleryImage[]>(fallbackImages);
+  const [selectedImage, setSelectedImage] = useState<FlatGalleryImage | null>(null);
 
   useEffect(() => {
     const loadGallery = async () => {
       try {
-        const dbEvents = await fetchGalleryEvents(20);
-        if (dbEvents.length > 0) {
-          setGalleryEvents([...hardcodedGalleryEvents, ...dbEvents]);
+        const dbImages: GalleryImageItem[] = await fetchGalleryEvents(50);
+        if (dbImages.length > 0) {
+          setGalleryImages(
+            dbImages.map((img) => ({
+              key: img.id,
+              imageUrl: img.imageUrl,
+              alt: img.title || img.description || "Galerie Ynuka Labs",
+              title: img.title,
+              description: img.description,
+              category: img.category,
+            }))
+          );
         }
       } catch (error) {
         console.error("Failed to fetch gallery events:", error);
-        setGalleryEvents(hardcodedGalleryEvents);
+        setGalleryImages(fallbackImages);
       }
     };
 
     loadGallery();
-  }, []);
-
-  type FlatGalleryImage = { alt: string; imageUrl: string; key: string };
-
-  const galleryImages: FlatGalleryImage[] = useMemo(() => {
-    const out: FlatGalleryImage[] = [];
-    galleryEvents.forEach((event, eventIndex) => {
-      event.images.forEach((img, imgIndex) => {
-        out.push({
-          alt: img.alt,
-          imageUrl: img.imageUrl,
-          key: `${event.title}-${eventIndex}-${imgIndex}-${img.imageUrl}`,
-        });
-      });
-    });
-    return out;
-  }, [galleryEvents]);
-
-  const desktopGalleryGrid = useMemo(() => {
-    const cols: FlatGalleryImage[][] = [[], [], [], []];
-    galleryImages.forEach((img, i) => {
-      cols[i % 4].push(img);
-    });
-    return cols;
-  }, [galleryImages]);
-
-  const mobileGalleryGrid = useMemo(() => {
-    const cols: FlatGalleryImage[][] = [[], []];
-    galleryImages.forEach((img, i) => {
-      cols[i % 2].push(img);
-    });
-    return cols;
-  }, [galleryImages]);
+  }, [fallbackImages]);
 
   return (
     <div className="min-h-screen bg-background pt-20">
-      <section className="py-20 hero-gradient">
+      <section className="hero-gradient py-20">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="mb-4 font-display text-4xl font-bold md:text-5xl">
               <span className="gradient-text">{t("resources.galleryTitle")}</span>
             </h1>
             <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">
@@ -109,97 +83,98 @@ const Gallery = () => {
         </div>
       </section>
 
-      <section className="border-t border-border py-16 bg-card/30">
-        <div className="container mx-auto max-w-6xl px-4">
+      <section className="py-16">
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
           {galleryImages.length === 0 ? (
             <p className="text-center text-muted-foreground">{t("blog.noContent")}</p>
           ) : (
-            <>
-              <div className="grid grid-cols-2 gap-2 md:hidden">
-                {galleryImages.map((img, imgIndex) => (
-                  <motion.div
-                    key={img.key}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-40px" }}
-                    transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.05, 0.35) }}
-                    className="overflow-hidden rounded-sm border border-border/80 bg-background/40 hover:border-primary/30 transition-colors relative group cursor-pointer"
-                    onClick={() => setSelectedImage({ imageUrl: img.imageUrl, alt: img.alt })}
-                  >
-                    <img
-                      src={img.imageUrl}
-                      alt={img.alt}
-                      className="block h-auto w-full rounded-sm object-cover aspect-[4/3]"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <ZoomIn className="w-8 h-8 text-white" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+            <div className="grid auto-rows-[140px] grid-cols-2 gap-2 sm:auto-rows-[160px] sm:gap-3 md:auto-rows-[180px] md:grid-cols-4 lg:auto-rows-[200px]">
+              {galleryImages.map((img, imgIndex) => {
+                const pattern = imgIndex % 6;
+                const spanClass =
+                  pattern === 0
+                    ? "col-span-2 row-span-2"
+                    : pattern === 3
+                      ? "col-span-2 row-span-1 md:col-span-2"
+                      : "col-span-1 row-span-1";
 
-              <div className="hidden md:grid grid-cols-4 gap-4">
-                {galleryImages.map((img, imgIndex) => (
-                  <motion.div
+                return (
+                  <motion.button
                     key={img.key}
-                    initial={{ opacity: 0, y: 16 }}
+                    type="button"
+                    initial={{ opacity: 0, y: 14 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-40px" }}
-                    transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.05, 0.35) }}
-                    className="overflow-hidden rounded-sm border border-border/80 bg-background/40 hover:border-primary/30 transition-colors relative group cursor-pointer"
-                    onClick={() => setSelectedImage({ imageUrl: img.imageUrl, alt: img.alt })}
+                    transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.04, 0.28) }}
+                    onClick={() => setSelectedImage(img)}
+                    className={`group relative overflow-hidden rounded-none border border-[#0f2847]/10 text-left dark:border-white/10 ${spanClass}`}
                   >
                     <img
                       src={img.imageUrl}
                       alt={img.alt}
-                      className="block h-auto w-full rounded-sm object-cover aspect-[4/3]"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <ZoomIn className="w-8 h-8 text-white" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </>
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f2847]/90 via-[#0f2847]/35 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    <ZoomIn className="absolute right-2 top-2 h-4 w-4 text-white opacity-0 transition-opacity group-hover:opacity-90" />
+                    {(img.title || img.description) && (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 px-3 py-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                        {img.title ? (
+                          <p className="font-display text-sm font-bold text-white">{img.title}</p>
+                        ) : null}
+                        {img.description ? (
+                          <p className="mt-1 line-clamp-2 text-[11px] text-white/85">{img.description}</p>
+                        ) : null}
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
           )}
         </div>
       </section>
 
       <AnimatePresence>
-        {selectedImage && (
+        {selectedImage ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
             onClick={() => setSelectedImage(null)}
           >
+            <button
+              type="button"
+              className="absolute right-4 top-4 rounded-none bg-white/10 p-2 text-white hover:bg-white/20"
+              onClick={() => setSelectedImage(null)}
+              aria-label="Fermer"
+            >
+              <X className="h-5 w-5" />
+            </button>
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="relative max-w-5xl max-h-[90vh] w-full"
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="max-h-[90vh] max-w-5xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
-                aria-label="Fermer"
-              >
-                <X className="w-8 h-8" />
-              </button>
               <img
                 src={selectedImage.imageUrl}
                 alt={selectedImage.alt}
-                className="w-full h-auto object-contain rounded-lg"
+                className="max-h-[75vh] w-full object-contain"
               />
+              <div className="mt-3 text-center text-white">
+                {selectedImage.title ? (
+                  <p className="font-display text-lg font-bold">{selectedImage.title}</p>
+                ) : null}
+                {selectedImage.description ? (
+                  <p className="mx-auto mt-1 max-w-2xl text-sm text-white/80">{selectedImage.description}</p>
+                ) : null}
+              </div>
             </motion.div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
