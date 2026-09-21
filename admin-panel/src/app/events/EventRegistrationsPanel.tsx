@@ -1,0 +1,317 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { Check, MessageSquare, Users } from 'lucide-react';
+
+type EventOption = { id: string; title: string };
+
+type RegistrationRow = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  status: string;
+  createdAt: string;
+  conversation?: { id: string; messages?: { body: string; createdAt: string }[] } | null;
+};
+
+type Message = {
+  id: string;
+  senderType: string;
+  senderName: string | null;
+  body: string;
+  createdAt: string;
+};
+
+const regStatusLabel: Record<string, string> = {
+  registered: 'Inscrit',
+  selected: 'Sélectionné',
+  rejected: 'Refusé',
+  waitlisted: 'Liste d’attente',
+};
+
+const regStatusClass: Record<string, string> = {
+  registered: 'bg-slate-100 text-slate-700',
+  selected: 'bg-green-100 text-green-800',
+  rejected: 'bg-red-100 text-red-700',
+  waitlisted: 'bg-amber-100 text-amber-800',
+};
+
+export default function EventRegistrationsPanel({ events }: { events: EventOption[] }) {
+  const [eventId, setEventId] = useState(events[0]?.id || '');
+  const [rows, setRows] = useState<RegistrationRow[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [active, setActive] = useState<RegistrationRow | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [reply, setReply] = useState('');
+  const [notifyMessage, setNotifyMessage] = useState('');
+
+  const load = useCallback(async () => {
+    if (!eventId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/event-registrations?admin=1&eventId=${encodeURIComponent(eventId)}`);
+      if (res.ok) setRows(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!eventId && events[0]?.id) setEventId(events[0].id);
+  }, [events, eventId]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+    setActive(null);
+    void load();
+  }, [load]);
+
+  const openChat = async (row: RegistrationRow) => {
+    setActive(row);
+    const res = await fetch(`/api/event-conversations/${row.id}?admin=1`);
+    if (res.ok) {
+      const data = await res.json();
+      setMessages(data.messages || []);
+    }
+  };
+
+  const toggle = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const selectAllRegistered = () => {
+    const ids = rows.filter((r) => r.status === 'registered').map((r) => r.id);
+    setSelectedIds(ids);
+  };
+
+  const applyStatus = async (status: 'selected' | 'rejected') => {
+    if (!selectedIds.length) return;
+    setBusy(true);
+    try {
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`/api/event-registrations/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status,
+              message: notifyMessage.trim() || undefined,
+            }),
+          })
+        )
+      );
+      setSelectedIds([]);
+      setNotifyMessage('');
+      await load();
+      alert(
+        status === 'selected'
+          ? 'Participants sélectionnés : message + notification envoyés.'
+          : 'Statut mis à jour et message envoyé.'
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendReply = async () => {
+    if (!active || !reply.trim()) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/event-conversations/${active.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderType: 'team',
+          senderName: 'Équipe Ynuka Labs',
+          body: reply.trim(),
+        }),
+      });
+      if (res.ok) {
+        const msg = await res.json();
+        setMessages((prev) => [...prev, msg]);
+        setReply('');
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Événement</span>
+          <select
+            value={eventId}
+            onChange={(e) => setEventId(e.target.value)}
+            className="min-w-[240px] rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>
+                {ev.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={selectAllRegistered}
+          className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
+        >
+          Tout cocher (inscrits)
+        </button>
+        <button
+          type="button"
+          disabled={!selectedIds.length || busy}
+          onClick={() => applyStatus('selected')}
+          className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+        >
+          <Check className="h-4 w-4" /> Sélectionner & notifier ({selectedIds.length})
+        </button>
+        <button
+          type="button"
+          disabled={!selectedIds.length || busy}
+          onClick={() => applyStatus('rejected')}
+          className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+        >
+          Refuser
+        </button>
+      </div>
+
+      <textarea
+        value={notifyMessage}
+        onChange={(e) => setNotifyMessage(e.target.value)}
+        placeholder="Message personnalisé (optionnel) envoyé aux sélectionnés…"
+        rows={2}
+        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+      />
+
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <div className="overflow-hidden rounded-md border">
+          <table className="min-w-full divide-y text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-3 py-2 text-left" />
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Participant</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Statut</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-500">Chat</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
+                    Chargement…
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
+                    <Users className="mx-auto mb-2 h-8 w-8 opacity-40" />
+                    Aucune inscription pour cet événement.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.id} className={active?.id === row.id ? 'bg-blue-50' : ''}>
+                    <td className="px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(row.id)}
+                        onChange={() => toggle(row.id)}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        {row.avatarUrl ? (
+                          <img src={row.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold">
+                            {row.fullName.slice(0, 1)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium text-slate-900">{row.fullName}</p>
+                          <p className="text-xs text-slate-500">{row.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${regStatusClass[row.status] || 'bg-gray-100'}`}>
+                        {regStatusLabel[row.status] || row.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => void openChat(row)}
+                        className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-slate-50"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" /> Ouvrir
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex min-h-[22rem] flex-col rounded-md border bg-white">
+          {active ? (
+            <>
+              <div className="border-b px-4 py-3">
+                <p className="font-semibold text-slate-900">{active.fullName}</p>
+                <p className="text-xs text-slate-500">{active.email}</p>
+              </div>
+              <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`rounded-md px-3 py-2 text-sm ${
+                      m.senderType === 'team'
+                        ? 'bg-amber-50 text-slate-800'
+                        : m.senderType === 'system'
+                          ? 'border bg-slate-50 text-slate-600'
+                          : 'bg-slate-800 text-white'
+                    }`}
+                  >
+                    <p className="mb-0.5 text-[10px] font-semibold uppercase opacity-70">
+                      {m.senderName || m.senderType}
+                    </p>
+                    <p className="whitespace-pre-wrap">{m.body}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t p-3">
+                <textarea
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  rows={2}
+                  placeholder="Répondre au participant…"
+                  className="mb-2 w-full rounded-md border px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  disabled={busy || !reply.trim()}
+                  onClick={() => void sendReply()}
+                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Envoyer + notifier
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="m-auto px-6 text-center text-sm text-slate-500">
+              Sélectionnez un participant pour voir et répondre dans l’espace d’échange.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

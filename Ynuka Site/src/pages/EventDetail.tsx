@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Calendar, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Clock, MapPin, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,8 @@ import {
 } from "@/services/events/eventsApi";
 import type { YnukaEvent } from "@/services/events/types";
 import RichTextDisplay from "@/components/RichTextDisplay";
+import GoogleSignInDialog from "@/components/auth/GoogleSignInDialog";
+import { authService, type AuthUser } from "@/lib/auth";
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -34,13 +36,16 @@ const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isFr = i18n.language === "fr";
 
   const [event, setEvent] = useState<YnukaEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [regForm, setRegForm] = useState({ full_name: "", email: "", phone: "" });
+  const [user, setUser] = useState<AuthUser | null>(authService.getUser());
+  const [regForm, setRegForm] = useState({ phone: "" });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -67,31 +72,52 @@ const EventDetail = () => {
     };
   }, [id]);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const startRegister = () => {
+    const current = authService.getUser();
+    if (!current) {
+      setShowAuth(true);
+      return;
+    }
+    setUser(current);
+    setShowRegister(true);
+  };
+
+  const completeRegistration = async (authUser: AuthUser) => {
     if (!id) return;
     setSubmitting(true);
     try {
-      await registerForEvent({
+      const result = await registerForEvent({
         event_id: id,
-        full_name: regForm.full_name,
-        email: regForm.email,
+        full_name: authUser.name,
+        email: authUser.email,
         phone: regForm.phone || null,
+        avatarUrl: authUser.avatar || null,
       });
-      toast({ title: t("events.registerSuccess") });
+      toast({
+        title: result.alreadyRegistered
+          ? t("events.alreadyRegistered")
+          : t("events.registerSuccess"),
+        description: isFr
+          ? "Vous pouvez maintenant échanger avec notre équipe."
+          : "You can now chat with our team.",
+      });
       setShowRegister(false);
-      setRegForm({ full_name: "", email: "", phone: "" });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      const status =
-        msg.includes("409") || msg.toLowerCase().includes("duplicate") ? 409 : null;
-      if (status === 409) {
-        toast({ title: t("events.alreadyRegistered"), variant: "destructive" });
-      } else {
-        toast({ title: t("events.registerError"), variant: "destructive" });
-      }
+      setRegForm({ phone: "" });
+      navigate(`/events/${id}/espace`);
+    } catch {
+      toast({ title: t("events.registerError"), variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    await completeRegistration(user);
   };
 
   if (loading) {
@@ -153,9 +179,19 @@ const EventDetail = () => {
         </a>
       </Button>
     ) : (
-      <Button variant="glow" size="lg" onClick={() => setShowRegister(true)}>
-        {t("events.register")} <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="flex flex-wrap gap-3">
+        <Button variant="glow" size="lg" onClick={startRegister}>
+          {t("events.register")} <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+        {user ? (
+          <Button variant="outline-glow" size="lg" asChild>
+            <Link to={`/events/${event.id}/espace`}>
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {isFr ? "Espace d'échange" : "Exchange space"}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     ));
 
   return (
@@ -246,7 +282,7 @@ const EventDetail = () => {
               <DetailRow label={t("events.audienceLabel")} value={event.audience} />
             </div>
           ) : null}
-          {event.capacity != null && !Number.isNaN(event.capacity) ? (
+          {event.capacity ? (
             <div className="mb-6">
               <DetailRow label={t("events.capacityLabel")} value={String(event.capacity)} />
             </div>
@@ -306,31 +342,49 @@ const EventDetail = () => {
         </div>
       </section>
 
+      <GoogleSignInDialog
+        open={showAuth}
+        onClose={() => setShowAuth(false)}
+        onSuccess={(authUser) => {
+          setUser(authUser);
+          setShowAuth(false);
+          setShowRegister(true);
+        }}
+        title={isFr ? "S'inscrire à l'événement" : "Register for the event"}
+        description={
+          isFr
+            ? "Connectez-vous avec Google pour vous inscrire, puis échanger avec l'équipe Ynuka Labs."
+            : "Sign in with Google to register, then chat with the Ynuka Labs team."
+        }
+      />
+
       <Dialog open={showRegister} onOpenChange={setShowRegister}>
-        <DialogContent className="max-w-md bg-card">
+        <DialogContent className="max-w-md rounded-md bg-card">
           <DialogHeader>
             <DialogTitle>{t("events.registerTitle")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleRegister} className="mt-4 space-y-4">
-            <Input
-              placeholder={t("events.fullName")}
-              value={regForm.full_name}
-              onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
-              required
-            />
-            <Input
-              type="email"
-              placeholder={t("events.email")}
-              value={regForm.email}
-              onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-              required
-            />
+          {user ? (
+            <div className="mb-2 flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+              {user.avatar ? (
+                <img src={user.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0f2847] text-sm font-bold text-white">
+                  {user.name.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-[#0f2847]">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{user.email}</p>
+              </div>
+            </div>
+          ) : null}
+          <form onSubmit={handleRegister} className="mt-2 space-y-4">
             <Input
               placeholder={t("events.phone")}
               value={regForm.phone}
-              onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+              onChange={(e) => setRegForm({ phone: e.target.value })}
             />
-            <Button type="submit" variant="glow" className="w-full" disabled={submitting}>
+            <Button type="submit" variant="glow" className="w-full" disabled={submitting || !user}>
               {submitting ? t("events.submitting") : t("events.confirmRegister")}
             </Button>
           </form>

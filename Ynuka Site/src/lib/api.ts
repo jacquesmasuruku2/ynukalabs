@@ -60,6 +60,19 @@ async function adminPost<T = unknown>(path: string, body: Record<string, unknown
   return response.json() as Promise<T>;
 }
 
+async function adminPatch<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
+  const response = await fetch(`${API_ROOT}${path.startsWith("/") ? path : `/${path}`}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error || `Admin API PATCH failed: ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
 /** @deprecated kept for rare PHP-only endpoints; prefer adminGet/adminPost */
 export async function fetchFromApi<T = unknown>(
   _action: string,
@@ -406,15 +419,81 @@ export async function registerForEvent(data: {
   phone?: string | null;
   organization?: string | null;
   message?: string | null;
+  avatarUrl?: string | null;
+  googleSub?: string | null;
 }) {
-  return adminPost("/event-registrations", {
+  return adminPost<{
+    id: string;
+    eventId: string;
+    status: string;
+    alreadyRegistered?: boolean;
+    conversation?: { id: string } | null;
+    event?: { id: string; title: string; titleFr?: string | null };
+  }>("/event-registrations", {
     eventId: data.event_id,
     fullName: data.full_name,
     email: data.email,
     phone: data.phone,
     organization: data.organization,
     message: data.message,
+    avatarUrl: data.avatarUrl,
+    googleSub: data.googleSub,
   });
+}
+
+export type EventConversationMessage = {
+  id: string;
+  senderType: string;
+  senderEmail?: string | null;
+  senderName?: string | null;
+  body: string;
+  createdAt: string;
+};
+
+export type SiteNotification = {
+  id: string;
+  userEmail: string;
+  type: string;
+  title: string;
+  body: string;
+  link?: string | null;
+  read: boolean;
+  createdAt: string;
+};
+
+export async function fetchEventRegistrationByEmail(eventId: string, email: string) {
+  return adminGet<{
+    id: string;
+    status: string;
+    conversation?: { id: string } | null;
+  } | null>("/event-registrations", { eventId, email });
+}
+
+export async function fetchEventConversation(registrationId: string, email: string) {
+  return adminGet<{
+    registration: { id: string; status: string; eventId: string };
+    conversation: { id: string };
+    messages: EventConversationMessage[];
+  }>(`/event-conversations/${registrationId}`, { email });
+}
+
+export async function sendEventConversationMessage(
+  registrationId: string,
+  data: { body: string; email: string; name?: string; senderType?: "user" | "team" }
+) {
+  return adminPost<EventConversationMessage>(`/event-conversations/${registrationId}`, data);
+}
+
+export async function fetchSiteNotifications(email: string) {
+  return adminGet<SiteNotification[]>("/site-notifications", { email });
+}
+
+export async function markNotificationRead(email: string, id: string) {
+  return adminPatch("/site-notifications", { email, id });
+}
+
+export async function markAllNotificationsRead(email: string) {
+  return adminPatch("/site-notifications", { email, markAllRead: true });
 }
 
 export async function fetchEventRegistrationCount(eventId: string) {

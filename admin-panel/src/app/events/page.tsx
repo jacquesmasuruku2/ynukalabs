@@ -3,7 +3,8 @@
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { Calendar, Check, Edit, Inbox, Plus, Trash2, X } from 'lucide-react';
+import { Calendar, Check, Edit, Inbox, Plus, Trash2, Users, X } from 'lucide-react';
+import EventRegistrationsPanel from './EventRegistrationsPanel';
 
 type EventRow = {
   id: string;
@@ -36,7 +37,7 @@ type ProposalRow = {
   createdAt: string;
 };
 
-type Tab = 'published' | 'proposals';
+type Tab = 'published' | 'proposals' | 'registrations';
 
 const statusLabel: Record<string, string> = {
   pending: 'En attente',
@@ -136,10 +137,20 @@ export default function EventsPage() {
               <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">{pendingCount}</span>
             ) : null}
           </button>
+          <button
+            type="button"
+            onClick={() => setTab('registrations')}
+            className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold ${tab === 'registrations' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}
+          >
+            <Users className="h-4 w-4" />
+            Inscrits & sélection
+          </button>
         </div>
 
         {loading ? (
           <p className="py-12 text-center text-secondary">Chargement...</p>
+        ) : tab === 'registrations' ? (
+          <EventRegistrationsPanel events={items.map((i) => ({ id: i.id, title: i.title }))} />
         ) : tab === 'published' ? (
           <div className="overflow-hidden rounded-lg border">
             <table className="min-w-full divide-y">

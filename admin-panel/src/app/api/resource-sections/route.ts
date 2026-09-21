@@ -8,9 +8,14 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const admin = request.nextUrl.searchParams.get('admin') === '1';
     const slug = request.nextUrl.searchParams.get('slug');
     const sections = await prisma.resourceSection.findMany({
-      where: slug ? { slug, isActive: true } : { isActive: true },
+      where: slug
+        ? { slug, ...(admin ? {} : { isActive: true }) }
+        : admin
+          ? {}
+          : { isActive: true },
       include: {
         items: {
           orderBy: { title: 'asc' },

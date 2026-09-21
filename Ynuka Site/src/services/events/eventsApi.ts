@@ -116,6 +116,8 @@ export async function registerForEvent(payload: EventRegistrationPayload) {
     phone: payload.phone,
     organization: payload.organization,
     message: payload.message,
+    avatarUrl: payload.avatarUrl,
+    googleSub: payload.googleSub,
   });
 }
 

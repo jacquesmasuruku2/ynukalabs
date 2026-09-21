@@ -12,6 +12,7 @@ import Index from "./pages/Index-final";
 import About from "./pages/About";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
+import EventEspace from "./pages/EventEspace";
 import Projects from "./pages/Projects";
 import Community from "./pages/Community";
 import Resources from "./pages/Resources";
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/events" element={<Events />} />
               <Route path="/events/:id" element={<EventDetail />} />
+              <Route path="/events/:id/espace" element={<EventEspace />} />
               <Route path="/luma-events" element={<LumaEvents />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/community" element={<Community />} />

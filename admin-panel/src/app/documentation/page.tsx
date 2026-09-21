@@ -54,10 +54,10 @@ export default function DocumentationPage() {
   useEffect(() => {
     const loadSections = async () => {
       try {
-        const response = await fetch('/api/resource-sections');
+        const response = await fetch('/api/resource-sections?admin=1');
         if (!response.ok) throw new Error('Failed to fetch sections');
         const data = await response.json();
-        const normalized = Array.isArray(data) && data.length > 0 ? data : fallbackSections;
+        const normalized = Array.isArray(data) ? data : [];
         setSections(normalized);
       } catch (error) {
         console.error('Failed to fetch documentation admin data', error);

@@ -17,6 +17,8 @@ import EventProposalForm from "@/components/events/EventProposalForm";
 import { cn } from "@/lib/utils";
 import { LUMA_EMBED_URL, LUMA_PUBLIC_PAGE_URL } from "@/config/luma";
 import { registerForEvent } from "@/services/events/eventsApi";
+import GoogleSignInDialog from "@/components/auth/GoogleSignInDialog";
+import { authService, type AuthUser } from "@/lib/auth";
 import {
   filterUnifiedEvents,
   loadMergedCarouselEvents,
@@ -39,7 +41,9 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [registerEventId, setRegisterEventId] = useState<string | null>(null);
-  const [regForm, setRegForm] = useState({ full_name: "", email: "", phone: "" });
+  const [showAuth, setShowAuth] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(authService.getUser());
+  const [regForm, setRegForm] = useState({ phone: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const filters: { key: EventAgendaFilter; label: string }[] = [
@@ -121,31 +125,38 @@ const Events = () => {
     [events, activeFilter]
   );
 
+  const openRegister = (eventId: string) => {
+    setRegisterEventId(eventId);
+    const current = authService.getUser();
+    if (!current) {
+      setShowAuth(true);
+      return;
+    }
+    setUser(current);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registerEventId || registerEventId.startsWith("luma-")) return;
+    if (!registerEventId || registerEventId.startsWith("luma-") || !user) return;
     setSubmitting(true);
     try {
       await registerForEvent({
         event_id: registerEventId,
-        full_name: regForm.full_name,
-        email: regForm.email,
+        full_name: user.name,
+        email: user.email,
         phone: regForm.phone || null,
+        avatarUrl: user.avatar || null,
       });
-
-      toast({ title: t("events.registerSuccess") });
+      toast({
+        title: t("events.registerSuccess"),
+        description: "Vous pouvez maintenant échanger avec notre équipe.",
+      });
+      const eid = registerEventId;
       setRegisterEventId(null);
-      setRegForm({ full_name: "", email: "", phone: "" });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      const status =
-        msg.includes("409") || msg.toLowerCase().includes("duplicate") ? 409 : null;
-
-      if (status === 409) {
-        toast({ title: t("events.alreadyRegistered"), variant: "destructive" });
-      } else {
-        toast({ title: t("events.registerError"), variant: "destructive" });
-      }
+      setRegForm({ phone: "" });
+      navigate(`/events/${eid}/espace`);
+    } catch {
+      toast({ title: t("events.registerError"), variant: "destructive" });
     }
     setSubmitting(false);
   };
@@ -297,7 +308,7 @@ const Events = () => {
                 visibleRows={4}
                 onRegister={(event) => {
                   if (event.id && !event.id.startsWith("luma-") && !event.isPast) {
-                    setRegisterEventId(event.id);
+                    openRegister(event.id);
                   }
                 }}
               />
@@ -314,32 +325,47 @@ const Events = () => {
         )}
       </main>
 
-      <Dialog open={!!registerEventId} onOpenChange={(open) => !open && setRegisterEventId(null)}>
-        <DialogContent className="max-w-md bg-card">
+      <GoogleSignInDialog
+        open={showAuth}
+        onClose={() => {
+          setShowAuth(false);
+          if (!authService.getUser()) setRegisterEventId(null);
+        }}
+        onSuccess={(authUser) => {
+          setUser(authUser);
+          setShowAuth(false);
+        }}
+        title="S'inscrire à l'événement"
+        description="Connectez-vous avec Google pour vous inscrire, puis échanger avec l'équipe Ynuka Labs."
+      />
+
+      <Dialog
+        open={!!registerEventId && !!user && !showAuth}
+        onOpenChange={(open) => !open && setRegisterEventId(null)}
+      >
+        <DialogContent className="max-w-md rounded-md bg-card">
           <DialogHeader>
             <DialogTitle>{t("events.registerTitle")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleRegister} className="mt-4 space-y-4">
-            <Input
-              placeholder={t("events.fullName")}
-              value={regForm.full_name}
-              onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
-              required
-            />
-            <Input
-              type="email"
-              placeholder={t("events.email")}
-              value={regForm.email}
-              onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-              required
-            />
+          {user ? (
+            <div className="mb-2 flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+              {user.avatar ? (
+                <img src={user.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+              ) : null}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{user.email}</p>
+              </div>
+            </div>
+          ) : null}
+          <form onSubmit={handleRegister} className="mt-2 space-y-4">
             <Input
               placeholder={t("events.phone")}
               value={regForm.phone}
-              onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+              onChange={(e) => setRegForm({ phone: e.target.value })}
             />
-            <Button type="submit" variant="glow" className="w-full" disabled={submitting}>
-              {submitting ? t("admin.loading") : t("events.submitRegistration")}
+            <Button type="submit" variant="glow" className="w-full" disabled={submitting || !user}>
+              {submitting ? t("admin.loading") : t("events.confirmRegister")}
             </Button>
           </form>
         </DialogContent>

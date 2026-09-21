@@ -64,4 +64,6 @@ export type EventRegistrationPayload = {
   phone?: string | null;
   organization?: string | null;
   message?: string | null;
+  avatarUrl?: string | null;
+  googleSub?: string | null;
 };

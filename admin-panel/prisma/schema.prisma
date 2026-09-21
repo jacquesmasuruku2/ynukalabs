@@ -575,21 +575,63 @@ model Event {
 }
 
 model EventRegistration {
-  id           String   @id @default(cuid())
+  id           String              @id @default(cuid())
   eventId      String
-  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event        Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   fullName     String
   email        String
   phone        String?
   organization String?
   message      String?
-  status       String   @default("registered")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  avatarUrl    String?
+  googleSub    String?
+  status       String              @default("registered")
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  conversation EventConversation?
 
   @@unique([eventId, email])
   @@index([eventId])
   @@index([status])
+  @@index([email])
+}
+
+model EventConversation {
+  id             String             @id @default(cuid())
+  registrationId String             @unique
+  registration   EventRegistration  @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  messages       EventMessage[]
+}
+
+model EventMessage {
+  id             String            @id @default(cuid())
+  conversationId String
+  conversation   EventConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType     String
+  senderEmail    String?
+  senderName     String?
+  body           String
+  createdAt      DateTime          @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model SiteNotification {
+  id        String   @id @default(cuid())
+  userEmail String
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userEmail])
+  @@index([read])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Project {

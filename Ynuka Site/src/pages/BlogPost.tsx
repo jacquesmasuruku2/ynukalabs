@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Calendar, ArrowLeft, Share2, MessageCircle, Send, Link as LinkIcon, User } from "lucide-react";
+import { Calendar, ArrowLeft, Share2, MessageCircle, Link as LinkIcon } from "lucide-react";
+import { FacebookLogo, TelegramLogo, XLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,18 +50,24 @@ const BlogPost = () => {
   useEffect(() => {
     if (!id) return;
     const fetchData = async () => {
+      setLoading(true);
       try {
         const postData = await fetchBlogPost(id);
         setPost(postData);
+      } catch {
+        setPost(null);
+      } finally {
+        setLoading(false);
+      }
+
+      try {
         const commentsRes = await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>(
           `/api/blog-comments?search=post_id=${encodeURIComponent(id)}&pagination[pageSize]=100`
         );
         const items = commentsRes.data ?? commentsRes.rows ?? [];
         setComments(items.map(mapComment));
       } catch {
-        setPost(null);
-      } finally {
-        setLoading(false);
+        setComments([]);
       }
     };
     fetchData();
@@ -220,9 +227,29 @@ const BlogPost = () => {
     window.open(urls[platform], "_blank");
   };
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    toast({ title: t("blog.linkCopied") });
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: t("blog.linkCopied") });
+    } catch {
+      toast({ title: t("admin.error"), variant: "destructive" });
+    }
+  };
+
+  const shareNative = async () => {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareTitle,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+    await copyLink();
   };
 
   if (loading) return <div className="py-32 text-center text-muted-foreground">{t("admin.loading")}</div>;
@@ -264,13 +291,53 @@ const BlogPost = () => {
           )}
 
           {/* Share */}
-          <div className="flex items-center gap-3 border-t border-b border-border py-4 mb-12">
-            <Share2 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{t("blog.share")}:</span>
-            <button onClick={() => shareOn("twitter")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Share2 className="h-4 w-4" /></button>
-            <button onClick={() => shareOn("facebook")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Share2 className="h-4 w-4" /></button>
-            <button onClick={() => shareOn("telegram")} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><Send className="h-4 w-4" /></button>
-            <button onClick={copyLink} className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"><LinkIcon className="h-4 w-4" /></button>
+          <div className="flex flex-wrap items-center gap-3 border-t border-b border-border py-4 mb-12">
+            <button
+              type="button"
+              onClick={shareNative}
+              aria-label={t("blog.share")}
+              title={t("blog.share")}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+            >
+              <Share2 className="h-4 w-4" />
+              {t("blog.share")}
+            </button>
+            <button
+              type="button"
+              onClick={() => shareOn("twitter")}
+              aria-label="X"
+              title="X"
+              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+            >
+              <XLogo weight="fill" className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => shareOn("facebook")}
+              aria-label="Facebook"
+              title="Facebook"
+              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+            >
+              <FacebookLogo weight="fill" className="h-5 w-5 text-[#1877F2]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => shareOn("telegram")}
+              aria-label="Telegram"
+              title="Telegram"
+              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+            >
+              <TelegramLogo weight="fill" className="h-5 w-5 text-[#26A5E4]" />
+            </button>
+            <button
+              type="button"
+              onClick={copyLink}
+              aria-label="Copier le lien"
+              title="Copier le lien"
+              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+            >
+              <LinkIcon className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Commentaires */}

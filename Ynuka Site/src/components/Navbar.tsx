@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo.png";
 import { strapiFetch } from "@/lib/strapi";
 import { socialLinks } from "@/data/socialLinks";
@@ -541,6 +542,7 @@ const Navbar = () => {
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:gap-3">
             <div className="flex items-center gap-1 md:gap-2">
+              <NotificationBell />
               <ThemeToggle />
               <LanguageSwitcher />
             </div>

@@ -108,7 +108,7 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
   };
 
   const underlineField =
-    "w-full border-0 border-b border-slate-300 bg-transparent px-0 py-3 text-base text-[#0f2847] placeholder:text-slate-400 focus:border-[#ffb800] focus:outline-none focus:ring-0 dark:border-white/25 dark:text-[#0f2847] dark:placeholder:text-slate-400 dark:focus:border-[#ffb800]";
+    "w-full border-0 border-b border-slate-300 bg-transparent px-0 py-3 text-base text-[#0f2847] placeholder:text-slate-400 focus:border-[#ffb800] focus:outline-none focus:ring-0 dark:border-white/20 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-[#ffb800]";
 
   return (
     <ModernSectionWrapper className="py-16 md:py-20">
@@ -118,9 +118,9 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
           viewport={{ once: true }}
-          className="border border-slate-200 bg-white p-5 shadow-none sm:p-7 md:p-8 dark:border-slate-200 dark:bg-white"
+          className="rounded-md border border-slate-200 bg-white p-5 shadow-none sm:p-7 md:p-8 dark:border-slate-700 dark:bg-[#0c1a2e]"
         >
-          <div className="mb-8 bg-[#0f2847] px-5 py-6 text-white md:px-6 md:py-7">
+          <div className="mb-8 rounded-md bg-[#0f2847] px-5 py-6 text-white md:px-6 md:py-7 dark:bg-[#152a48]">
             <h2 className="text-2xl font-bold tracking-tight text-[#ffb800] md:text-3xl">
               {t("contact.bannerKicker")}
             </h2>
@@ -174,23 +174,23 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
               />
 
               <div className="mt-auto flex flex-col gap-3 pt-2 sm:flex-row sm:items-end sm:justify-between">
-                <div className="w-full max-w-[280px] rounded-md border border-slate-300 bg-[#f9fafb] p-3">
+                <div className="w-full max-w-[280px] rounded-md border border-slate-300 bg-[#f9fafb] p-3 dark:border-slate-600 dark:bg-slate-800/60">
                   <label className="flex cursor-pointer items-center gap-3">
                     <input
                       type="checkbox"
                       checked={notRobot}
                       onChange={(e) => setNotRobot(e.target.checked)}
-                      className="h-5 w-5 rounded border-slate-400 text-[#0f2847] accent-[#ffb800]"
+                      className="h-5 w-5 rounded border-slate-400 text-[#0f2847] accent-[#ffb800] dark:border-slate-500"
                     />
-                    <span className="flex-1 text-sm font-medium text-[#0f2847]">
+                    <span className="flex-1 text-sm font-medium text-[#0f2847] dark:text-white">
                       {t("contact.captchaLabel")}
                     </span>
-                    <ShieldCheck className="h-5 w-5 text-[#0f2847]/70" aria-hidden />
+                    <ShieldCheck className="h-5 w-5 text-[#0f2847]/70 dark:text-white/70" aria-hidden />
                   </label>
 
                   {notRobot ? (
-                    <div className="mt-3 flex items-center gap-2 border-t border-slate-200 pt-3">
-                      <span className="whitespace-nowrap text-xs text-slate-500">
+                    <div className="mt-3 flex items-center gap-2 border-t border-slate-200 pt-3 dark:border-slate-600">
+                      <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
                         {t("contact.captchaPrompt")} {challenge.a} + {challenge.b} ?
                       </span>
                       <input
@@ -198,14 +198,14 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
                         inputMode="numeric"
                         value={captchaInput}
                         onChange={(e) => setCaptchaInput(e.target.value.replace(/[^\d]/g, ""))}
-                        className="w-14 rounded border border-slate-300 bg-white px-2 py-1 text-center text-sm text-[#0f2847] focus:border-[#ffb800] focus:outline-none"
+                        className="w-14 rounded-md border border-slate-300 bg-white px-2 py-1 text-center text-sm text-[#0f2847] focus:border-[#ffb800] focus:outline-none dark:border-slate-500 dark:bg-slate-900 dark:text-white"
                         aria-label={t("contact.captchaLabel")}
                         required={notRobot}
                       />
                       <button
                         type="button"
                         onClick={refreshCaptcha}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded text-[#0f2847] hover:bg-slate-200"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#0f2847] hover:bg-slate-200 dark:text-white dark:hover:bg-slate-700"
                         aria-label="Refresh captcha"
                       >
                         <RefreshCw className="h-4 w-4" />
@@ -217,7 +217,7 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
                 <button
                   type="submit"
                   disabled={submitting || !captchaOk}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ffb800] px-7 py-3 text-sm font-bold text-white transition-colors hover:bg-[#e6a600] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ffb800] px-7 py-3 text-sm font-bold text-[#0f2847] transition-colors hover:bg-[#e6a600] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting ? t("events.submitting") : t("contact.send")}
                   <Send className="h-4 w-4" />
@@ -226,29 +226,29 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
             </form>
 
             <div className="flex h-full flex-col space-y-4">
-              <div className="border border-slate-200 bg-slate-50/80 p-5">
+              <div className="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-700 dark:bg-slate-800/40">
                 <div className="mb-2 flex items-center gap-3">
                   <Mail className="h-5 w-5 shrink-0 text-[#ffb800]" />
-                  <h4 className="font-semibold text-[#0f2847]">{t("contact.emailLabel")}</h4>
+                  <h4 className="font-semibold text-[#0f2847] dark:text-white">{t("contact.emailLabel")}</h4>
                 </div>
                 <a
                   href="mailto:contact@ynukalabs.com"
-                  className="break-all text-sm text-[#315795] hover:text-[#ffb800]"
+                  className="break-all text-sm text-[#315795] hover:text-[#ffb800] dark:text-slate-300 dark:hover:text-[#ffb800]"
                 >
                   contact@ynukalabs.com
                 </a>
               </div>
 
-              <div className="border border-slate-200 bg-slate-50/80 p-5">
+              <div className="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-700 dark:bg-slate-800/40">
                 <div className="mb-2 flex items-center gap-3">
                   <MapPin className="h-5 w-5 shrink-0 text-[#ffb800]" />
-                  <h4 className="font-semibold text-[#0f2847]">{t("contact.locationLabel")}</h4>
+                  <h4 className="font-semibold text-[#0f2847] dark:text-white">{t("contact.locationLabel")}</h4>
                 </div>
-                <p className="whitespace-pre-line text-sm text-[#315795]">{t("contact.location")}</p>
+                <p className="whitespace-pre-line text-sm text-[#315795] dark:text-slate-300">{t("contact.location")}</p>
               </div>
 
-              <div className="mt-auto border border-slate-200 bg-slate-50/80 p-5">
-                <h4 className="mb-3 font-semibold text-[#0f2847]">{t("contact.followUs")}</h4>
+              <div className="mt-auto rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-700 dark:bg-slate-800/40">
+                <h4 className="mb-3 font-semibold text-[#0f2847] dark:text-white">{t("contact.followUs")}</h4>
                 <div className="flex flex-wrap gap-2">
                   {socialLinks.map(({ href, ariaLabel }) => (
                     <a
@@ -256,7 +256,7 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="border border-slate-200 bg-white px-3 py-1.5 text-sm text-[#315795] transition-colors hover:border-[#ffb800]/50 hover:text-[#0f2847]"
+                      className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-[#315795] transition-colors hover:border-[#ffb800]/50 hover:text-[#0f2847] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-[#ffb800]/50 dark:hover:text-white"
                     >
                       {ariaLabel}
                     </a>
