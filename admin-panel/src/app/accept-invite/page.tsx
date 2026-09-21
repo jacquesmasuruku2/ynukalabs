@@ -4,6 +4,18 @@ import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
+async function readResponse(response: Response) {
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new Error(`Le serveur a renvoyé une réponse vide (${response.status}). Vérifiez la migration AdminInvite et DATABASE_URL.`);
+  }
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new Error(`Réponse serveur invalide (${response.status}).`);
+  }
+}
+
 function Form() {
   const params = useSearchParams();
   const token = params.get('token') || '';
@@ -18,14 +30,14 @@ function Form() {
 
   useEffect(() => {
     if (!token) { setError('Lien d’invitation invalide.'); setLoading(false); return; }
-    fetch(`/api/admin/accept-invite?token=${encodeURIComponent(token)}`).then(async (res) => { const data = await res.json(); if (!res.ok) throw new Error(data.error); setInvite(data); setName(data.name || ''); }).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
+    fetch(`/api/admin/accept-invite?token=${encodeURIComponent(token)}`).then(async (res) => { const data = await readResponse(res); if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Invitation invalide'); setInvite({ email: String(data.email), name: data.name ? String(data.name) : null, invitedBy: String(data.invitedBy) }); setName(data.name ? String(data.name) : ''); }).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
   }, [token]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError('');
     if (password.length < 8 || password !== confirmPassword) { setError(password.length < 8 ? 'Le mot de passe doit contenir au moins 8 caractères.' : 'La confirmation ne correspond pas.'); return; }
     setSubmitting(true);
-    try { const res = await fetch('/api/admin/accept-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, name, password, confirmPassword }) }); const data = await res.json(); if (!res.ok) throw new Error(data.error); router.push('/'); router.refresh(); } catch (err) { setError(err instanceof Error ? err.message : 'Impossible de créer le mot de passe.'); } finally { setSubmitting(false); }
+    try { const res = await fetch('/api/admin/accept-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, name, password, confirmPassword }) }); const data = await readResponse(res); if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Impossible de finaliser l’invitation.'); router.push('/'); router.refresh(); } catch (err) { setError(err instanceof Error ? err.message : 'Impossible de créer le mot de passe.'); } finally { setSubmitting(false); }
   };
 
   if (loading) return <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />;

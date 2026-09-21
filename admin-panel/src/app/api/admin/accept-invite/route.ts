@@ -5,11 +5,16 @@ import { prisma } from '@/lib/prisma';
 import { ADMIN_ROLE } from '@/lib/adminRoles';
 
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token')?.trim() || '';
-  if (!token) return NextResponse.json({ error: 'Token manquant.' }, { status: 400 });
-  const invite = await prisma.adminInvite.findUnique({ where: { tokenHash: crypto.createHash('sha256').update(token).digest('hex') }, include: { invitedBy: { select: { name: true, email: true } } } });
-  if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) return NextResponse.json({ error: 'Invitation invalide ou expirée.' }, { status: 400 });
-  return NextResponse.json({ email: invite.email, name: invite.name, invitedBy: invite.invitedBy.name || invite.invitedBy.email, expiresAt: invite.expiresAt.toISOString() });
+  try {
+    const token = request.nextUrl.searchParams.get('token')?.trim() || '';
+    if (!token) return NextResponse.json({ error: 'Token manquant.' }, { status: 400 });
+    const invite = await prisma.adminInvite.findUnique({ where: { tokenHash: crypto.createHash('sha256').update(token).digest('hex') }, include: { invitedBy: { select: { name: true, email: true } } } });
+    if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) return NextResponse.json({ error: 'Invitation invalide ou expirée.' }, { status: 400 });
+    return NextResponse.json({ email: invite.email, name: invite.name, invitedBy: invite.invitedBy.name || invite.invitedBy.email, expiresAt: invite.expiresAt.toISOString() });
+  } catch (error) {
+    console.error('Accept invite GET error:', error);
+    return NextResponse.json({ error: 'Impossible de vérifier l’invitation. Vérifiez que la migration AdminInvite est appliquée.' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
