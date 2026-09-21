@@ -1,3 +1,5 @@
+ALTER TABLE IF EXISTS "AdminInvite" SET (schema_locked = false);
+
 CREATE TABLE IF NOT EXISTS "AdminInvite" (
   "id" STRING PRIMARY KEY,
   "email" STRING NOT NULL,

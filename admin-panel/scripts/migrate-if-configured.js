@@ -28,20 +28,33 @@ async function baselineExistingDatabase() {
       WHERE table_schema = 'public';
     `);
     const tableNames = tables.rows.map((row) => row.table_name);
-    if (tableNames.includes('_prisma_migrations') || tableNames.length === 0) return;
-
     const migrations = fs
       .readdirSync(migrationsPath, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
     const latestMigration = migrations.at(-1);
-    console.log(`[admin-panel] Existing database detected; baselining ${migrations.length - 1} historical migrations.`);
-    for (const migration of migrations.slice(0, -1)) {
-      const result = runPrisma(['migrate', 'resolve', '--applied', migration]);
-      if (result.status !== 0) process.exit(result.status ?? 1);
+    if (!tableNames.includes('_prisma_migrations') && tableNames.length > 0) {
+      console.log(`[admin-panel] Existing database detected; baselining ${migrations.length - 1} historical migrations.`);
+      for (const migration of migrations.slice(0, -1)) {
+        const result = runPrisma(['migrate', 'resolve', '--applied', migration]);
+        if (result.status !== 0) process.exit(result.status ?? 1);
+      }
+      console.log(`[admin-panel] Latest migration will be applied normally: ${latestMigration}`);
     }
-    console.log(`[admin-panel] Latest migration will be applied normally: ${latestMigration}`);
+
+    if (tableNames.includes('_prisma_migrations')) {
+      const failed = await client.query(`
+        SELECT migration_name
+        FROM "_prisma_migrations"
+        WHERE finished_at IS NULL AND rolled_back_at IS NULL;
+      `);
+      for (const row of failed.rows) {
+        console.log(`[admin-panel] Recovering failed migration: ${row.migration_name}`);
+        const result = runPrisma(['migrate', 'resolve', '--rolled-back', row.migration_name]);
+        if (result.status !== 0) process.exit(result.status ?? 1);
+      }
+    }
   } finally {
     await client.end();
   }
