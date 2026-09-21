@@ -702,3 +702,42 @@ model GalleryEvent {
   @@index([date(sort: Desc)])
   @@index([legacyId])
 }
+
+/// Demandes d'événement envoyées depuis le site (/events#proposer-evenement)
+model EventProposal {
+  id                  String    @id @default(cuid())
+  contactName         String
+  contactEmail        String
+  contactPhone        String?
+  organization        String
+  title               String
+  description         String
+  category            String
+  eventDate           DateTime?
+  eventTime           String?
+  timezone            String?
+  format              String
+  locationOrLink      String?
+  venue               String?
+  onlineLink          String?
+  audience            String?
+  capacity            Int?
+  publicationChannel  String    @default("ynuka_agenda")
+  externalEventUrl    String?
+  registrationMode    String?
+  registrationUrl     String?
+  imageUrl            String?
+  imageData           String?
+  imageFilename       String?
+  partners            String?
+  speakers            String?
+  status              String    @default("pending")
+  adminNotes          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([contactEmail])
+}
+

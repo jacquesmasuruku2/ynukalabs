@@ -2,8 +2,8 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import WordEditor from '@/components/WordEditor';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Save, X } from 'lucide-react';
 
 const slugify = (value: string) =>
@@ -17,8 +17,18 @@ const slugify = (value: string) =>
 const fieldClass =
   'w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500';
 
-export default function NewEventPage() {
+function toLocalInput(iso: string | null) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function NewEventPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromProposal = searchParams.get('fromProposal');
   const [saving, setSaving] = useState(false);
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
   const [form, setForm] = useState({
@@ -40,6 +50,33 @@ export default function NewEventPage() {
   });
   const update = (key: string, value: string | boolean) => setForm((c) => ({ ...c, [key]: value }));
 
+  useEffect(() => {
+    if (!fromProposal) return;
+    fetch(`/api/event-proposals/${fromProposal}`)
+      .then(async (res) => {
+        if (!res.ok) return;
+        const p = await res.json();
+        setForm((c) => ({
+          ...c,
+          title: p.title || '',
+          titleFr: p.title || '',
+          slug: slugify(p.title || ''),
+          description: p.description || '',
+          descriptionFr: p.description || '',
+          date: toLocalInput(p.eventDate),
+          time: p.eventTime || '',
+          location: p.venue || p.locationOrLink || '',
+          type: p.category || p.format || '',
+          capacity: p.capacity != null ? String(p.capacity) : '',
+          imageUrl: p.imageUrl || '',
+          upcoming: true,
+          published: false,
+        }));
+        setLang('fr');
+      })
+      .catch(() => undefined);
+  }, [fromProposal]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -53,8 +90,16 @@ export default function NewEventPage() {
       }),
     });
     setSaving(false);
-    if (res.ok) router.push('/events');
-    else alert('Impossible de créer l’événement.');
+    if (res.ok) {
+      if (fromProposal) {
+        await fetch(`/api/event-proposals/${fromProposal}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'accepted' }),
+        });
+      }
+      router.push('/events');
+    } else alert('Impossible de créer l’événement.');
   };
 
   const titleValue = lang === 'fr' ? form.titleFr || form.title : form.title;
@@ -225,5 +270,13 @@ export default function NewEventPage() {
         </form>
       </div>
     </AdminLayout>
+  );
+}
+
+export default function NewEventPage() {
+  return (
+    <Suspense fallback={<AdminLayout><p className="p-8 text-secondary">Chargement...</p></AdminLayout>}>
+      <NewEventPageInner />
+    </Suspense>
   );
 }

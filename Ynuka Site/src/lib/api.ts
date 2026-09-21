@@ -85,12 +85,34 @@ export async function submitContactForm(data: {
   subject?: string;
   message: string;
 }): Promise<{ success: boolean; message?: string }> {
-  try {
-    await adminPost("/contact", data);
-    return { success: true };
-  } catch (e) {
-    return { success: false, message: e instanceof Error ? e.message : "Erreur" };
-  }
+  await adminPost("/contact", data);
+  return { success: true };
+}
+
+export async function submitPartnershipForm(data: {
+  companyName: string;
+  companyWebsite?: string;
+  industry?: string;
+  contactPerson: string;
+  email: string;
+  phone?: string;
+  partnershipType: string;
+  description?: string;
+}): Promise<{ success: boolean; id?: string; message?: string }> {
+  const result = await adminPost<{ success?: boolean; id?: string; message?: string }>(
+    "/partnerships",
+    {
+      companyName: data.companyName,
+      companyWebsite: data.companyWebsite || null,
+      industry: data.industry || null,
+      contactPerson: data.contactPerson,
+      email: data.email,
+      phone: data.phone || null,
+      partnershipType: data.partnershipType,
+      description: data.description || null,
+    }
+  );
+  return { success: true, id: result.id, message: result.message };
 }
 
 export async function fetchEvents(limit = 100) {

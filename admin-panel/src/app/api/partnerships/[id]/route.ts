@@ -1,10 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { corsOptions, jsonCors } from '@/lib/cors';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function OPTIONS() {
+  return corsOptions();
+}
+
+type Params = { params: Promise<{ id: string }> };
+
+export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -15,7 +19,7 @@ export async function PATCH(
         const parsedWebsiteUrl = new URL(websiteUrl);
         if (!['http:', 'https:'].includes(parsedWebsiteUrl.protocol)) throw new Error('Invalid protocol');
       } catch {
-        return NextResponse.json(
+        return jsonCors(
           { error: 'Website URL must be a valid HTTP or HTTPS URL' },
           { status: 400 }
         );
@@ -23,10 +27,7 @@ export async function PATCH(
     }
 
     if (!status && imageUrl === undefined && websiteUrl === undefined) {
-      return NextResponse.json(
-        { error: 'Status is required' },
-        { status: 400 }
-      );
+      return jsonCors({ error: 'Status is required' }, { status: 400 });
     }
 
     const partnership = await prisma.partnership.update({
@@ -38,32 +39,20 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(partnership);
+    return jsonCors(partnership);
   } catch (error) {
     console.error('Error updating partnership:', error);
-    return NextResponse.json(
-      { error: 'Failed to update partnership' },
-      { status: 500 }
-    );
+    return jsonCors({ error: 'Failed to update partnership' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
-    await prisma.partnership.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ message: 'Partnership deleted successfully' });
+    await prisma.partnership.delete({ where: { id } });
+    return jsonCors({ message: 'Partnership deleted successfully' });
   } catch (error) {
     console.error('Error deleting partnership:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete partnership' },
-      { status: 500 }
-    );
+    return jsonCors({ error: 'Failed to delete partnership' }, { status: 500 });
   }
 }

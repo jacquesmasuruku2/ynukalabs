@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { fetchPartners } from "@/lib/api";
+import { fetchPartners, submitPartnershipForm } from "@/lib/api";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
@@ -196,19 +196,14 @@ const Partners = () => {
                       if (submitting) return;
                       setSubmitting(true);
                       try {
-                        await strapiFetch("/api/partner-applications", {
-                          method: "POST",
-                          body: JSON.stringify({
-                            data: {
-                              companyName: form.companyName,
-                              companyWebsite: form.companyWebsite,
-                              industry: form.industry,
-                              contactPerson: form.contactPerson,
-                              email: form.email,
-                              phone: form.phone,
-                              partnershipType: form.partnershipType,
-                            },
-                          }),
+                        await submitPartnershipForm({
+                          companyName: form.companyName,
+                          companyWebsite: form.companyWebsite,
+                          industry: form.industry,
+                          contactPerson: form.contactPerson,
+                          email: form.email,
+                          phone: form.phone,
+                          partnershipType: form.partnershipType,
                         });
                         toast({ title: "Demande envoyée avec succès." });
                         setShowForm(false);
@@ -221,8 +216,12 @@ const Partners = () => {
                           phone: "",
                           partnershipType: "sponsorship",
                         });
-                      } catch {
-                        toast({ title: "Erreur lors de l'envoi.", variant: "destructive" });
+                      } catch (err) {
+                        toast({
+                          title: "Erreur lors de l'envoi.",
+                          description: err instanceof Error ? err.message : undefined,
+                          variant: "destructive",
+                        });
                       } finally {
                         setSubmitting(false);
                       }

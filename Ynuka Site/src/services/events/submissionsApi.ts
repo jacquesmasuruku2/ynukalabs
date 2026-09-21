@@ -1,9 +1,6 @@
 /**
- * Soumissions publiques speakers / event proposals.
- * Si l’endpoint backend n’existe pas encore → ApiServiceUnavailableError
- * (jamais de fausse réussite côté UI).
+ * Soumissions publiques speakers / event proposals → Admin Panel API.
  */
-import { fetchFromApi } from "@/lib/api";
 import {
   ApiServiceUnavailableError,
   type EventProposalPayload,
@@ -13,64 +10,57 @@ import {
 
 export { ApiServiceUnavailableError } from "./submissionsTypes";
 
-function isLikelyMissingResource(error: unknown): boolean {
-  const msg = error instanceof Error ? error.message : String(error);
-  const lower = msg.toLowerCase();
-  return (
-    lower.includes("invalid resource") ||
-    lower.includes("unknown table") ||
-    lower.includes("doesn't exist") ||
-    lower.includes("does not exist") ||
-    lower.includes("no such table") ||
-    lower.includes("404") ||
-    lower.includes("501") ||
-    lower.includes("503")
-  );
-}
+const ADMIN_API_BASE = (
+  import.meta.env.VITE_ADMIN_API_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:3000"
+).replace(/\/$/, "");
 
-async function createPublicResource(
-  resource: "speaker_applications" | "event_proposals",
-  body: Record<string, unknown>
-): Promise<PublicSubmitResult> {
+async function postJson(path: string, body: Record<string, unknown>): Promise<PublicSubmitResult> {
+  let response: Response;
   try {
-    const result = await fetchFromApi<PublicSubmitResult & { error?: string }>(
-      "create",
-      { resource },
-      body
-    );
-
-    if (result && typeof result === "object" && "error" in result && result.error) {
-      throw new Error(String(result.error));
-    }
-
-    const ok =
-      result?.success === true ||
-      result?.status === "pending" ||
-      result?.id != null;
-
-    if (!ok) {
-      throw new ApiServiceUnavailableError();
-    }
-
-    return {
-      success: true,
-      id: result.id ?? null,
-      status: result.status ?? "pending",
-      message: result.message,
-    };
-  } catch (error) {
-    if (error instanceof ApiServiceUnavailableError) throw error;
-    if (isLikelyMissingResource(error)) {
-      throw new ApiServiceUnavailableError();
-    }
-    throw error;
+    response = await fetch(`${ADMIN_API_BASE}/api${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiServiceUnavailableError();
   }
+
+  const data = (await response.json().catch(() => ({}))) as PublicSubmitResult & {
+    error?: string;
+  };
+
+  if (!response.ok) {
+    if (response.status >= 500) throw new ApiServiceUnavailableError();
+    throw new Error(data.error || `Erreur ${response.status}`);
+  }
+
+  if (data && typeof data === "object" && data.error) {
+    throw new Error(String(data.error));
+  }
+
+  const ok =
+    data?.success === true || data?.status === "pending" || data?.id != null;
+
+  if (!ok) {
+    throw new ApiServiceUnavailableError();
+  }
+
+  return {
+    success: true,
+    id: data.id ?? null,
+    status: data.status ?? "pending",
+    message: data.message,
+  };
 }
 
 export async function submitSpeakerApplication(
   payload: SpeakerApplicationPayload
 ): Promise<PublicSubmitResult> {
-  return createPublicResource("speaker_applications", {
+  // Endpoint speakers à brancher ensuite ; pour l’instant signal clair si absent
+  return postJson("/speaker-applications", {
     ...payload,
     phone: payload.phone || null,
     organization: payload.organization || null,
@@ -83,7 +73,7 @@ export async function submitSpeakerApplication(
 export async function submitEventProposal(
   payload: EventProposalPayload
 ): Promise<PublicSubmitResult> {
-  return createPublicResource("event_proposals", {
+  return postJson("/event-proposals", {
     ...payload,
     contact_phone: payload.contact_phone || null,
     event_time: payload.event_time || null,

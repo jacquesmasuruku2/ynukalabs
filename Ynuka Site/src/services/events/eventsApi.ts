@@ -1,8 +1,12 @@
 /**
  * Service Events — appels API centralisés + helpers agenda.
- * N’invente aucune donnée : champs absents → null.
+ * Source : Admin Panel (Prisma / Cockroach) via VITE_ADMIN_API_URL.
  */
-import { fetchFromApi, registerForEvent as registerForEventApi } from "@/lib/api";
+import {
+  fetchEvent,
+  fetchEvents,
+  registerForEvent as registerForEventApi,
+} from "@/lib/api";
 import type {
   EventAgendaFilter,
   EventFormat,
@@ -27,12 +31,19 @@ function normalizeFormat(value: unknown): EventFormat | null {
   if (typeof value !== "string") return null;
   const v = value.trim().toLowerCase();
   if (v === "in_person" || v === "online" || v === "hybrid") return v;
+  if (v === "présentiel" || v === "presentiel" || v.includes("person")) return "in_person";
+  if (v.includes("online") || v.includes("ligne")) return "online";
+  if (v.includes("hybrid")) return "hybrid";
   return null;
 }
 
 function mapEventRow(item: Record<string, unknown>): YnukaEvent {
-  const description = (item.description as string) || null;
-  const descriptionFr = (item.description_fr as string) || null;
+  const description =
+    (item.description as string) || null;
+  const descriptionFr =
+    (item.description_fr as string) ||
+    (item.descriptionFr as string) ||
+    null;
   const youtubeFromFields = pickOptionalUrl(
     item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl
   );
@@ -48,20 +59,20 @@ function mapEventRow(item: Record<string, unknown>): YnukaEvent {
   return {
     id: String(item.id ?? ""),
     title: String(item.title || ""),
-    titleFr: (item.title_fr as string) || null,
+    titleFr: (item.title_fr as string) || (item.titleFr as string) || null,
     description,
     descriptionFr,
-    date: String(item.date || item.start_date || ""),
+    date: String(item.date || item.start_date || item.startDate || ""),
     location: String(item.location || ""),
     type: String(item.type || ""),
     upcoming: Boolean(item.upcoming),
     time: (item.time as string) || null,
-    imageUrl: pickOptionalUrl(item.image_url || item.imageUrl || item.featured_image),
+    imageUrl: pickOptionalUrl(item.image_url || item.imageUrl || item.featured_image || item.featuredImage),
     capacity:
       item.capacity !== undefined && item.capacity !== null && item.capacity !== ""
         ? Number(item.capacity)
         : null,
-    format: normalizeFormat(item.format),
+    format: normalizeFormat(item.format || item.type),
     timezone: (item.timezone as string) || null,
     organizer: (item.organizer as string) || null,
     speakers: (item.speakers as string) || null,
@@ -75,32 +86,26 @@ function mapEventRow(item: Record<string, unknown>): YnukaEvent {
   };
 }
 
-function unwrapListRows(result: unknown): Record<string, unknown>[] {
-  if (!result || typeof result !== "object") return [];
-  const r = result as { rows?: unknown[]; data?: unknown[] };
-  const list = Array.isArray(r.rows) ? r.rows : Array.isArray(r.data) ? r.data : [];
-  return list.filter((row): row is Record<string, unknown> => !!row && typeof row === "object");
-}
-
-/** Liste les événements (source existante `events`). */
+/** Liste les événements depuis le panel admin. */
 export async function listEvents(limit = 100): Promise<YnukaEvent[]> {
-  const result = await fetchFromApi("list", { resource: "events", limit });
-  return unwrapListRows(result)
-    .map(mapEventRow)
+  const rows = await fetchEvents(limit);
+  return rows
+    .map((item) => mapEventRow(item as unknown as Record<string, unknown>))
     .filter((e) => e.id && e.title);
 }
 
 /** Détail d’un événement. */
 export async function getEvent(id: string): Promise<YnukaEvent | null> {
-  const result = await fetchFromApi<{ row?: unknown }>("get", {
-    resource: "events",
-    id,
-  });
-  const row = result?.row;
-  if (!row || typeof row !== "object") return null;
-  const mapped = mapEventRow(row as Record<string, unknown>);
-  return mapped.id ? mapped : null;
+  try {
+    const item = await fetchEvent(id);
+    if (!item?.id) return null;
+    const mapped = mapEventRow(item as unknown as Record<string, unknown>);
+    return mapped.id ? mapped : null;
+  } catch {
+    return null;
+  }
 }
+
 
 /** Inscription (contrat existant event_registrations). */
 export async function registerForEvent(payload: EventRegistrationPayload) {
