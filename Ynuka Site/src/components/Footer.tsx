@@ -34,8 +34,7 @@ const Footer = () => {
       order: 1,
       items: [
         { labelKey: "nav.blog", path: "/resources#blog" },
-        { labelKey: "nav.documentation", path: "/resources#documentation" },
-        { labelKey: "nav.tools", path: "/resources#tools" },
+        { labelKey: "nav.educationalContent", path: "/resources#education" },
         { labelKey: "nav.contact", path: "/contact" },
       ],
     },

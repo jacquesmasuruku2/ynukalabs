@@ -26,13 +26,6 @@ const GOLD = "#ffb800";
 const EMAIL = "contact@ynukalabs.com";
 const DROPDOWN_VIEWPORT_PAD = 16;
 
-const PROJECTS_NAV_ITEMS: NavGroup["items"] = [
-  { key: "projectsAll", path: "/projects" },
-  { key: "projectsEducation", path: "/projects?cat=Education" },
-  { key: "projectsEnvironment", path: "/projects?cat=Environnement" },
-  { key: "projectsBlockchain", path: "/projects?cat=Blockchain" },
-];
-
 /** Indicateur sous-menu : chevron (pattern dropdown standard) */
 const MenuExpandHint = ({ open }: { open?: boolean }) => (
   <CaretDown
@@ -153,10 +146,7 @@ const Navbar = () => {
         { key: "partners", path: "/about#partners" },
       ],
     },
-    {
-      label: "nav.projects",
-      items: PROJECTS_NAV_ITEMS,
-    },
+    { key: "projects", path: "/projects" },
     {
       label: "nav.ecosystem",
       items: [
@@ -170,10 +160,9 @@ const Navbar = () => {
     {
       label: "nav.resources",
       items: [
-        { key: "blog", path: "/blog" },
-        { key: "documentation", path: "/documentation" },
-        { key: "tools", path: "/tools" },
-        { key: "gallery", path: "/gallery" },
+        { key: "blog", path: "/resources#blog" },
+        { key: "educationalContent", path: "/resources#education" },
+        { key: "gallery", path: "/resources#gallery" },
       ],
     },
   ];
@@ -209,10 +198,9 @@ const Navbar = () => {
 
         if (normalizedLabel.includes("resource") || normalizedLabel.includes("ressource")) {
           items = [
-            { key: "blog", path: "/blog" },
-            { key: "documentation", path: "/documentation" },
-            { key: "tools", path: "/tools" },
-            { key: "gallery", path: "/gallery" },
+            { key: "blog", path: "/resources#blog" },
+            { key: "educationalContent", path: "/resources#education" },
+            { key: "gallery", path: "/resources#gallery" },
           ];
         }
 
@@ -233,7 +221,7 @@ const Navbar = () => {
         return { ...entry, items };
       });
 
-    // Force Projets en groupe avec sous-menus catégories
+    // Projets = lien simple (catégories gérées sur la page /projects)
     const withoutAnyProjects = cleaned.filter((entry) => {
       if ("items" in entry) {
         const l = entry.label.toLowerCase();
@@ -246,18 +234,15 @@ const Navbar = () => {
       (entry) => "items" in entry && entry.label.toLowerCase().includes("about")
     );
 
-    const projectsGroup: NavGroup = {
-      label: "nav.projects",
-      items: PROJECTS_NAV_ITEMS,
-    };
+    const projectsLink: NavEntry = { key: "projects", path: "/projects" };
 
     if (aboutIndex === -1) {
-      return [...withoutAnyProjects, projectsGroup];
+      return [...withoutAnyProjects, projectsLink];
     }
 
     return [
       ...withoutAnyProjects.slice(0, aboutIndex + 1),
-      projectsGroup,
+      projectsLink,
       ...withoutAnyProjects.slice(aboutIndex + 1),
     ];
   };
@@ -354,8 +339,8 @@ const Navbar = () => {
             label: "nav.resources",
             items: [
               { key: "blog", path: "/resources#blog" },
-              { key: "documentation", path: "/resources#documentation" },
-              { key: "tools", path: "/resources#tools" },
+              { key: "educationalContent", path: "/resources#education" },
+              { key: "gallery", path: "/resources#gallery" },
             ],
           },
         ];
@@ -399,7 +384,7 @@ const Navbar = () => {
     }
 
     if (path === "/projects") {
-      return location.pathname === "/projects" && !new URLSearchParams(location.search).get("cat");
+      return location.pathname === "/projects";
     }
 
     if (path.includes("#")) {
@@ -407,12 +392,11 @@ const Navbar = () => {
       const want = hashPart.trim();
 
       if (pathname === "/resources") {
-        if (location.pathname === "/blog" && want === "blog") return true;
-        if (location.pathname === "/documentation" && want === "documentation") return true;
-        if (location.pathname === "/tools" && want === "tools") return true;
         if (location.pathname !== pathname) return false;
         const current = location.hash.replace("#", "").trim();
         if (!current) return want === "blog";
+        // Compat anciennes ancres
+        if (want === "education" && (current === "documentation" || current === "education")) return true;
         return current === want || decodeURIComponent(current) === want;
       }
 

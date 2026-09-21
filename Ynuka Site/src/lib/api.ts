@@ -399,21 +399,88 @@ export async function fetchDocumentation(limit = 50) {
   }));
 }
 
-// Gallery events API
-export async function fetchGalleryEvents(limit = 20) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
+// Gallery events API — une ligne = une image (admin)
+export type GalleryImageItem = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  imageUrl: string;
+  date: string;
+  featured: boolean;
+  displayOrder: number;
+};
+
+function normalizeGalleryRow(item: any): GalleryImageItem[] {
+  const flatUrl = String(item.image_url || item.imageUrl || item.url || "").trim();
+  if (flatUrl) {
+    return [
+      {
+        id: String(item.id),
+        title: String(item.title || "").trim(),
+        description: String(item.description || item.caption || item.alt || "").trim(),
+        category: String(item.category || item.type || "").trim(),
+        imageUrl: flatUrl,
+        date: String(item.event_date || item.date || "").trim(),
+        featured:
+          item.featured === true ||
+          item.featured === 1 ||
+          item.featured === "1" ||
+          String(item.featured).toLowerCase() === "true",
+        displayOrder: Number(item.display_order ?? item.order ?? 0) || 0,
+      },
+    ];
+  }
+
+  // Ancien schéma (événement + tableau images JSON) — rétrocompat
+  let images: unknown[] = [];
+  try {
+    images = item.images
+      ? typeof item.images === "string"
+        ? JSON.parse(item.images)
+        : item.images
+      : [];
+  } catch {
+    images = [];
+  }
+  if (!Array.isArray(images)) return [];
+
+  return images
+    .map((img: any, index: number) => {
+      const url =
+        typeof img === "string"
+          ? img
+          : String(img?.imageUrl || img?.image_url || img?.url || "").trim();
+      if (!url) return null;
+      return {
+        id: `${item.id}-${index}`,
+        title: String(img?.title || item.title || "").trim(),
+        description: String(
+          img?.description || img?.caption || img?.alt || item.description || ""
+        ).trim(),
+        category: String(img?.category || item.category || "").trim(),
+        imageUrl: url,
+        date: String(item.date || item.event_date || "").trim(),
+        featured: false,
+        displayOrder: index,
+      } satisfies GalleryImageItem;
+    })
+    .filter((x): x is GalleryImageItem => Boolean(x));
+}
+
+export async function fetchGalleryEvents(limit = 50): Promise<GalleryImageItem[]> {
+  const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[]; total?: number }>("list", {
     resource: "gallery_events",
     limit,
   });
-  
-  return result.rows.map((item: any) => ({
-    id: String(item.id),
-    title: item.title || "",
-    subtitle: item.subtitle || "",
-    date: item.date || "",
-    description: item.description || "",
-    images: item.images ? JSON.parse(item.images) : [],
-  }));
+
+  const rows = result.rows ?? result.data ?? [];
+  return rows
+    .flatMap((item) => normalizeGalleryRow(item))
+    .sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      return a.displayOrder - b.displayOrder;
+    });
 }
 
 // Team members API

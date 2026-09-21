@@ -20,7 +20,8 @@
     "joinOurCommunity": "Join our Community",
     "resources": "Resources",
     "blog": "Blog",
-    "documentation": "Documentation",
+    "documentation": "Educational content",
+    "educationalContent": "Educational content",
     "tools": "Tools",
     "gallery": "Gallery",
     "onboarding": "Onboarding Program",
@@ -461,7 +462,28 @@
     "title": "Discover our Projects",
     "subtitle": "Innovative Web3 solutions, environmental projects, hackathons and education programs built and incubated by Ynuka Labs.",
     "all": "All",
-    "viewProject": "View Project",
+    "viewProject": "Explore project",
+    "viewGithub": "GitHub",
+    "searchPlaceholder": "Search (name, category, keywords…)",
+    "loading": "Loading projects…",
+    "empty": "No projects match your search.",
+    "emptyCategory": "No projects in this category yet.",
+    "fallbackCategory": "Project",
+    "noLinks": "Link coming soon",
+    "demo": {
+      "edu1Title": "EduChain",
+      "edu1Desc": "Blockchain-verified credentials and learning paths for schools and universities in the DRC.",
+      "edu2Title": "Onboarding Program",
+      "edu2Desc": "Web3 onboarding programme to train local talent on blockchain tools and project building.",
+      "env1Title": "Mtidano NFTree",
+      "env1Desc": "Digitise reforestation: trace, fund and guarantee the survival of planted trees with NFTs.",
+      "env2Title": "VolcanoDAO",
+      "env2Desc": "Community governance for environmental monitoring and resilience around Nyiragongo.",
+      "chain1Title": "KivuPay",
+      "chain1Desc": "Decentralized payment solution enabling merchants in Eastern Congo to accept crypto payments.",
+      "chain2Title": "Stakepool Goma",
+      "chain2Desc": "Cardano stake pool based in Goma to secure the network and share value with the local community."
+    },
     "proj1Desc": "Decentralized payment solution enabling merchants in Eastern Congo to accept crypto payments seamlessly.",
     "proj2Desc": "Blockchain-verified academic credentials for Congolese universities, fighting diploma fraud.",
     "proj3Desc": "Community governance platform for Nyiragongo environmental monitoring and disaster preparedness.",
@@ -528,7 +550,7 @@
   },
   "resources": {
     "title": "Resources",
-    "subtitle": "Free educational content to accelerate your Web3 journey.",
+    "subtitle": "Blog, educational content and gallery: everything to learn and follow the hub.",
     "cat1": "Blockchain Guides",
     "cat2": "Workshop Videos",
     "cat3": "Training Documents",
@@ -693,8 +715,8 @@
     "p6Excerpt": "Exploring how decentralized technologies can address financial inclusion and governance challenges."
   },
   "docs": {
-    "title": "Documentation",
-    "subtitle": "Technical documentation and development guides for Web3 builders.",
+    "title": "Educational content",
+    "subtitle": "Guides, materials and resources to learn and grow in Web3.",
     "guide1Title": "Getting Started with Cardano",
     "guide1Desc": "Complete guide to setting up your Cardano development environment and building your first transaction.",
     "guide2Title": "Smart Contract Patterns",
@@ -703,7 +725,7 @@
     "guide3Desc": "Complete API reference for Ynuka Labs tools and services.",
     "guide4Title": "Deployment Guide",
     "guide4Desc": "Step-by-step guide to deploying your DApp on mainnet.",
-    "empty": "No documentation available yet."
+    "empty": "No educational content available at the moment."
   },
   "tools": {
     "title": "Developer Tools",
