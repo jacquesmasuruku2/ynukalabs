@@ -82,13 +82,17 @@ export async function fetchFromApi<T = unknown>(
   throw new Error("fetchFromApi (PHP) is deprecated — use Admin Panel API via VITE_ADMIN_API_URL");
 }
 
-export async function subscribeToNewsletter(name: string, email: string): Promise<{ success: boolean; message?: string }> {
-  try {
-    await adminPost("/newsletter", { name, email });
-    return { success: true };
-  } catch (e) {
-    return { success: false, message: e instanceof Error ? e.message : "Erreur" };
-  }
+export async function subscribeToNewsletter(
+  name: string,
+  email: string,
+  interests: string[] = ["actualites"]
+): Promise<{ success: boolean; message?: string }> {
+  const result = await adminPost<{ message?: string }>("/newsletter", {
+    name: name.trim() || undefined,
+    email: email.trim(),
+    interests,
+  });
+  return { success: true, message: result.message };
 }
 
 export async function submitContactForm(data: {

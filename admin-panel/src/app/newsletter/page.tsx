@@ -4,14 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import AdminLayout from '@/components/AdminLayout';
 import { Mail, Search, Trash2, Plus, UserCircle2, Download, Upload } from 'lucide-react';
+import {
+  NEWSLETTER_INTEREST_OPTIONS,
+  labelForNewsletterInterest,
+} from '@/lib/newsletterInterests';
 
-const interestOptions = [
-  { value: 'actualites', label: 'Actualités' },
-  { value: 'economie', label: 'Économie' },
-  { value: 'culture', label: 'Culture' },
-  { value: 'sport', label: 'Sport' },
-  { value: 'tech', label: 'Science & Tech' },
-];
+const interestOptions = NEWSLETTER_INTEREST_OPTIONS.map((o) => ({
+  value: o.value,
+  label: o.label,
+}));
 
 export default function NewsletterSubscribersPage() {
   const [subs, setSubs] = useState<any[]>([]);
@@ -352,19 +353,19 @@ export default function NewsletterSubscribersPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Centres d’intérêt</label>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            <div className="flex flex-wrap gap-2.5">
               {interestOptions.map((option) => {
                 const checked = form.interests.includes(option.value);
                 return (
                   <label
                     key={option.value}
-                    className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition ${checked ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'}`}
+                    className={`inline-flex min-h-[2.5rem] items-center gap-2 rounded-md border px-3.5 py-2 text-sm cursor-pointer transition whitespace-nowrap ${checked ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'}`}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => handleInterestToggle(option.value)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span>{option.label}</span>
                   </label>
@@ -437,7 +438,7 @@ export default function NewsletterSubscribersPage() {
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-2">
                             {(Array.isArray(s.interests) && s.interests.length > 0 ? s.interests : ['actualites']).map((interest: string) => {
-                              const label = interestOptions.find((option) => option.value === interest)?.label || interest;
+                              const label = labelForNewsletterInterest(interest);
                               return (
                                 <span key={`${s.id}-${interest}`} className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
                                   {label}

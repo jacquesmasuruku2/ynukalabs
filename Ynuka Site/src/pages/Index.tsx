@@ -4,8 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Users, Calendar, Rocket, Trees, ChevronRight, MapPin, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { strapiFetch } from "@/lib/strapi";
-import { fetchEvents } from "@/lib/api";
+import { fetchEvents, subscribeToNewsletter } from "@/lib/api";
 import CustomButton from "@/components/ui/CustomButton";
 import EventCard from "@/components/ui/EventCard";
 import SectionWrapper from "@/components/ui/SectionWrapper";
@@ -133,21 +132,15 @@ const Index = () => {
     if (!newsletterEmail) return;
     setSubscribing(true);
     try {
-      await strapiFetch("/api/newsletter-subscribers", {
-        method: "POST",
-        body: JSON.stringify({
-          data: { email: newsletterEmail, active: true, subscribed_at: new Date().toISOString() },
-        }),
-      });
-
+      await subscribeToNewsletter("", newsletterEmail);
       toast({ title: t("home.subscribeSuccess") });
       setNewsletterEmail("");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("409") || msg.toLowerCase().includes("unique")) {
+      if (msg.includes("409") || msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("déjà")) {
         toast({ title: t("home.alreadySubscribed") });
       } else {
-        toast({ title: t("admin.error"), variant: "destructive" });
+        toast({ title: msg || t("admin.error"), variant: "destructive" });
       }
     } finally {
       setSubscribing(false);

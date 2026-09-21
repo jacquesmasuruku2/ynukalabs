@@ -5,6 +5,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { socialLinks } from "@/data/socialLinks";
 import { strapiFetch } from "@/lib/strapi";
+import { subscribeToNewsletter } from "@/lib/api";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -224,26 +225,19 @@ const Footer = () => {
 
                 setSubmitting(true);
                 try {
-                  await strapiFetch("/api/newsletter-subscribers", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      data: {
-                        email: newsletterEmail,
-                        name: newsletterName || "Anonymous",
-                        active: 1,
-                        subscribed_at: new Date().toISOString(),
-                      },
-                    }),
-                  });
-
+                  await subscribeToNewsletter(newsletterName, newsletterEmail);
                   toast({ title: t("home.subscribeSuccess") });
                   setNewsletterName("");
                   setNewsletterEmail("");
                 } catch (err: unknown) {
                   console.error("Newsletter subscription error:", err);
                   const errorMessage = err instanceof Error ? err.message : "Unknown error";
-                  // Check for duplicate error
-                  if (errorMessage.toLowerCase().includes("duplicate") || errorMessage.includes("1062") || errorMessage.toLowerCase().includes("unique")) {
+                  if (
+                    errorMessage.toLowerCase().includes("duplicate") ||
+                    errorMessage.includes("1062") ||
+                    errorMessage.toLowerCase().includes("unique") ||
+                    errorMessage.toLowerCase().includes("déjà")
+                  ) {
                     toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
                   } else {
                     toast({ title: errorMessage || t("admin.error"), variant: "destructive" });

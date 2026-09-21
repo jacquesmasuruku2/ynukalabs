@@ -74,13 +74,13 @@ function ProjectCard({
       viewport={{ once: true }}
       className="group relative flex h-full flex-col overflow-hidden rounded-card border border-[#0f2847]/12 bg-[#0f2847] transition-all duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:hover:border-[#ffb800]/55"
     >
-      <Link to={detailHref} className="relative block aspect-[16/7] overflow-hidden bg-[#152a48]">
+      <Link to={detailHref} className="relative block aspect-[16/10] overflow-hidden bg-[#152a48] sm:aspect-[16/9]">
         <img
           src={project.imageUrl || FALLBACK_IMAGE}
           alt={project.title}
           className={
             hasImage
-              ? "h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+              ? "h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.04]"
               : "absolute inset-0 m-auto h-10 w-10 object-contain opacity-50"
           }
           loading="lazy"
@@ -92,7 +92,7 @@ function ProjectCard({
             img.className = "absolute inset-0 m-auto h-10 w-10 object-contain opacity-50";
           }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f2847] via-[#0f2847]/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f2847]/70 via-[#0f2847]/15 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-[#ffb800] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
         <span className="absolute left-0 top-3 inline-flex rounded-none bg-[#ffb800] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#0f2847]">
@@ -365,7 +365,7 @@ const Projects = () => {
                   key={i}
                   className="animate-pulse overflow-hidden rounded-card border border-[#0f2847]/10 bg-muted/50 dark:border-white/10"
                 >
-                  <div className="aspect-[16/7] bg-muted" />
+                  <div className="aspect-[16/10] bg-muted sm:aspect-[16/9]" />
                   <div className="h-20 bg-muted/40" />
                 </div>
               ))}

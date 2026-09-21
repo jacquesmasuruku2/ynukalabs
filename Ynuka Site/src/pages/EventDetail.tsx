@@ -235,7 +235,7 @@ const EventDetail = () => {
               <img
                 src={event.imageUrl}
                 alt={title}
-                className="max-h-[28rem] w-full object-cover object-center"
+                className="max-h-[32rem] w-full object-contain object-center bg-[#0f2847]/5"
               />
             </div>
           ) : null}

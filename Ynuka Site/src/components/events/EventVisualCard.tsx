@@ -87,12 +87,25 @@ const EventVisualCard = ({
     <div
       className={cn(
         "flex overflow-hidden rounded-card bg-[#0f2847] text-white ring-1 ring-[#ffb800]/35",
-        compact ? "min-h-[150px] p-3.5 md:min-h-[190px] md:p-4" : "min-h-[260px] p-4 md:min-h-[300px] md:p-5",
+        compact ? "min-h-[220px] p-3.5 md:min-h-[260px] md:p-4" : "min-h-[320px] p-4 md:min-h-[360px] md:p-5",
         className
       )}
     >
-      <div className="flex h-full flex-col p-0">
-        <div>
+      <div className="flex h-full w-full flex-col p-0">
+        <div
+          className={cn(
+            "relative w-full overflow-hidden rounded-card bg-[#0a3d44] ring-1 ring-[#ffb800]/20",
+            compact ? "aspect-[16/10] md:aspect-[16/9]" : "aspect-[16/10] md:aspect-[16/9]"
+          )}
+        >
+          <img
+            src={img}
+            alt={event.title}
+            className="h-full w-full object-cover object-center"
+          />
+        </div>
+
+        <div className="mt-3 flex flex-1 flex-col">
           <div className="flex items-center gap-2.5">
             <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain md:h-9 md:w-9" />
             <div className="min-w-0">
@@ -133,18 +146,7 @@ const EventVisualCard = ({
           </div>
         </div>
 
-        <div className="mt-auto overflow-hidden pt-2">
-          <div
-            className={cn(
-              "w-full overflow-hidden rounded-card bg-[#0a3d44] ring-1 ring-[#ffb800]/20",
-              compact ? "aspect-[16/4.6] md:aspect-[16/5]" : "aspect-[16/6.5] md:aspect-[16/7]"
-            )}
-          >
-            <img src={img} alt={event.title} className="h-full w-full object-cover" />
-          </div>
-        </div>
-
-        <div>
+        <div className="mt-auto">
           {primaryHref ? (
             <ModernButton
               variant="primary"

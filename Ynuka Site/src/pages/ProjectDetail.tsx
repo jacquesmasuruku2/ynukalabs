@@ -139,21 +139,21 @@ const ProjectDetail = () => {
 
       <section className={`${PAGE_SHELL} py-10 md:py-14`}>
         <article className="mx-auto max-w-3xl">
-          <div className="mb-8 overflow-hidden rounded-card border border-[#0f2847]/12 bg-[#152a48] dark:border-white/10">
-            <div className="relative aspect-[16/8] bg-[#152a48]">
+          <div className="mb-8 overflow-hidden rounded-card border border-[#0f2847]/12 bg-[#152a48]/40 dark:border-white/10">
+            <div className="relative flex min-h-[12rem] items-center justify-center bg-[#152a48]/40 sm:min-h-[16rem]">
               <img
                 src={project.featured_image || FALLBACK_IMAGE}
                 alt={project.title}
                 className={
                   hasImage
-                    ? "h-full w-full object-cover"
-                    : "absolute inset-0 m-auto h-12 w-12 object-contain opacity-50"
+                    ? "max-h-[32rem] w-full object-contain object-center"
+                    : "m-auto h-12 w-12 object-contain opacity-50"
                 }
                 onError={(e) => {
                   const img = e.currentTarget;
                   if (img.src.endsWith(FALLBACK_IMAGE)) return;
                   img.src = FALLBACK_IMAGE;
-                  img.className = "absolute inset-0 m-auto h-12 w-12 object-contain opacity-50";
+                  img.className = "m-auto h-12 w-12 object-contain opacity-50";
                 }}
               />
             </div>

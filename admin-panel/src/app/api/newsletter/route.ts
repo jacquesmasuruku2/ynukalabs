@@ -1,13 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
-
-const interestOptions = [
-  { value: 'actualites', label: 'Actualités' },
-  { value: 'economie', label: 'Économie' },
-  { value: 'culture', label: 'Culture' },
-  { value: 'sport', label: 'Sport' },
-  { value: 'tech', label: 'Science & Tech' },
-];
+import {
+  isKnownNewsletterInterest,
+} from '@/lib/newsletterInterests';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -50,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     const validInterests = interests.filter((interest: string) =>
-      interestOptions.some((option) => option.value === interest)
+      isKnownNewsletterInterest(interest)
     );
 
     const existingSubscriber = await prisma.newsletterSubscription.findUnique({

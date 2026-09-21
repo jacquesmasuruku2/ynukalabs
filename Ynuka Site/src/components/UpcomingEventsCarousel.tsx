@@ -172,7 +172,7 @@ export function EventSlideCard({
   const card = (
     <article
       className={cn(
-        "flex h-full min-h-[300px] flex-col overflow-hidden rounded-card border transition-colors md:min-h-[320px]",
+        "flex h-full min-h-[360px] flex-col overflow-hidden rounded-card border transition-colors md:min-h-[380px]",
         isDark
           ? "border-[#ffb800]/45 bg-[#0f2847] text-white"
           : "border-black/[0.08] bg-white text-[#0f2847] dark:border-[#3b82f6]/30 dark:bg-[#152a48] dark:text-[#dbeafe]",
@@ -181,12 +181,17 @@ export function EventSlideCard({
       )}
       onClick={onSelect}
     >
-      <div className="relative h-[112px] shrink-0 overflow-hidden md:h-[120px]">
-        <img src={img} alt="" className="h-full w-full object-cover" aria-hidden />
+      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#152a48] sm:aspect-[16/9]">
+        <img
+          src={img}
+          alt=""
+          className="h-full w-full object-cover object-center"
+          aria-hidden
+        />
         <div
           className={cn(
-            "absolute inset-0",
-            isDark ? "bg-[#0f2847]/25" : "bg-[#0f2847]/10"
+            "pointer-events-none absolute inset-0",
+            isDark ? "bg-gradient-to-t from-[#0f2847]/50 via-transparent to-[#0f2847]/10" : "bg-gradient-to-t from-black/20 via-transparent to-transparent"
           )}
           aria-hidden
         />
