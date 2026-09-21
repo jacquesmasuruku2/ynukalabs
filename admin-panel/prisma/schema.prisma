@@ -656,6 +656,24 @@ model SitePresence {
   @@index([userEmail])
 }
 
+model SitePageView {
+  id        String   @id @default(cuid())
+  sessionId String
+  path      String
+  pageTitle String?
+  referrer  String?
+  userAgent String?
+  language  String?
+  userEmail String?
+  userName  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([sessionId])
+  @@index([path])
+  @@index([userEmail])
+}
+
 model Project {
   id            String   @id @default(cuid())
   title         String

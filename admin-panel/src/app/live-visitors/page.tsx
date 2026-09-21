@@ -10,9 +10,9 @@ export default function LiveVisitorsPage() {
       <AdminLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Visiteurs actifs</h1>
+            <h1 className="text-3xl font-bold text-primary">Visiteurs du site</h1>
             <p className="mt-1 text-secondary">
-              Aperçu en direct des personnes actuellement sur le site public (rafraîchi automatiquement).
+              Toutes les visites du site public : anonymes et connectées. En ligne maintenant et historique 24 h.
             </p>
           </div>
           <div className="card rounded-lg border p-5 shadow-sm">

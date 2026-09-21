@@ -4,26 +4,27 @@ import { authService } from "@/lib/auth";
 import { API_ROOT } from "@/lib/api";
 
 const SESSION_KEY = "ynuka_presence_sid";
-const INTERVAL_MS = 25_000;
+const INTERVAL_MS = 20_000;
 
 function getSessionId(): string {
   try {
-    let id = sessionStorage.getItem(SESSION_KEY);
+    let id = localStorage.getItem(SESSION_KEY);
     if (!id) {
       id = crypto.randomUUID();
-      sessionStorage.setItem(SESSION_KEY, id);
+      localStorage.setItem(SESSION_KEY, id);
     }
     return id;
   } catch {
-    return `anon-${Date.now()}`;
+    return `anon-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 }
 
-async function ping(path: string) {
+async function ping(path: string, pageView: boolean) {
   const user = authService.getUser();
   const payload = {
     sessionId: getSessionId(),
     path,
+    pageView,
     pageTitle: typeof document !== "undefined" ? document.title : null,
     referrer: typeof document !== "undefined" ? document.referrer || null : null,
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
@@ -38,27 +39,32 @@ async function ping(path: string) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       keepalive: true,
+      mode: "cors",
     });
   } catch {
-    /* silencieux : ne pas perturber la navigation */
+    /* silencieux */
   }
 }
 
-/** Envoie un heartbeat de présence vers l’admin (visiteurs actifs). */
+/** Suit toutes les visites (anonymes ou connectées) pour l’admin. */
 export default function PresenceTracker() {
   const location = useLocation();
   const pathRef = useRef(location.pathname + location.search + location.hash);
+  const booted = useRef(false);
 
   useEffect(() => {
-    pathRef.current = location.pathname + location.search + location.hash;
-    void ping(pathRef.current);
+    const next = location.pathname + location.search + location.hash;
+    const isNav = booted.current && next !== pathRef.current;
+    pathRef.current = next;
+    booted.current = true;
+    void ping(next, true);
 
     const interval = window.setInterval(() => {
-      void ping(pathRef.current);
+      void ping(pathRef.current, false);
     }, INTERVAL_MS);
 
     const onVisible = () => {
-      if (document.visibilityState === "visible") void ping(pathRef.current);
+      if (document.visibilityState === "visible") void ping(pathRef.current, isNav);
     };
     document.addEventListener("visibilitychange", onVisible);
 

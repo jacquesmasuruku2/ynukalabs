@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
 
-const ACTIVE_MS = 2 * 60 * 1000; // 2 minutes
-const STALE_MS = 24 * 60 * 60 * 1000; // 24h cleanup
+const ACTIVE_MS = 2 * 60 * 1000;
+const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function OPTIONS() {
   return corsOptions();
@@ -18,6 +18,38 @@ function summarizeUa(ua: string | null | undefined): string {
   if (/Firefox\//i.test(ua)) return 'Desktop · Firefox';
   if (/Safari\//i.test(ua)) return 'Desktop · Safari';
   return 'Desktop';
+}
+
+function mapVisitor(r: {
+  id: string;
+  sessionId: string;
+  path: string;
+  pageTitle: string | null;
+  userEmail: string | null;
+  userName: string | null;
+  language: string | null;
+  userAgent: string | null;
+  firstSeenAt?: Date;
+  lastSeenAt?: Date;
+  createdAt?: Date;
+}, now: number, active = false) {
+  const stamp = r.lastSeenAt || r.createdAt || new Date();
+  return {
+    id: r.id,
+    sessionId: r.sessionId,
+    path: r.path,
+    pageTitle: r.pageTitle,
+    userEmail: r.userEmail,
+    userName: r.userName,
+    language: r.language,
+    device: summarizeUa(r.userAgent),
+    isAnonymous: !r.userEmail,
+    isActive: active,
+    firstSeenAt: r.firstSeenAt || null,
+    lastSeenAt: r.lastSeenAt || null,
+    createdAt: r.createdAt || null,
+    secondsAgo: Math.max(0, Math.round((now - new Date(stamp).getTime()) / 1000)),
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -39,7 +71,11 @@ export async function POST(request: NextRequest) {
       ? String(body.userEmail).trim().toLowerCase().slice(0, 200)
       : null;
     const userName = body.userName ? String(body.userName).slice(0, 120) : null;
+    const forcePageView = body.pageView === true;
     const now = new Date();
+
+    const existing = await prisma.sitePresence.findUnique({ where: { sessionId } });
+    const pathChanged = !existing || existing.path !== path;
 
     const row = await prisma.sitePresence.upsert({
       where: { sessionId },
@@ -67,7 +103,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return jsonCors({ ok: true, id: row.id });
+    if (forcePageView || pathChanged || !existing) {
+      await prisma.sitePageView.create({
+        data: {
+          sessionId,
+          path,
+          pageTitle,
+          referrer,
+          userAgent,
+          language,
+          userEmail,
+          userName,
+        },
+      });
+    }
+
+    return jsonCors({ ok: true, id: row.id, anonymous: !userEmail });
   } catch (error) {
     return jsonCors(
       { error: 'Failed to update presence', details: error instanceof Error ? error.message : 'Unknown error' },
@@ -85,46 +136,70 @@ export async function GET(request: NextRequest) {
 
     const now = Date.now();
     const activeSince = new Date(now - ACTIVE_MS);
-    const staleBefore = new Date(now - STALE_MS);
+    const recentSince = new Date(now - 24 * 60 * 60 * 1000);
+    const staleBefore = new Date(now - RETENTION_MS);
 
-    // Nettoyage léger des sessions trop anciennes
-    await prisma.sitePresence.deleteMany({
-      where: { lastSeenAt: { lt: staleBefore } },
-    });
+    await prisma.sitePresence.deleteMany({ where: { lastSeenAt: { lt: staleBefore } } });
+    await prisma.sitePageView.deleteMany({ where: { createdAt: { lt: staleBefore } } });
 
-    const rows = await prisma.sitePresence.findMany({
-      where: { lastSeenAt: { gte: activeSince } },
-      orderBy: { lastSeenAt: 'desc' },
-      take: 200,
-    });
+    const [activeRows, pageViews, todayViews] = await Promise.all([
+      prisma.sitePresence.findMany({
+        where: { lastSeenAt: { gte: activeSince } },
+        orderBy: { lastSeenAt: 'desc' },
+        take: 200,
+      }),
+      prisma.sitePageView.findMany({
+        where: { createdAt: { gte: recentSince } },
+        orderBy: { createdAt: 'desc' },
+        take: 300,
+      }),
+      prisma.sitePageView.count({
+        where: {
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+      }),
+    ]);
 
     const byPath: Record<string, number> = {};
-    for (const r of rows) {
-      byPath[r.path] = (byPath[r.path] || 0) + 1;
+    for (const v of pageViews) {
+      byPath[v.path] = (byPath[v.path] || 0) + 1;
     }
-
     const topPages = Object.entries(byPath)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .slice(0, 12)
       .map(([path, count]) => ({ path, count }));
 
+    const anonymousActive = activeRows.filter((r) => !r.userEmail).length;
+    const connectedActive = activeRows.filter((r) => !!r.userEmail).length;
+
     return jsonCors({
-      activeCount: rows.length,
+      activeCount: activeRows.length,
+      anonymousActive,
+      connectedActive,
+      todayViews,
+      recentViewsCount: pageViews.length,
       windowSeconds: ACTIVE_MS / 1000,
       topPages,
-      visitors: rows.map((r) => ({
-        id: r.id,
-        sessionId: r.sessionId,
-        path: r.path,
-        pageTitle: r.pageTitle,
-        userEmail: r.userEmail,
-        userName: r.userName,
-        language: r.language,
-        device: summarizeUa(r.userAgent),
-        firstSeenAt: r.firstSeenAt,
-        lastSeenAt: r.lastSeenAt,
-        secondsAgo: Math.max(0, Math.round((now - new Date(r.lastSeenAt).getTime()) / 1000)),
-      })),
+      visitors: activeRows.map((r) => mapVisitor(r, now, true)),
+      pageViews: pageViews.map((v) =>
+        mapVisitor(
+          {
+            id: v.id,
+            sessionId: v.sessionId,
+            path: v.path,
+            pageTitle: v.pageTitle,
+            userEmail: v.userEmail,
+            userName: v.userName,
+            language: v.language,
+            userAgent: v.userAgent,
+            createdAt: v.createdAt,
+          },
+          now,
+          false
+        )
+      ),
     });
   } catch (error) {
     return jsonCors(

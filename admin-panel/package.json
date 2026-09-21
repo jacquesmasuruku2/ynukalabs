@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "node scripts/migrate-if-configured.js && next build",
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
