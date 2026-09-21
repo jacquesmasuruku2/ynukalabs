@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  FolderOpen, 
-  Users, 
-  Settings, 
-  LogOut,
+import {
+  LayoutDashboard,
+  FileText,
+  FolderOpen,
+  Users,
+  Settings,
+  Power,
   Menu,
   X,
   Inbox,
@@ -26,8 +26,206 @@ import {
   FolderKanban,
   Images,
   Activity,
+  ChevronDown,
+  Shield,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
+
+function formatDateTime(value?: string | null) {
+  if (!value) return '—';
+  try {
+    return new Intl.DateTimeFormat('fr-FR', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
+}
+
+function providerLabel(provider?: string) {
+  if (!provider) return 'Email';
+  if (provider === 'google') return 'Google';
+  if (provider === 'email') return 'Email / mot de passe';
+  return provider;
+}
+
+function roleLabel(role?: string) {
+  if (!role) return 'Administrateur';
+  if (role === 'admin') return 'Administrateur';
+  if (role === 'editor') return 'Éditeur';
+  return role;
+}
+
+function PowerLogoutButton({
+  onClick,
+}: {
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Se déconnecter"
+      title="Se déconnecter"
+      className="group inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 text-[var(--text-secondary)] hover:bg-red-50 hover:text-red-600 active:bg-red-100 active:text-red-700"
+    >
+      <Power className="h-5 w-5 transition-colors group-hover:text-red-600 group-active:text-red-700" strokeWidth={2.25} />
+    </button>
+  );
+}
+
+function AdminUserMenu({
+  user,
+  session,
+  onLogout,
+}: {
+  user: ReturnType<typeof useAuth>['user'];
+  session: ReturnType<typeof useAuth>['session'];
+  onLogout: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, []);
+
+  const initials = (user?.name || user?.email || 'A')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'A';
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <button
+          type="button"
+          onClick={() => setIsOpen((open) => !open)}
+          className="flex max-w-[14rem] items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:max-w-xs"
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+        >
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt=""
+              className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-black/10"
+            />
+          ) : (
+            <span
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #0f2847, #2563eb)' }}
+            >
+              {initials}
+            </span>
+          )}
+          <span className="hidden min-w-0 sm:block">
+            <span className="block truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {user?.name || 'Administrateur'}
+            </span>
+            <span className="block truncate text-xs" style={{ color: 'var(--text-secondary)' }}>
+              {user?.email || 'Session active'}
+            </span>
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            style={{ color: 'var(--text-secondary)' }}
+          />
+        </button>
+        <PowerLogoutButton onClick={onLogout} />
+      </div>
+
+      {isOpen && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-2 w-[min(92vw,20rem)] overflow-hidden rounded-xl border bg-white shadow-lg"
+          style={{ borderColor: 'var(--sidebar-border)' }}
+        >
+          <div className="border-b px-4 py-3" style={{ borderColor: 'var(--sidebar-border)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {user?.name || 'Administrateur'}
+            </p>
+            <p className="mt-0.5 break-all text-xs" style={{ color: 'var(--text-secondary)' }}>
+              {user?.email}
+            </p>
+          </div>
+          <div className="space-y-2.5 px-4 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className="flex items-start gap-2">
+              <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">Rôle</span>
+                {roleLabel(user?.role)}
+              </span>
+            </p>
+            <p className="flex items-start gap-2">
+              <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">Connexion</span>
+                {providerLabel(user?.provider)}
+              </span>
+            </p>
+            <p className="flex items-start gap-2">
+              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">Dernière connexion</span>
+                {formatDateTime(user?.lastLoginAt)}
+              </span>
+            </p>
+            <p className="flex items-start gap-2">
+              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">Session ouverte</span>
+                {formatDateTime(session?.createdAt)}
+              </span>
+            </p>
+            <p className="flex items-start gap-2">
+              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">Expire le</span>
+                {formatDateTime(session?.expiresAt)}
+              </span>
+            </p>
+          </div>
+          <div className="border-t p-2" style={{ borderColor: 'var(--sidebar-border)' }}>
+            <Link
+              href="/settings"
+              role="menuitem"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-black/[0.04]"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <Settings className="h-4 w-4" />
+              Paramètres du compte
+            </Link>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setIsOpen(false);
+                onLogout();
+              }}
+              className="group mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-red-50 hover:text-red-600"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Power className="h-4 w-4 group-hover:text-red-600" strokeWidth={2.25} />
+              Se déconnecter
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminLayout({
   children,
@@ -36,7 +234,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user, session } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isEditorToolbarActive, setIsEditorToolbarActive] = useState(false);
@@ -91,7 +289,7 @@ export default function AdminLayout({
           borderColor: 'var(--sidebar-border)',
         }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="rounded-xl p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -100,10 +298,10 @@ export default function AdminLayout({
           >
             {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
-          <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="truncate text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             Ynuka Labs
           </h1>
-          <div className="w-10" />
+          <AdminUserMenu user={user} session={session} onLogout={handleLogout} />
         </div>
       </div>
 
@@ -192,13 +390,13 @@ export default function AdminLayout({
               <button
                 type="button"
                 onClick={handleLogout}
-                className={`flex w-full items-center rounded-xl py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
+                aria-label="Se déconnecter"
+                title="Se déconnecter"
+                className={`group flex w-full items-center rounded-xl py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
                   isSidebarCollapsed ? 'justify-center px-2' : 'space-x-3 px-4'
-                }`}
-                title={isSidebarCollapsed ? 'Se déconnecter' : undefined}
-                style={{ color: 'var(--text-secondary)' }}
+                } text-[var(--text-secondary)] hover:bg-red-50 hover:text-red-600 active:bg-red-100 active:text-red-700`}
               >
-                <LogOut className="h-5 w-5" />
+                <Power className="h-5 w-5 shrink-0 transition-colors group-hover:text-red-600 group-active:text-red-700" strokeWidth={2.25} />
                 <span className={isSidebarCollapsed ? 'hidden' : ''}>Se déconnecter</span>
               </button>
               <a
@@ -228,6 +426,15 @@ export default function AdminLayout({
 
         {/* Main content */}
         <main className={`min-h-screen min-w-0 flex-1 transition-[margin] duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+          <div
+            className="sticky top-0 z-30 hidden items-center justify-end border-b px-4 py-2.5 backdrop-blur-sm sm:px-6 lg:flex lg:px-8"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--sidebar-bg) 92%, transparent)',
+              borderColor: 'var(--sidebar-border)',
+            }}
+          >
+            <AdminUserMenu user={user} session={session} onLogout={handleLogout} />
+          </div>
           <div className="p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>

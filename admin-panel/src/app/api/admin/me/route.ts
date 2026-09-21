@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
         avatarUrl: session.adminUser.avatarUrl,
         provider: session.adminUser.provider,
         role: session.adminUser.role,
+        lastLoginAt: session.adminUser.lastLoginAt?.toISOString() || null,
+      },
+      session: {
+        createdAt: session.createdAt.toISOString(),
+        expiresAt: session.expiresAt.toISOString(),
       },
     });
   } catch (error) {
