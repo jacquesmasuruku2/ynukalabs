@@ -6,7 +6,7 @@
 const ADMIN_API_BASE = (
   import.meta.env.VITE_ADMIN_API_URL ||
   import.meta.env.VITE_API_URL ||
-  "http://localhost:3000"
+  "https://admin.ynukalabs.com"
 ).replace(/\/$/, "");
 
 const API_ROOT = `${ADMIN_API_BASE}/api`;
@@ -48,11 +48,18 @@ async function adminGet<T = unknown>(path: string, params: Record<string, string
 }
 
 async function adminPost<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
-  const response = await fetch(`${API_ROOT}${path.startsWith("/") ? path : `/${path}`}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_ROOT}${path.startsWith("/") ? path : `/${path}`}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    const error = new Error("Le service d'inscription est momentanément indisponible. Réessayez dans quelques instants.") as Error & { code?: string };
+    error.code = "NETWORK_ERROR";
+    throw error;
+  }
   if (!response.ok) {
     const err = (await response.json().catch(() => ({}))) as {
       error?: string;

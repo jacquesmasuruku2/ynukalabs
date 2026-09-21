@@ -240,8 +240,10 @@ const Footer = () => {
                     errorMessage.toLowerCase().includes("already subscribed")
                   ) {
                     toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
+                  } else if (error.code === "NETWORK_ERROR" || errorMessage.toLowerCase().includes("failed to fetch")) {
+                    toast({ title: "Impossible de joindre le service newsletter. Vérifiez votre connexion et réessayez.", variant: "destructive" });
                   } else {
-                    toast({ title: errorMessage || t("admin.error"), variant: "destructive" });
+                    toast({ title: errorMessage || "Impossible de vous inscrire à la newsletter.", variant: "destructive" });
                   }
                 } finally {
                   setSubmitting(false);
