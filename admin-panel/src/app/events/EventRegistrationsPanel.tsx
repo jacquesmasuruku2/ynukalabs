@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Check, MessageSquare, Users } from 'lucide-react';
+import { Check, CheckCheck, MessageSquare, Users } from 'lucide-react';
 
 type EventOption = { id: string; title: string };
 
@@ -22,6 +22,7 @@ type Message = {
   senderName: string | null;
   body: string;
   createdAt: string;
+  readAt?: string | null;
 };
 
 const regStatusLabel: Record<string, string> = {
@@ -269,23 +270,50 @@ export default function EventRegistrationsPanel({ events }: { events: EventOptio
                 <p className="text-xs text-slate-500">{active.email}</p>
               </div>
               <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`rounded-md px-3 py-2 text-sm ${
-                      m.senderType === 'team'
-                        ? 'bg-amber-50 text-slate-800'
-                        : m.senderType === 'system'
-                          ? 'border bg-slate-50 text-slate-600'
-                          : 'bg-slate-800 text-white'
-                    }`}
-                  >
-                    <p className="mb-0.5 text-[10px] font-semibold uppercase opacity-70">
-                      {m.senderName || m.senderType}
-                    </p>
-                    <p className="whitespace-pre-wrap">{m.body}</p>
-                  </div>
-                ))}
+                {messages.map((m) => {
+                  const mine = m.senderType === 'team';
+                  const read = Boolean(m.readAt);
+                  return (
+                    <div
+                      key={m.id}
+                      className={`rounded-md px-3 py-2 text-sm ${
+                        mine
+                          ? 'bg-amber-50 text-slate-800'
+                          : m.senderType === 'system'
+                            ? 'border bg-slate-50 text-slate-600'
+                            : 'ml-auto max-w-[90%] bg-slate-800 text-white'
+                      }`}
+                    >
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase opacity-70">
+                        {m.senderName || m.senderType}
+                      </p>
+                      <p className="whitespace-pre-wrap">{m.body}</p>
+                      <p
+                        className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] ${
+                          mine ? 'text-slate-500' : m.senderType === 'system' ? 'text-slate-400' : 'text-white/60'
+                        }`}
+                      >
+                        <span>
+                          {new Date(m.createdAt).toLocaleString('fr-FR', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {mine ? (
+                          <span title={read ? 'Lu' : 'Envoyé'} aria-label={read ? 'Message lu' : 'Message envoyé'}>
+                            {read ? (
+                              <CheckCheck className="h-3.5 w-3.5 text-sky-500" strokeWidth={2.5} />
+                            ) : (
+                              <Check className="h-3.5 w-3.5 text-slate-400" strokeWidth={2.5} />
+                            )}
+                          </span>
+                        ) : null}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
               <div className="border-t p-3">
                 <textarea

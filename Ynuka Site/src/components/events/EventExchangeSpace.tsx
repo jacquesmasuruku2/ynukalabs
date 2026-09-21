@@ -15,6 +15,7 @@ import {
   type SiteNotification,
 } from "@/lib/api";
 import GoogleSignInDialog from "@/components/auth/GoogleSignInDialog";
+import { MessageReadReceipt } from "@/components/events/MessageReadReceipt";
 
 type EventExchangeSpaceProps = {
   eventId: string;
@@ -190,13 +191,20 @@ export default function EventExchangeSpace({
                         </p>
                       ) : null}
                       <p className="whitespace-pre-wrap">{m.body}</p>
-                      <p className={`mt-1 text-[10px] ${mine ? "text-white/60" : "text-slate-400"}`}>
-                        {new Date(m.createdAt).toLocaleString("fr-FR", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      <p
+                        className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] ${
+                          mine ? "text-white/60" : "text-slate-400"
+                        }`}
+                      >
+                        <span>
+                          {new Date(m.createdAt).toLocaleString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {mine ? <MessageReadReceipt readAt={m.readAt} onDark /> : null}
                       </p>
                     </div>
                   </motion.div>

@@ -25,6 +25,7 @@ import {
   Calendar,
   FolderKanban,
   Images,
+  Activity,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -57,6 +58,7 @@ export default function AdminLayout({
 
   const sidebarItems = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
+    { name: 'Visiteurs actifs', href: '/live-visitors', icon: Activity },
     { name: 'Articles', href: '/articles', icon: FileText },
     { name: 'Événements', href: '/events', icon: Calendar },
     { name: 'Projets', href: '/projects', icon: FolderKanban },

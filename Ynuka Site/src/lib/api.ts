@@ -448,6 +448,7 @@ export type EventConversationMessage = {
   senderName?: string | null;
   body: string;
   createdAt: string;
+  readAt?: string | null;
 };
 
 export type SiteNotification = {

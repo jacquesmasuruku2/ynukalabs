@@ -12,6 +12,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
+import { LiveVisitorsWidget } from '@/components/LiveVisitorsWidget';
 
 interface Stats {
   articles: number;
@@ -113,6 +114,19 @@ export default function AdminDashboard() {
                 );
               })
             )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <LiveVisitorsWidget compact />
+            <div className="card rounded-lg border p-5 shadow-sm lg:col-span-2">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-primary">Activité en direct</h2>
+                <Link href="/live-visitors" className="text-sm font-medium text-blue-600 hover:underline">
+                  Voir tout →
+                </Link>
+              </div>
+              <LiveVisitorsWidget />
+            </div>
           </div>
 
           {/* Additional Stats */}

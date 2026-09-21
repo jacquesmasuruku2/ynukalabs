@@ -43,6 +43,9 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "SiteNotification_userEmail_idx" ON "SiteNotification"("userEmail")`,
   `CREATE INDEX IF NOT EXISTS "SiteNotification_read_idx" ON "SiteNotification"("read")`,
   `CREATE INDEX IF NOT EXISTS "SiteNotification_createdAt_idx" ON "SiteNotification"("createdAt" DESC)`,
+
+  `ALTER TABLE "EventMessage" ADD COLUMN IF NOT EXISTS "readAt" TIMESTAMPTZ`,
+  `CREATE INDEX IF NOT EXISTS "EventMessage_readAt_idx" ON "EventMessage"("readAt")`,
 ];
 
 async function main() {

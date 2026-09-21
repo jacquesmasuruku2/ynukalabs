@@ -613,10 +613,12 @@ model EventMessage {
   senderEmail    String?
   senderName     String?
   body           String
+  readAt         DateTime?
   createdAt      DateTime          @default(now())
 
   @@index([conversationId])
   @@index([createdAt])
+  @@index([readAt])
 }
 
 model SiteNotification {
@@ -632,6 +634,26 @@ model SiteNotification {
   @@index([userEmail])
   @@index([read])
   @@index([createdAt(sort: Desc)])
+}
+
+model SitePresence {
+  id         String   @id @default(cuid())
+  sessionId  String   @unique
+  path       String
+  pageTitle  String?
+  referrer   String?
+  userAgent  String?
+  language   String?
+  userEmail  String?
+  userName   String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([lastSeenAt(sort: Desc)])
+  @@index([path])
+  @@index([userEmail])
 }
 
 model Project {
