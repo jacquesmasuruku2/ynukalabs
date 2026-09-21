@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .result {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test API Search Parameter</h1>
+    
+    <div class="test-section">
+        <h2>1. Lister sans search</h2>
+        <button onclick="testWithoutSearch()">Sans search</button>
+        <div id="withoutSearchResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Lister avec search=published=1</h2>
+        <button onclick="testWithSearch()">Avec search=published=1</button>
+        <div id="withSearchResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Lister avec search=published=true</h2>
+        <button onclick="testWithSearchTrue()">Avec search=published=true</button>
+        <div id="withSearchTrueResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://admin.ynukalabs.com/api/api.php';
+
+        async function testWithoutSearch() {
+            const resultDiv = document.getElementById('withoutSearchResult');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=list&resource=blog_posts&limit=10`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✓ ${data.rows?.length || 0} blog post(s) trouvé(s)</span>\n\nDonnées:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Erreur</span>\n\nErreur: ${error.message}`;
+            }
+        }
+
+        async function testWithSearch() {
+            const resultDiv = document.getElementById('withSearchResult');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=list&resource=blog_posts&limit=10&search=published=1`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✓ ${data.rows?.length || 0} blog post(s) trouvé(s)</span>\n\nDonnées:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Erreur</span>\n\nErreur: ${error.message}`;
+            }
+        }
+
+        async function testWithSearchTrue() {
+            const resultDiv = document.getElementById('withSearchTrueResult');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=list&resource=blog_posts&limit=10&search=published=true`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✓ ${data.rows?.length || 0} blog post(s) trouvé(s)</span>\n\nDonnées:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Erreur</span>\n\nErreur: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

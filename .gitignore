@@ -1,0 +1,13 @@
+node_modules/
+**/node_modules/
+.env
+.env.*
+!.env.example
+dist.zip
+**/dist.zip
+*.tsbuildinfo
+.next/
+**/.next/
+mobile-app/.expo/
+Ynuka Site/dist/
+admin-panel/.next/

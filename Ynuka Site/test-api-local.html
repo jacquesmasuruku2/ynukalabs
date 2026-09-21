@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Contact</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        button { margin: 10px 5px; padding: 10px 20px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Test API Contact Formulaire</h1>
+    
+    <div>
+        <label>URL API: </label>
+        <input type="text" id="apiUrl" value="https://admin.ynukalabs.com/api/api.php" style="width: 400px;">
+    </div>
+    
+    <div style="margin: 20px 0;">
+        <button onclick="testPing()">Test Ping API</button>
+        <button onclick="testContact()">Test Soumission Contact</button>
+        <button onclick="testWithNoCors()">Test Ping (mode no-cors)</button>
+        <button onclick="clearResult()">Effacer</button>
+    </div>
+    
+    <pre id="result">Cliquez sur un bouton pour tester...</pre>
+
+    <script>
+        function getApiUrl() {
+            return document.getElementById('apiUrl').value;
+        }
+
+        function appendResult(text, className = '') {
+            const result = document.getElementById('result');
+            const span = document.createElement('span');
+            span.className = className;
+            span.textContent = text + '\n';
+            result.appendChild(span);
+        }
+
+        function clearResult() {
+            document.getElementById('result').textContent = '';
+        }
+
+        async function testPing() {
+            clearResult();
+            const API_URL = getApiUrl();
+            appendResult('=== Test Ping API ===\n');
+            appendResult('URL: ' + API_URL + '?action=ping\n', 'info');
+            
+            try {
+                appendResult('Envoi de la requête...\n');
+                const response = await fetch(`${API_URL}?action=ping`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                appendResult('Status: ' + response.status + ' ' + response.statusText + '\n');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    appendResult('❌ Erreur HTTP: ' + errorText + '\n', 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                appendResult('✅ Ping Réussi:\n', 'success');
+                appendResult(JSON.stringify(data, null, 2) + '\n');
+            } catch (error) {
+                appendResult('❌ Ping Échoué:\n', 'error');
+                appendResult('Erreur: ' + error.message + '\n');
+                appendResult('\nCauses possibles:\n');
+                appendResult('1. L\'API n\'est pas déployée sur le serveur\n');
+                appendResult('2. Problème CORS (headers manquants)\n');
+                appendResult('3. Problème SSL/TLS (certificat invalide)\n');
+                appendResult('4. L\'URL est incorrecte\n');
+            }
+        }
+
+        async function testContact() {
+            clearResult();
+            const API_URL = getApiUrl();
+            appendResult('=== Test Soumission Contact ===\n');
+            appendResult('URL: ' + API_URL + '?action=create&resource=contact_messages\n', 'info');
+            
+            const testData = {
+                name: 'Test User',
+                email: 'test@example.com',
+                subject: 'Test Subject',
+                message: 'Test message from API test'
+            };
+            
+            appendResult('Données: ' + JSON.stringify(testData) + '\n');
+            
+            try {
+                appendResult('Envoi de la requête POST...\n');
+                const response = await fetch(`${API_URL}?action=create&resource=contact_messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                appendResult('Status: ' + response.status + ' ' + response.statusText + '\n');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    appendResult('❌ Erreur HTTP: ' + errorText + '\n', 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                appendResult('✅ Contact Réussi:\n', 'success');
+                appendResult(JSON.stringify(data, null, 2) + '\n');
+            } catch (error) {
+                appendResult('❌ Contact Échoué:\n', 'error');
+                appendResult('Erreur: ' + error.message + '\n');
+                appendResult('\nCauses possibles:\n');
+                appendResult('1. L\'API n\'est pas déployée sur le serveur\n');
+                appendResult('2. Problème CORS (headers manquants)\n');
+                appendResult('3. Problème SSL/TLS (certificat invalide)\n');
+                appendResult('4. La table contact_messages n\'existe pas\n');
+            }
+        }
+
+        async function testWithNoCors() {
+            clearResult();
+            const API_URL = getApiUrl();
+            appendResult('=== Test Ping (mode no-cors) ===\n');
+            appendResult('URL: ' + API_URL + '?action=ping\n', 'info');
+            appendResult('Ce mode ne peut pas lire la réponse mais teste si le serveur répond\n', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}?action=ping`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                appendResult('Status: ' + response.status + ' ' + response.statusText + '\n');
+                appendResult('Type: ' + response.type + '\n');
+                
+                if (response.type === 'opaque') {
+                    appendResult('✅ Le serveur a répondu (mode opaque)\n', 'success');
+                    appendResult('Cela signifie que le serveur est accessible mais CORS bloque la lecture\n');
+                } else {
+                    appendResult('Réponse reçue\n');
+                }
+            } catch (error) {
+                appendResult('❌ Échoué:\n', 'error');
+                appendResult('Erreur: ' + error.message + '\n');
+                appendResult('Le serveur est probablement inaccessible ou l\'URL est incorrecte\n');
+            }
+        }
+    </script>
+</body>
+</html>

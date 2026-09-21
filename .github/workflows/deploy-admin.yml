@@ -1,0 +1,93 @@
+name: Deploy Panel Admin SPA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Panel Admin/**'
+      - '.github/workflows/deploy-admin.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: cd "Panel Admin" && npm install
+
+      - name: Build SPA
+        run: cd "Panel Admin" && npm run build:spa
+
+      - name: Verify build output
+        run: |
+          echo "Checking Panel Admin/dist contents:"
+          ls -la "Panel Admin/dist/" || exit 1
+          echo "Checking .htaccess-spa:"
+          ls -la "Panel Admin/.htaccess-spa" || exit 1
+
+      - name: Prepare deployment files
+        run: |
+          mkdir -p deploy_admin
+          echo "Copying dist files..."
+          cp -r "Panel Admin/dist"/* deploy_admin/
+          echo "Copying .htaccess-spa..."
+          cp "Panel Admin/.htaccess-spa" deploy_admin/
+          echo "Files ready for deployment:"
+          ls -la deploy_admin/
+          echo "Checking .htaccess-spa presence:"
+          ls -la deploy_admin/.htaccess-spa || echo "WARNING: .htaccess-spa not found in deploy_admin/"
+          echo "Checking index.html:"
+          ls -la deploy_admin/index.html
+          echo "Checking assets:"
+          ls -la deploy_admin/assets/ | head -5
+
+      - name: Deploy Admin SPA to Interserver
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "deploy_admin/*"
+          target: "domains/admin.ynukalabs.com/public_html/"
+          strip_components: 1
+          overwrite: true
+
+      - name: Verify Admin deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "✓ Admin SPA deployment started"
+            ADMIN_DIR="domains/admin.ynukalabs.com/public_html"
+            
+            # Move .htaccess-spa to .htaccess
+            if [ -f "$ADMIN_DIR/.htaccess-spa" ]; then
+              mv "$ADMIN_DIR/.htaccess-spa" "$ADMIN_DIR/.htaccess"
+              echo "✓ .htaccess configured for SPA routing"
+            fi
+            
+            # Fix permissions
+            chmod 755 "$ADMIN_DIR"
+            chmod 644 "$ADMIN_DIR/.htaccess"
+            chmod 644 "$ADMIN_DIR/index.html"
+            chmod -R 755 "$ADMIN_DIR/assets" 2>/dev/null || true
+            chmod -R 644 "$ADMIN_DIR/assets"/* 2>/dev/null || true
+            
+            # Verify critical files exist
+            echo "✓ Verifying deployment files:"
+            ls -lh "$ADMIN_DIR/index.html"
+            echo "✓ Checking assets directory:"
+            ls -la "$ADMIN_DIR/assets/" | head -5
+            echo "✓ .htaccess configuration:"
+            head -5 "$ADMIN_DIR/.htaccess"
+            echo "✓ Admin SPA deployed successfully to $ADMIN_DIR"
+

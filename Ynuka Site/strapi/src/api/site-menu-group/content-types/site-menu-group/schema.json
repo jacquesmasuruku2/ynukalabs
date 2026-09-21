@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "site_menu_groups",
+  "info": {
+    "singularName": "site-menu-group",
+    "pluralName": "site-menu-groups",
+    "displayName": "Site Menu Group"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "labelKey": {
+      "type": "string",
+      "required": true
+    },
+    "location": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "header",
+        "footer"
+      ]
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::site-menu-item.site-menu-item",
+      "mappedBy": "group"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "menutests",
+  "info": {
+    "singularName": "menutest",
+    "pluralName": "menutests",
+    "displayName": "Menu Test"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "label": {
+      "type": "string"
+    }
+  }
+}
+

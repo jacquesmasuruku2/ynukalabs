@@ -1,0 +1,32 @@
+# Ynuka Labs — Public Website (racine public_html)
+# À copier vers : domains/ynukalabs.com/public_html/.htaccess
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1) Laisser intact le backend PHP sous /php/ (api.php, config.php, etc.)
+  RewriteRule ^php(/|$) - [L,NC]
+
+  # 2) Ne pas réécrire les fichiers et dossiers qui existent réellement
+  #    (assets/, index.html, favicon, images, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3) Routes virtuelles React (/events, /resources, …) → SPA
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Page d'accueil par défaut
+DirectoryIndex index.html
+
+# Pas de listing de répertoires
+Options -Indexes
+
+# Activer CORS pour l'API PHP
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+  Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+  Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>

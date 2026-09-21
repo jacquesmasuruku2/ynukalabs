@@ -1,0 +1,37 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+build_output.txt
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Node modules and builds in subdirectories
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/build/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Large files and archives
+dist - Copie.zip
+php.zip
+dist - Copie/
+

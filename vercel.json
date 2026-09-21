@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm --prefix \"Ynuka Site\" run build",
+  "installCommand": "npm --prefix \"Ynuka Site\" install",
+  "outputDirectory": "Ynuka Site/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/luma-api/:path*",
+      "destination": "https://api.luma.com/:path*"
+    },
+    {
+      "source": "/((?!luma-api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

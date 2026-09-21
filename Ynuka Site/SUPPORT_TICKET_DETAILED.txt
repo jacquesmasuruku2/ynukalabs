@@ -1,0 +1,147 @@
+═══════════════════════════════════════════════════════════════════════════════
+TICKET DE SUPPORT - InterServer Portal
+═══════════════════════════════════════════════════════════════════════════════
+
+🔴 PRIORITÉ: CRITIQUE
+
+───────────────────────────────────────────────────────────────────────────────
+TITRE DU TICKET:
+───────────────────────────────────────────────────────────────────────────────
+
+LiteSpeed Web Server arrêté - Domaine ynukalabs.com indisponible
+
+
+───────────────────────────────────────────────────────────────────────────────
+CATÉGORIE:
+───────────────────────────────────────────────────────────────────────────────
+
+Services > Web Server > LiteSpeed
+
+
+───────────────────────────────────────────────────────────────────────────────
+INFORMATIONS COMPTE:
+───────────────────────────────────────────────────────────────────────────────
+
+Domaine Principal: ynukalabs.com
+Adresse IP Serveur: 205.209.109.3
+Nom d'utilisateur DirectAdmin: ynukalab
+E-mail Compte: jacquesmasuruku2@gmail.com
+Plan: Hébergement Web avec administration directe
+
+
+───────────────────────────────────────────────────────────────────────────────
+DESCRIPTION DÉTAILLÉE:
+───────────────────────────────────────────────────────────────────────────────
+
+Le LiteSpeed Web Server (LSWS) sur mon compte s'est arrêté et ne répond plus.
+Le domaine ynukalabs.com est complètement indisponible - tous les accès au 
+domaine retournent une erreur 404.
+
+DIAGNOSTIC TECHNIQUE:
+→ Aucun processus lshttpd n'est en cours d'exécution
+→ Aucun processus lscgid n'est en cours d'exécution  
+→ Les ports 80 et 443 n'ont aucun service en écoute
+→ Les certificats SSL sont inaccessibles
+
+FICHIERS SUR LE SERVEUR:
+→ Les fichiers d'application SONT présents sur le serveur
+→ Les droits d'accès sont corrects (644 sur les fichiers JS/CSS/HTML)
+→ Le problème n'est PAS un problème de fichiers manquants
+
+TENTATIVES EFFECTUÉES:
+✗ Redémarrage via lswsctrl (permission denied - utilisateur régulier)
+✗ Redémarrage via systemctl (commande non disponible)
+✓ Vérification des fichiers d'application (présents et intacts)
+✓ Vérification des permissions (correctes)
+
+
+───────────────────────────────────────────────────────────────────────────────
+SOLUTION REQUISE:
+───────────────────────────────────────────────────────────────────────────────
+
+Veuillez exécuter la commande suivante SUR LE SERVEUR EN TANT QUE ROOT:
+
+    /usr/local/lsws/bin/lswsctrl start
+
+Alternativement, si systemctl est disponible:
+
+    systemctl start lsws
+
+
+───────────────────────────────────────────────────────────────────────────────
+SERVICES À VÉRIFIER ÉGALEMENT:
+───────────────────────────────────────────────────────────────────────────────
+
+Lors du redémarrage de LiteSpeed, veuillez également vérifier:
+
+1. ✓ MYSQL/MARIADB
+   → Nécessaire pour les bases de données d'application
+   → Doit redémarrer automatiquement ou être redémarré
+
+2. ✓ SERVICE E-MAIL (Exim/Postfix)
+   → Comptes e-mail configurés dans DirectAdmin
+   → Doit continuer de fonctionner correctement
+
+3. ✓ REDIS
+   → Service utilisateur actif (/home/ynukalab/.redis/redis.sock)
+   → Utilisation par l'application Node.js
+   → Doit rester actif après redémarrage
+
+4. ✓ SSL/TLS
+   → Certificats doivent être revalidés après redémarrage
+   → HTTPS doit fonctionner correctement sur https://www.ynukalabs.com
+
+
+───────────────────────────────────────────────────────────────────────────────
+IMPACT BUSINESS:
+───────────────────────────────────────────────────────────────────────────────
+
+CRITIQUE: Mon site Web est complètement inaccessible.
+- Application: Ynuka Labs (Centre d'innovation Web3 en République Démocratique du Congo)
+- Utilisateurs affectés: Tous les visiteurs du site
+- Revenu impacté: Potentiellement - Site utilisé pour engagement commercial
+
+
+───────────────────────────────────────────────────────────────────────────────
+INFORMATIONS ADDITIONNELLES:
+───────────────────────────────────────────────────────────────────────────────
+
+Configuration du serveur:
+- Serveur: vda6600 (InterServer)
+- LiteSpeed Version: 6.3.5+ (dernière version déployée le 19 mai 2026)
+- DirectAdmin: Evolution Interface
+- PHP Versions: Multiple (via selector)
+- Node.js: Setup disponible
+- Python: Setup disponible
+- Redis: Actif (utilisateur)
+
+État du compte:
+- Renouvellement automatique: Activé (20 avril 2027)
+- Facturation: En règle
+- Aucun problème antérieur de ce type
+
+
+───────────────────────────────────────────────────────────────────────────────
+PRÉFÉRENCES DE CONTACT:
+───────────────────────────────────────────────────────────────────────────────
+
+Méthode préférée: Email (jacquesmasuruku2@gmail.com)
+Urgence: MAXIMALE - Site indisponible
+Délai acceptable: Immédiat (dès que possible)
+
+Confirmation requise: Oui - Veuillez confirmer une fois le service redémarré
+
+
+───────────────────────────────────────────────────────────────────────────────
+ATTACHEMENTS SUGGÉRÉS:
+───────────────────────────────────────────────────────────────────────────────
+
+□ Logs système du serveur depuis le 19 mai 2026
+□ Logs de LiteSpeed (error.log)
+□ Journaux d'accès Apache/LiteSpeed
+□ État des services au moment du ticket
+
+
+═══════════════════════════════════════════════════════════════════════════════
+Merci de traiter cette demande en priorité absolue.
+═══════════════════════════════════════════════════════════════════════════════

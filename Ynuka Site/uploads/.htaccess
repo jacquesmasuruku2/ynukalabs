@@ -1,0 +1,26 @@
+# ============ UPLOADS DIRECTORY SECURITY ============
+# Permet l'accès aux images, interdit l'exécution de code
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Interdire l'exécution de PHP dans ce dossier
+    # (par défaut les fichiers jpg, png, etc. ne s'exécutent pas,
+    # mais c'est une protection supplémentaire)
+    RewriteRule \.(php|php3|php4|php5|phtml|shtml)$ - [F,L]
+</IfModule>
+
+# ============ DISABLE SCRIPT EXECUTION ============
+<FilesMatch "\.(php|php3|php4|php5|phtml|shtml)$">
+    Deny from all
+</FilesMatch>
+
+# ============ ALLOW IMAGE VIEWING ============
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    Allow from all
+</FilesMatch>
+
+# ============ CACHE IMAGES ============
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>

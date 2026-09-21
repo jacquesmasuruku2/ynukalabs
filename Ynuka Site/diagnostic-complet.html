@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnostic Complet API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; border: none; border-radius: 4px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        .info { color: blue; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .section h3 { margin-top: 0; }
+        input[type="text"] { padding: 8px; width: 300px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic Complet API Ynuka Labs</h1>
+        
+        <div class="section">
+            <h3>1. Configuration URL</h3>
+            <label>URL API à tester:</label><br>
+            <input type="text" id="apiUrl" value="https://admin.ynukalabs.com/api/api.php">
+            <button class="btn-primary" onclick="runAllTests()">Lancer tous les tests</button>
+            <button class="btn-secondary" onclick="clearResults()">Effacer</button>
+        </div>
+
+        <div class="section">
+            <h3>2. Tests de connectivité</h3>
+            <button class="btn-primary" onclick="testBasicFetch()">Test Fetch Basique</button>
+            <button class="btn-primary" onclick="testNoCors()">Test Mode No-CORS</button>
+            <button class="btn-primary" onclick="testImageLoad()">Test Chargement Image</button>
+            <pre id="connectivityResults">En attente...</pre>
+        </div>
+
+        <div class="section">
+            <h3>3. Tests API</h3>
+            <button class="btn-success" onclick="testPing()">Test Ping</button>
+            <button class="btn-success" onclick="testContact()">Test Contact</button>
+            <pre id="apiResults">En attente...</pre>
+        </div>
+
+        <div class="section">
+            <h3>4. Informations Navigateur</h3>
+            <pre id="browserInfo"></pre>
+        </div>
+
+        <div class="section">
+            <h3>5. Solutions suggérées</h3>
+            <pre id="solutions">Les solutions apparaîtront après les tests</pre>
+        </div>
+    </div>
+
+    <script>
+        function getApiUrl() {
+            return document.getElementById('apiUrl').value;
+        }
+
+        function appendResult(elementId, text, className = '') {
+            const element = document.getElementById(elementId);
+            const span = document.createElement('span');
+            span.className = className;
+            span.textContent = text + '\n';
+            element.appendChild(span);
+        }
+
+        function clearResults() {
+            document.getElementById('connectivityResults').textContent = 'En attente...';
+            document.getElementById('apiResults').textContent = 'En attente...';
+            document.getElementById('solutions').textContent = 'Les solutions apparaîtront après les tests';
+        }
+
+        function showBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                secureContext: window.isSecureContext,
+                location: window.location.href
+            };
+            document.getElementById('browserInfo').textContent = JSON.stringify(info, null, 2);
+        }
+
+        async function testBasicFetch() {
+            const results = document.getElementById('connectivityResults');
+            results.textContent = '';
+            const url = getApiUrl();
+            
+            appendResult('connectivityResults', '=== Test Fetch Basique ===', 'info');
+            appendResult('connectivityResults', 'URL: ' + url, 'info');
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(url + '?action=ping', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const duration = Date.now() - start;
+                
+                appendResult('connectivityResults', 'Temps de réponse: ' + duration + 'ms', 'info');
+                appendResult('connectivityResults', 'Status: ' + response.status + ' ' + response.statusText, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    appendResult('connectivityResults', '✅ SUCCÈS: API accessible et répond correctement', 'success');
+                    appendResult('connectivityResults', 'Données: ' + JSON.stringify(data).substring(0, 200) + '...', 'info');
+                } else {
+                    const text = await response.text();
+                    appendResult('connectivityResults', '❌ ERREUR HTTP: ' + text, 'error');
+                }
+            } catch (error) {
+                appendResult('connectivityResults', '❌ ERREUR: ' + error.message, 'error');
+                analyzeError(error.message);
+            }
+        }
+
+        async function testNoCors() {
+            const url = getApiUrl();
+            appendResult('connectivityResults', '\n=== Test Mode No-CORS ===', 'info');
+            
+            try {
+                const response = await fetch(url + '?action=ping', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                appendResult('connectivityResults', 'Status: ' + response.status, 'info');
+                appendResult('connectivityResults', 'Type: ' + response.type, 'info');
+                
+                if (response.type === 'opaque') {
+                    appendResult('connectivityResults', '✅ Le serveur répond mais CORS bloque la lecture', 'warning');
+                    appendResult('connectivityResults', 'Solution: Configurer CORS dans api.php', 'info');
+                }
+            } catch (error) {
+                appendResult('connectivityResults', '❌ ERREUR: ' + error.message, 'error');
+                appendResult('connectivityResults', 'Le serveur est inaccessible ou l\'URL est incorrecte', 'error');
+            }
+        }
+
+        async function testImageLoad() {
+            const url = getApiUrl();
+            appendResult('connectivityResults', '\n=== Test Chargement Image ===', 'info');
+            
+            // Essayer de charger une image du même domaine
+            const imgUrl = url.replace('api.php', 'logo.png');
+            
+            try {
+                const img = new Image();
+                img.onload = () => {
+                    appendResult('connectivityResults', '✅ Image chargée: Le domaine est accessible', 'success');
+                };
+                img.onerror = () => {
+                    appendResult('connectivityResults', '⚠️ Image non trouvée (normal si pas d\'image)', 'warning');
+                };
+                img.src = imgUrl;
+            } catch (error) {
+                appendResult('connectivityResults', '❌ Erreur: ' + error.message, 'error');
+            }
+        }
+
+        async function testPing() {
+            const results = document.getElementById('apiResults');
+            results.textContent = '';
+            const url = getApiUrl();
+            
+            appendResult('apiResults', '=== Test Ping API ===', 'info');
+            
+            try {
+                const response = await fetch(url + '?action=ping', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    appendResult('apiResults', '✅ Ping réussi', 'success');
+                    appendResult('apiResults', JSON.stringify(data, null, 2), 'info');
+                } else {
+                    const text = await response.text();
+                    appendResult('apiResults', '❌ Erreur: ' + text, 'error');
+                }
+            } catch (error) {
+                appendResult('apiResults', '❌ Erreur: ' + error.message, 'error');
+            }
+        }
+
+        async function testContact() {
+            const url = getApiUrl();
+            appendResult('apiResults', '\n=== Test Contact ===', 'info');
+            
+            try {
+                const response = await fetch(url + '?action=create&resource=contact_messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test Diagnostic',
+                        email: 'test@diagnostic.com',
+                        subject: 'Test',
+                        message: 'Message de test diagnostic'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    appendResult('apiResults', '✅ Contact réussi', 'success');
+                    appendResult('apiResults', JSON.stringify(data, null, 2), 'info');
+                } else {
+                    const text = await response.text();
+                    appendResult('apiResults', '❌ Erreur: ' + text, 'error');
+                }
+            } catch (error) {
+                appendResult('apiResults', '❌ Erreur: ' + error.message, 'error');
+            }
+        }
+
+        function analyzeError(errorMessage) {
+            const solutions = document.getElementById('solutions');
+            let suggestions = [];
+            
+            if (errorMessage.includes('Failed to fetch')) {
+                suggestions.push('ERREUR: Failed to fetch');
+                suggestions.push('');
+                suggestions.push('Causes possibles:');
+                suggestions.push('1. L\'API n\'est pas déployée sur le serveur');
+                suggestions.push('2. Problème CORS (Cross-Origin Resource Sharing)');
+                suggestions.push('3. Problème SSL/TLS (certificat invalide)');
+                suggestions.push('4. Firewall bloque les requêtes');
+                suggestions.push('5. L\'URL est incorrecte');
+                suggestions.push('');
+                suggestions.push('Solutions:');
+                suggestions.push('- Vérifiez que les fichiers sont uploadés sur public_html/php/');
+                suggestions.push('- Testez l\'URL directement dans le navigateur');
+                suggestions.push('- Vérifiez les headers CORS dans api.php');
+                suggestions.push('- Essayez avec http:// au lieu de https:// (pour test uniquement)');
+            }
+            
+            if (errorMessage.includes('CORS')) {
+                suggestions.push('ERREUR: CORS');
+                suggestions.push('- Ajoutez headers CORS dans api.php');
+                suggestions.push('- Vérifiez Access-Control-Allow-Origin');
+            }
+            
+            if (errorMessage.includes('SSL') || errorMessage.includes('certificate')) {
+                suggestions.push('ERREUR: SSL/TLS');
+                suggestions.push('- Vérifiez le certificat SSL du serveur');
+                suggestions.push('- Le certificat doit être valide pour ynukalabs.com');
+            }
+            
+            solutions.textContent = suggestions.join('\n');
+        }
+
+        async function runAllTests() {
+            clearResults();
+            showBrowserInfo();
+            await testBasicFetch();
+            await testNoCors();
+            await testImageLoad();
+            await testPing();
+            await testContact();
+        }
+
+        // Afficher les infos au chargement
+        showBrowserInfo();
+    </script>
+</body>
+</html>

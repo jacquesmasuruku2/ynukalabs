@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "site_menu_items",
+  "info": {
+    "singularName": "site-menu-item",
+    "pluralName": "site-menu-items",
+    "displayName": "Site Menu Item"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "labelKey": {
+      "type": "string",
+      "required": true
+    },
+    "path": {
+      "type": "string",
+      "required": true
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "group": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::site-menu-group.site-menu-group",
+      "inversedBy": "items"
+    }
+  }
+}

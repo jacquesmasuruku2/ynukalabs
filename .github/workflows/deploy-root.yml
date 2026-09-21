@@ -1,0 +1,41 @@
+name: Deploy Root Config & Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'vercel.json'
+      - 'API_SETUP.md'
+      - 'DEPLOYMENT_CHECKLIST.md'
+      - '.github/workflows/deploy-root.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Copy config files to Interserver
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: |
+            vercel.json
+            API_SETUP.md
+            DEPLOYMENT_CHECKLIST.md
+          target: "/home/ynukalab/public_html/"
+          strip_components: 0
+          overwrite: true
+
+      - name: Verify files
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "✓ Config files updated"
+            ls -la /home/ynukalab/public_html/{vercel.json,API_SETUP.md,DEPLOYMENT_CHECKLIST.md} 2>/dev/null || echo "Some files not found (normal if first deploy)"
