@@ -72,7 +72,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="animate-pulse overflow-hidden rounded-none border border-[#0f2847]/10 dark:border-white/10"
+                className="animate-pulse overflow-hidden rounded-card border border-[#0f2847]/10 dark:border-white/10"
               >
                 <div className="aspect-[16/9] bg-muted" />
                 <div className="h-32 bg-muted/40" />
@@ -100,7 +100,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: Math.min(i * 0.06, 0.3) }}
-                  className="group flex h-full flex-col overflow-hidden rounded-none border border-[#0f2847]/12 bg-white transition-colors duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:bg-[#12253f]"
+                  className="group flex h-full flex-col overflow-hidden rounded-card border border-[#0f2847]/12 bg-white transition-colors duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:bg-[#12253f]"
                 >
                   <Link to={`/blog/${post.id}`} className="relative block aspect-[16/9] overflow-hidden bg-[#152a48]">
                     {post.cover_url ? (

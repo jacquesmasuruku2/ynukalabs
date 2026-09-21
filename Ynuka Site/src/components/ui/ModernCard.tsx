@@ -7,7 +7,7 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ children, className = "", hover = true }) => {
-  const baseClasses = "bg-card text-card-foreground rounded-xl border border-border transition-colors duration-300";
+  const baseClasses = "bg-card text-card-foreground rounded-card border border-border transition-colors duration-300";
   const hoverClasses = hover ? "hover:border-[#ffb800]/40 transition-colors duration-200" : "";
   return (
     <div className={`${baseClasses} ${hoverClasses} ${className}`}>

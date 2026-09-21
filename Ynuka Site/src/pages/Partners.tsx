@@ -131,7 +131,7 @@ const Partners = () => {
                     className="block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/90"
                     aria-label={partner.name}
                   >
-                    <div className="bg-white rounded-2xl border border-black/10 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center">
+                    <div className="bg-white rounded-card border border-black/10 p-4 md:p-5 h-[100px] w-[200px] md:h-[108px] md:w-[220px] flex items-center justify-center">
                       <img
                         src={partner.logo}
                         alt=""

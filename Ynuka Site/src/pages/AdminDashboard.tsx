@@ -387,22 +387,22 @@ const AdminDashboard = () => {
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="glass rounded-card p-4 text-center">
               <Calendar className="h-6 w-6 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold">{events.length}</p>
               <p className="text-xs text-muted-foreground">{t("admin.totalEvents")}</p>
             </div>
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="glass rounded-card p-4 text-center">
               <Users className="h-6 w-6 text-accent mx-auto mb-2" />
               <p className="text-2xl font-bold">{registrations.length}</p>
               <p className="text-xs text-muted-foreground">{t("admin.totalRegistrations")}</p>
             </div>
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="glass rounded-card p-4 text-center">
               <FileText className="h-6 w-6 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold">{blogPosts.length}</p>
               <p className="text-xs text-muted-foreground">{t("admin.totalPosts")}</p>
             </div>
-            <div className="glass rounded-xl p-4 text-center">
+            <div className="glass rounded-card p-4 text-center">
               <Mail className="h-6 w-6 text-accent mx-auto mb-2" />
               <p className="text-2xl font-bold">{subscribers.length}</p>
               <p className="text-xs text-muted-foreground">{t("admin.totalSubscribers")}</p>
@@ -451,7 +451,7 @@ const AdminDashboard = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-              <div className="glass rounded-xl overflow-hidden">
+              <div className="glass rounded-card overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -497,7 +497,7 @@ const AdminDashboard = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="glass rounded-xl overflow-hidden">
+              <div className="glass rounded-card overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -563,7 +563,7 @@ const AdminDashboard = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-              <div className="glass rounded-xl overflow-hidden">
+              <div className="glass rounded-card overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -601,7 +601,7 @@ const AdminDashboard = () => {
           {/* Newsletter Tab */}
           {activeTab === "newsletter" && (
             <div>
-              <div className="glass rounded-xl overflow-hidden">
+              <div className="glass rounded-card overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>

@@ -35,7 +35,7 @@ const AdminLogin = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-2xl p-8 w-full max-w-md"
+        className="glass rounded-card p-8 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">

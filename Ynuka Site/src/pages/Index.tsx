@@ -250,11 +250,11 @@ const Index = () => {
           subtitle={t("home.upcomingSubtitle")} 
         />
         {eventsLoading ? (
-          <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+          <div className="flex min-h-[200px] items-center justify-center rounded-card border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
             Chargement des événements...
           </div>
         ) : upcomingEvents.length === 0 ? (
-          <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+          <div className="flex min-h-[200px] items-center justify-center rounded-card border border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
             Aucun événement publié pour le moment.
           </div>
         ) : (
@@ -336,7 +336,7 @@ const Index = () => {
                   key={`${partner.name}-${i}`}
                   className="flex flex-col items-center min-w-[200px] max-w-[220px] flex-shrink-0"
                 >
-                  <div className="w-full bg-white rounded-2xl border border-black/10 p-4 md:p-5 flex items-center justify-center min-h-[100px] mb-3">
+                  <div className="w-full bg-white rounded-card border border-black/10 p-4 md:p-5 flex items-center justify-center min-h-[100px] mb-3">
                     <img
                       src={partner.logo}
                       alt={partner.name}

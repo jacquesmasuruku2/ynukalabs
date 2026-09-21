@@ -125,7 +125,7 @@ const Catalog = () => {
                     key={i}
                     {...fadeUp}
                     transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-                    className="glass rounded-xl p-6 hover:border-primary/30 transition-colors"
+                    className="glass rounded-card p-6 hover:border-primary/30 transition-colors"
                   >
                     <h3 className="font-display font-semibold mb-2">{item.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>

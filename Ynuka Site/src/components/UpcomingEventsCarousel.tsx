@@ -172,7 +172,7 @@ export function EventSlideCard({
   const card = (
     <article
       className={cn(
-        "flex h-full min-h-[300px] flex-col overflow-hidden rounded-none border transition-colors md:min-h-[320px]",
+        "flex h-full min-h-[300px] flex-col overflow-hidden rounded-card border transition-colors md:min-h-[320px]",
         isDark
           ? "border-[#ffb800]/45 bg-[#0f2847] text-white"
           : "border-black/[0.08] bg-white text-[#0f2847] dark:border-[#3b82f6]/30 dark:bg-[#152a48] dark:text-[#dbeafe]",

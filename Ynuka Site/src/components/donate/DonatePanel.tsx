@@ -528,7 +528,7 @@ const DonatePanel = ({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-xl p-6 md:p-7 border border-border/70"
+          className="glass rounded-card p-6 md:p-7 border border-border/70"
         >
           <div className="flex items-center gap-2 mb-2">
             <Smartphone className="h-5 w-5 text-primary shrink-0" />
@@ -545,7 +545,7 @@ const DonatePanel = ({
                 <button
                   type="button"
                   onClick={() => setMobileSubview("rdc-logos")}
-                  className="flex flex-col items-start gap-3 rounded-xl border border-border bg-background/70 p-5 text-left transition hover:border-primary/50 hover:bg-secondary/40"
+                  className="flex flex-col items-start gap-3 rounded-card border border-border bg-background/70 p-5 text-left transition hover:border-primary/50 hover:bg-secondary/40"
                 >
                   <Smartphone className="h-8 w-8 text-primary" aria-hidden />
                   <span className="font-display text-base font-semibold text-foreground">{t("onboarding.mobilePathRdcTitle")}</span>
@@ -554,7 +554,7 @@ const DonatePanel = ({
                 <button
                   type="button"
                   onClick={() => setMobileSubview("flutterwave")}
-                  className="flex flex-col items-start gap-3 rounded-xl border border-border bg-background/70 p-5 text-left transition hover:border-primary/50 hover:bg-secondary/40"
+                  className="flex flex-col items-start gap-3 rounded-card border border-border bg-background/70 p-5 text-left transition hover:border-primary/50 hover:bg-secondary/40"
                 >
                   <CreditCard className="h-8 w-8 text-primary" aria-hidden />
                   <span className="font-display text-base font-semibold text-foreground">{t("onboarding.mobilePathFlutterwaveTitle")}</span>
@@ -588,7 +588,7 @@ const DonatePanel = ({
                       setRdcOperator(op);
                       setMobileSubview("rdc-form");
                     }}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-border bg-background/80 p-4 transition hover:border-primary/60 hover:bg-secondary/50"
+                    className="flex flex-col items-center gap-2 rounded-card border border-border bg-background/80 p-4 transition hover:border-primary/60 hover:bg-secondary/50"
                   >
                     <div className="flex h-16 w-full items-center justify-center rounded-lg bg-secondary/50">
                       {!rdcLogoFailed[op] ? (
@@ -706,7 +706,7 @@ const DonatePanel = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ y: -2 }}
-          className="glass rounded-xl p-6 md:p-7 border border-border/70"
+          className="glass rounded-card p-6 md:p-7 border border-border/70"
         >
           <div className="flex items-center gap-2 mb-1">
             <Wallet className="h-5 w-5 text-primary" />
@@ -714,7 +714,7 @@ const DonatePanel = ({
           </div>
           <p className="text-foreground/80 mb-5">{t("onboarding.cryptoHow")}</p>
 
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 md:p-5 mb-6">
+          <div className="rounded-card border border-primary/20 bg-primary/5 p-4 md:p-5 mb-6">
             <div className="mb-3 inline-flex items-center rounded-md border border-primary/30 bg-background/70 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
               Preprod
             </div>

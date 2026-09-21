@@ -397,7 +397,7 @@ const Presentation = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="rounded-2xl border border-white/10 bg-slate-900/40 p-6"
+                className="rounded-card border border-white/10 bg-slate-900/40 p-6"
               >
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#ffb800]/15 text-[#ffb800] text-lg font-bold">
                   {index + 1}

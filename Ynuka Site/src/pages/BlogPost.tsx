@@ -281,7 +281,7 @@ const BlogPost = () => {
             </h2>
 
             {comments.map((c) => (
-              <div key={c.id} className="glass rounded-xl p-4 mb-4">
+              <div key={c.id} className="glass rounded-card p-4 mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-sm">{c.author_name}</span>
                   <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
@@ -303,7 +303,7 @@ const BlogPost = () => {
               </Button>
             )}
 
-            {isCommentFormOpen && <form onSubmit={handleComment} className="glass rounded-xl p-6 mt-6 space-y-4">
+            {isCommentFormOpen && <form onSubmit={handleComment} className="glass rounded-card p-6 mt-6 space-y-4">
               <h3 className="font-display font-semibold">{t("blog.addComment")}</h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input placeholder={t("blog.yourName")} value={commentForm.author_name} onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })} required />

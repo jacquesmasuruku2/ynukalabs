@@ -107,7 +107,7 @@ const Gallery = () => {
                     viewport={{ once: true, margin: "-40px" }}
                     transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.04, 0.28) }}
                     onClick={() => setSelectedImage(img)}
-                    className={`group relative overflow-hidden rounded-none border border-[#0f2847]/10 text-left dark:border-white/10 ${spanClass}`}
+                    className={`group relative overflow-hidden rounded-card border border-[#0f2847]/10 text-left dark:border-white/10 ${spanClass}`}
                   >
                     <img
                       src={img.imageUrl}

@@ -73,7 +73,7 @@ function ProjectCard({
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay }}
       viewport={{ once: true }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-none border border-[#0f2847]/12 bg-[#0f2847] transition-all duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:hover:border-[#ffb800]/55"
+      className="group relative flex h-full flex-col overflow-hidden rounded-card border border-[#0f2847]/12 bg-[#0f2847] transition-all duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:hover:border-[#ffb800]/55"
     >
       <div className="relative aspect-[16/7] overflow-hidden bg-[#152a48]">
         <img
@@ -356,7 +356,7 @@ const Projects = () => {
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="animate-pulse overflow-hidden rounded-none border border-[#0f2847]/10 bg-muted/50 dark:border-white/10"
+                  className="animate-pulse overflow-hidden rounded-card border border-[#0f2847]/10 bg-muted/50 dark:border-white/10"
                 >
                   <div className="aspect-[16/7] bg-muted" />
                   <div className="h-20 bg-muted/40" />
@@ -377,7 +377,7 @@ const Projects = () => {
               ))}
 
               {filteredProjects.length === 0 && (
-                <div className="rounded-none border border-border/70 bg-card/60 p-5 text-center text-muted-foreground sm:col-span-2 lg:col-span-3">
+                <div className="rounded-card border border-border/70 bg-card/60 p-5 text-center text-muted-foreground sm:col-span-2 lg:col-span-3">
                   {emptyMessage}
                 </div>
               )}

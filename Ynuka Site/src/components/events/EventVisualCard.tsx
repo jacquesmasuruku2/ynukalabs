@@ -86,7 +86,7 @@ const EventVisualCard = ({
   return (
     <div
       className={cn(
-        "flex overflow-hidden rounded-none bg-[#0f2847] text-white ring-1 ring-[#ffb800]/35",
+        "flex overflow-hidden rounded-card bg-[#0f2847] text-white ring-1 ring-[#ffb800]/35",
         compact ? "min-h-[150px] p-3.5 md:min-h-[190px] md:p-4" : "min-h-[260px] p-4 md:min-h-[300px] md:p-5",
         className
       )}
@@ -136,7 +136,7 @@ const EventVisualCard = ({
         <div className="mt-auto overflow-hidden pt-2">
           <div
             className={cn(
-              "w-full overflow-hidden rounded-none bg-[#0a3d44] ring-1 ring-[#ffb800]/20",
+              "w-full overflow-hidden rounded-card bg-[#0a3d44] ring-1 ring-[#ffb800]/20",
               compact ? "aspect-[16/4.6] md:aspect-[16/5]" : "aspect-[16/6.5] md:aspect-[16/7]"
             )}
           >

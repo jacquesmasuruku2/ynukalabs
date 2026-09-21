@@ -106,7 +106,7 @@ function VoiceTestimonialCard({ tm }: { tm: VoiceTestimonial }) {
         />
 
         <div className="flex min-w-0 flex-1 flex-col justify-center sm:pl-4">
-          <div className="flex flex-col rounded-2xl bg-gradient-to-br from-[#0f2847]/5 via-[#ffb800]/10 to-transparent px-3 py-3 dark:from-white/5 dark:via-[#ffb800]/10 dark:to-transparent">
+          <div className="flex flex-col rounded-card bg-gradient-to-br from-[#0f2847]/5 via-[#ffb800]/10 to-transparent px-3 py-3 dark:from-white/5 dark:via-[#ffb800]/10 dark:to-transparent">
             <blockquote
               ref={quoteRef}
               lang={i18n.language}
@@ -279,7 +279,7 @@ function ShareTestimonialCard({ onFormOpenChange }: { onFormOpenChange?: (open: 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center gap-3 rounded-xl border border-dashed border-[#ffb800]/70 bg-[#ffb800]/5 p-3 text-left transition-colors hover:bg-[#ffb800]/10"
+                className="flex w-full items-center gap-3 rounded-card border border-dashed border-[#ffb800]/70 bg-[#ffb800]/5 p-3 text-left transition-colors hover:bg-[#ffb800]/10"
               >
                 <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#0f2847]/10">
                   {imagePreview ? (

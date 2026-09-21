@@ -46,7 +46,7 @@ const ToolsGridSection = ({ showHeading = true }: ToolsGridSectionProps) => {
               key={i}
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-              className="glass rounded-xl p-6 hover:border-primary/30 transition-colors"
+              className="glass rounded-card p-6 hover:border-primary/30 transition-colors"
             >
               <tool.icon className="h-8 w-8 text-primary mb-4" />
               <h3 className="font-display text-lg font-semibold mb-2">{tool.title}</h3>

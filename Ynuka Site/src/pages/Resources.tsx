@@ -149,7 +149,7 @@ const Resources = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-40px" }}
                     transition={{ duration: 0.45, delay: Math.min(imgIndex * 0.04, 0.28) }}
-                    className={`group relative overflow-hidden rounded-none border border-[#0f2847]/10 bg-[#0f2847]/5 dark:border-white/10 ${spanClass}`}
+                    className={`group relative overflow-hidden rounded-card border border-[#0f2847]/10 bg-[#0f2847]/5 dark:border-white/10 ${spanClass}`}
                   >
                     <img
                       src={img.imageUrl}

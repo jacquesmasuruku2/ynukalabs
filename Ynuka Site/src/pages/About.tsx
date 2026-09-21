@@ -585,7 +585,7 @@ const About = () => {
             </p>
           </motion.div>
 
-          <div className="overflow-hidden rounded-none border border-[#0f2847]/12 bg-white/40 dark:border-white/10 dark:bg-white/[0.02]">
+          <div className="overflow-hidden rounded-card border border-[#0f2847]/12 bg-white/40 dark:border-white/10 dark:bg-white/[0.02]">
             {services.map((service, i) => {
               const open = selectedServiceIndex === i;
               const contactHref = `/contact?subject=${encodeURIComponent(
@@ -782,7 +782,7 @@ const About = () => {
                   viewport={{ once: true }}
                   className="group flex flex-col text-center"
                 >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#e8eef5]">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-card bg-[#e8eef5]">
                     {hasImage ? (
                       <img
                         src={member.image}

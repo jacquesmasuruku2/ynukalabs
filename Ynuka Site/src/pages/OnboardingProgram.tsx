@@ -23,7 +23,7 @@ const ImpactStat = ({ value, suffix, label }: { value: number; suffix?: string; 
   const { count, barProgress, elementRef } = useCountUp({ end: value, duration: 1800, startOnView: true });
 
   return (
-    <div ref={elementRef} className="glass rounded-xl p-6 text-center">
+    <div ref={elementRef} className="glass rounded-card p-6 text-center">
       <p className="font-display text-4xl font-bold text-primary">
         {suffix ?? ""}
         {count}
@@ -129,7 +129,7 @@ const OnboardingProgram = () => {
             >
               <div className="grid h-full grid-cols-1 lg:grid-cols-2 lg:gap-4">
                 {/* Image (gauche) */}
-                <div className="relative min-h-[360px] lg:min-h-0 overflow-hidden rounded-2xl border border-border">
+                <div className="relative min-h-[360px] lg:min-h-0 overflow-hidden rounded-card border border-border">
                   <AnimatePresence mode="wait">
                     {missingImages.includes(currentImageIndex) ? (
                       <motion.div
@@ -191,7 +191,7 @@ const OnboardingProgram = () => {
             id="impact"
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.08 }}
-            className="glass rounded-xl p-8 scroll-mt-28"
+            className="glass rounded-card p-8 scroll-mt-28"
           >
             <div className="flex items-center justify-center gap-3 mb-6 text-center">
               <TrendingUp className="h-6 w-6 text-primary" />
@@ -204,7 +204,7 @@ const OnboardingProgram = () => {
               <ImpactStat value={1} label={t("onboarding.stats.hub")} />
             </div>
 
-            <div className="mt-8 rounded-2xl border border-border bg-secondary/20 p-6 md:p-7">
+            <div className="mt-8 rounded-card border border-border bg-secondary/20 p-6 md:p-7">
               <h3 className="font-display text-xl font-semibold mb-2 text-center">
                 {t("onboarding.testimonials.title")}
               </h3>
@@ -219,7 +219,7 @@ const OnboardingProgram = () => {
                   return (
                     <div
                       key={idx}
-                      className="rounded-xl border border-border/70 bg-background/60 p-4"
+                      className="rounded-card border border-border/70 bg-background/60 p-4"
                     >
                       <div className="w-full aspect-square rounded-lg overflow-hidden bg-secondary/40 mb-3 flex items-center justify-center text-xs text-muted-foreground text-center px-2">
                         <img
@@ -270,7 +270,7 @@ const OnboardingProgram = () => {
             id="donate"
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.16 }}
-            className="glass rounded-xl p-8 scroll-mt-28"
+            className="glass rounded-card p-8 scroll-mt-28"
           >
             <div className="flex items-center justify-center gap-3 mb-6 text-center">
               <HandCoins className="h-6 w-6 text-primary" />
@@ -282,7 +282,7 @@ const OnboardingProgram = () => {
 
             <DonatePanel donationContext="onboarding_program" showTitle={false} />
 
-            <div className="rounded-2xl border border-border bg-gradient-to-br from-secondary/40 to-secondary/20 p-6 md:p-7 mt-6">
+            <div className="rounded-card border border-border bg-gradient-to-br from-secondary/40 to-secondary/20 p-6 md:p-7 mt-6">
               <h3 className="font-display text-xl font-semibold mb-2 text-center">
                 {t("onboarding.ideaTitle")}
               </h3>

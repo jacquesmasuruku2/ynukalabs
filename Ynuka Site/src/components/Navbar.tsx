@@ -559,7 +559,7 @@ const Navbar = () => {
 
       {/* Menu mobile */}
       {mobileOpen && (
-        <div className="absolute left-0 right-0 top-full z-40 max-h-[min(85vh,calc(100dvh-5rem))] overflow-y-auto border-b border-border bg-background/98 px-4 pb-8 pt-4 lg:hidden">
+        <div className="absolute left-0 right-0 top-full z-40 max-h-[min(85vh,calc(100dvh-5rem))] overflow-y-auto border-b border-slate-200/90 bg-white px-4 pb-8 pt-4 shadow-[0_18px_40px_-12px_rgba(15,40,71,0.28)] dark:border-slate-600 dark:bg-slate-900 dark:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.55)] lg:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-1">
             {navGroups.map((item) =>
               isGroup(item) ? (

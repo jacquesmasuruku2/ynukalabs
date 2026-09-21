@@ -91,7 +91,7 @@ const ImpactStatCard = ({
       <div
         style={{ animationDelay: `${0.4 + delay}s` }}
         className={cn(
-          "impact-card h-full rounded-2xl border border-white/20 bg-white/[0.04] px-6 py-6 md:px-7 md:py-7",
+          "impact-card h-full rounded-card border border-white/20 bg-white/[0.04] px-6 py-6 md:px-7 md:py-7",
           isWide
             ? "flex flex-col justify-center gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
             : "flex flex-col justify-center"
@@ -188,7 +188,7 @@ function HomeProjectCard({ project, delay }: { project: HomeProject; delay: numb
   );
 
   const cardClass =
-    "flex h-full min-h-[180px] flex-col rounded-2xl border border-slate-200 bg-white px-6 py-5 transition-colors hover:border-[#ffb800]/50 dark:border-[#3b82f6]/25 dark:bg-[#152a48]";
+    "flex h-full min-h-[180px] flex-col rounded-card border border-slate-200 bg-white px-6 py-5 transition-colors hover:border-[#ffb800]/50 dark:border-[#3b82f6]/25 dark:bg-[#152a48]";
   const isExternal = Boolean(project.href && /^https?:\/\//i.test(project.href));
 
   return (
@@ -694,7 +694,7 @@ const Index = () => {
             >
               <div
                 style={{ animationDelay: "0.85s" }}
-                className="impact-card flex h-full items-center justify-center rounded-2xl border border-[#ffb800]/40 bg-[#ffb800]/[0.08] px-6 py-6 text-center md:px-7 md:py-7"
+                className="impact-card flex h-full items-center justify-center rounded-card border border-[#ffb800]/40 bg-[#ffb800]/[0.08] px-6 py-6 text-center md:px-7 md:py-7"
               >
                 <p className="typo-lead mx-auto max-w-[20ch] text-pretty text-center leading-snug text-white">
                   {t("home.statsTagline")}
@@ -849,7 +849,7 @@ const Index = () => {
                     className="min-w-0"
                   >
                     <Link to={`/blog/${featuredBlogPost.id}`} className="group block">
-                      <div className="relative overflow-hidden rounded-2xl">
+                      <div className="relative overflow-hidden rounded-card">
                         <img
                           src={cover(featuredBlogPost)}
                           alt=""
@@ -898,9 +898,9 @@ const Index = () => {
                       >
                         <Link
                           to={`/blog/${post.id}`}
-                          className="group flex gap-3.5 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 transition-colors hover:border-[#ffb800]/40 hover:bg-white dark:border-[#3b82f6]/20 dark:bg-[#152a48]/70 dark:hover:bg-[#152a48]"
+                          className="group flex gap-3.5 rounded-card border border-slate-100 bg-slate-50/80 p-3 transition-colors hover:border-[#ffb800]/40 hover:bg-white dark:border-[#3b82f6]/20 dark:bg-[#152a48]/70 dark:hover:bg-[#152a48]"
                         >
-                          <div className="h-[92px] w-[108px] shrink-0 overflow-hidden rounded-xl sm:h-[100px] sm:w-[118px]">
+                          <div className="h-[92px] w-[108px] shrink-0 overflow-hidden rounded-card sm:h-[100px] sm:w-[118px]">
                             <img
                               src={cover(post)}
                               alt=""

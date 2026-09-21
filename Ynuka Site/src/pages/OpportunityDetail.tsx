@@ -405,7 +405,7 @@ const OpportunityDetail = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-12 rounded-2xl overflow-hidden"
+                className="mb-12 rounded-card overflow-hidden"
               >
                 <img
                   src={opportunity.cover_url}
