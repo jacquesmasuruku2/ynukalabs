@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Calendar, Users, X, MessageCircle } from "lucide-react";
 import Container from "@/components/ui/Container";
-import { teamMembers, type TeamMember } from "@/data/teamMembers";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { teamMembers, type TeamMember, mapAdminTeamMember, mergeTeamMembers } from "@/data/teamMembers";
+import { fetchTeamMembers } from "@/lib/api";
 import "@/styles/AboutDesign.css";
 
 // Custom LinkedIn icon since it's not available in lucide-react
@@ -222,33 +222,11 @@ const Presentation = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/team-members?populate=image&pagination[pageSize]=100"
-        );
-        const items = res.data || [];
-
-        const mapped: TeamMember[] = items
-          .map((item) => {
-            const it = item as { id?: string | number; attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const imageUrl = mediaToUrl(attrs.image) ?? "";
-
-            return {
-              name: String(attrs.name ?? ""),
-              role: String(attrs.role ?? ""),
-              image: imageUrl,
-              social: {
-                x: String(attrs.social_x ?? attrs.x ?? ""),
-                telegram: String(attrs.social_telegram ?? attrs.telegram ?? ""),
-                linkedin: String(attrs.social_linkedin ?? attrs.linkedin ?? ""),
-              },
-            } satisfies TeamMember;
-          })
-          .filter((m) => m.name && m.role);
-
-        if (mapped.length) setTeam(mapped);
+        const items = await fetchTeamMembers(100);
+        const mapped = items.map(mapAdminTeamMember).filter((m) => m.name && m.role);
+        setTeam(mergeTeamMembers(teamMembers, mapped));
       } catch {
-        // fallback: teamMembers local
+        setTeam(mergeTeamMembers(teamMembers, []));
       }
     };
 

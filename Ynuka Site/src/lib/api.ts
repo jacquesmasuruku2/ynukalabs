@@ -391,6 +391,7 @@ export async function fetchTeamMembers(limit = 50) {
     image: item.imageUrl || item.image || "",
     slug: item.slug || "",
     description: item.description || "",
+    portfolioUrl: item.portfolioUrl || "",
     social: {
       x: item.xUrl || "",
       linkedin: item.linkedinUrl || "",

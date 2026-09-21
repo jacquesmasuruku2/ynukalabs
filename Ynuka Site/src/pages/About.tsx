@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Container from "@/components/ui/Container";
 import "@/styles/AboutDesign.css";
-import { teamMembers, type TeamMember } from "@/data/teamMembers";
+import { teamMembers, type TeamMember, mapAdminTeamMember, mergeTeamMembers } from "@/data/teamMembers";
 import { fetchPartners, fetchTeamMembers } from "@/lib/api";
 
 const FALLBACK_ABOUT_HERO_BG = "/about/about.jpg";
@@ -107,24 +107,10 @@ const About = () => {
     const fetchTeam = async () => {
       try {
         const items = await fetchTeamMembers(100);
-        const mapped: TeamMember[] = items
-          .map((item) => ({
-            slug: item.slug || String(item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-            name: item.name || "",
-            role: item.role || "",
-            image: item.image || "",
-            description: item.description || "",
-            social: {
-              x: item.social?.x || "",
-              telegram: item.social?.telegram || "",
-              linkedin: item.social?.linkedin || "",
-            },
-          }))
-          .filter((m) => m.name && m.role);
-
-        if (mapped.length) setTeam(mapped);
+        const mapped = items.map(mapAdminTeamMember).filter((m) => m.name && m.role);
+        setTeam(mergeTeamMembers(teamMembers, mapped));
       } catch {
-        // fallback: teamMembers local
+        setTeam(mergeTeamMembers(teamMembers, []));
       }
     };
 

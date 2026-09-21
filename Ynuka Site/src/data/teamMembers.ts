@@ -201,3 +201,92 @@ export const teamMembers: TeamMember[] = [
 },
 ];
 
+export function slugifyTeamName(name: string): string {
+  return String(name || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function preferSocial(primary?: string, fallback?: string): string {
+  if (primary?.startsWith("http")) return primary;
+  if (fallback?.startsWith("http")) return fallback;
+  if (primary && !primary.startsWith("TO_ADD_")) return primary;
+  if (fallback && !fallback.startsWith("TO_ADD_")) return fallback;
+  return primary || fallback || "";
+}
+
+function preferImage(primary?: string, fallback?: string): string {
+  if (primary?.trim() && !primary.startsWith("TO_ADD_") && !primary.startsWith("http://TO_ADD")) {
+    return primary;
+  }
+  if (fallback?.trim() && !fallback.startsWith("TO_ADD_") && !fallback.startsWith("http://TO_ADD")) {
+    return fallback;
+  }
+  return primary || fallback || "";
+}
+
+/** Fusionne équipe locale + admin. Même slug → admin prioritaire, champs vides gardent le local. */
+export function mergeTeamMembers(local: TeamMember[], fromAdmin: TeamMember[]): TeamMember[] {
+  const bySlug = new Map<string, TeamMember>();
+
+  for (const m of local) {
+    const slug = m.slug || slugifyTeamName(m.name);
+    if (!slug || !m.name) continue;
+    bySlug.set(slug, { ...m, slug });
+  }
+
+  for (const m of fromAdmin) {
+    const slug = m.slug || slugifyTeamName(m.name);
+    if (!slug || !m.name) continue;
+    const prev = bySlug.get(slug);
+    bySlug.set(slug, {
+      slug,
+      name: m.name || prev?.name || "",
+      role: m.role || prev?.role || "",
+      image: preferImage(m.image, prev?.image),
+      description: m.description?.trim() ? m.description : prev?.description || "",
+      portfolioUrl: m.portfolioUrl?.startsWith("http")
+        ? m.portfolioUrl
+        : prev?.portfolioUrl || m.portfolioUrl || "",
+      social: {
+        x: preferSocial(m.social?.x, prev?.social?.x),
+        telegram: preferSocial(m.social?.telegram, prev?.social?.telegram),
+        linkedin: preferSocial(m.social?.linkedin, prev?.social?.linkedin),
+      },
+    });
+  }
+
+  return Array.from(bySlug.values()).filter(
+    (m) =>
+      !m.name.toLowerCase().includes("frederic samvura") &&
+      !m.name.toLowerCase().includes("frédéric samvura")
+  );
+}
+
+export function mapAdminTeamMember(item: {
+  slug?: string;
+  name?: string;
+  role?: string;
+  image?: string;
+  description?: string;
+  portfolioUrl?: string;
+  social?: { x?: string; telegram?: string; linkedin?: string };
+}): TeamMember {
+  return {
+    slug: item.slug || slugifyTeamName(item.name || ""),
+    name: item.name || "",
+    role: item.role || "",
+    image: item.image || "",
+    description: item.description || "",
+    portfolioUrl: item.portfolioUrl || "",
+    social: {
+      x: item.social?.x || "",
+      telegram: item.social?.telegram || "",
+      linkedin: item.social?.linkedin || "",
+    },
+  };
+}
+
