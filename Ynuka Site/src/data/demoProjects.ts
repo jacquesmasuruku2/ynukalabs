@@ -5,7 +5,7 @@
  *   → passer `USE_DEMO_PROJECTS` à `false`
  *   (ou supprimer ce fichier et l'import dans Projects.tsx)
  */
-export const USE_DEMO_PROJECTS = true;
+export const USE_DEMO_PROJECTS = false;
 
 export type DemoProject = {
   id: string;

@@ -231,7 +231,7 @@ const EventDetail = () => {
       <section className="py-10 md:py-12">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           {event.imageUrl ? (
-            <div className="mb-8 overflow-hidden border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+            <div className="mb-8 overflow-hidden rounded-card border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
               <img
                 src={event.imageUrl}
                 alt={title}
@@ -240,7 +240,7 @@ const EventDetail = () => {
             </div>
           ) : null}
 
-          <div className="mb-8 grid gap-5 border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-[#0c1a2e] sm:grid-cols-2">
+          <div className="mb-8 grid gap-5 rounded-card border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-[#0c1a2e] sm:grid-cols-2">
             <div className="flex gap-3">
               <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-[#ffb800]" aria-hidden />
               <DetailRow label={t("events.dateLabel")} value={dateDisplay} />
@@ -328,7 +328,7 @@ const EventDetail = () => {
             upcomingRegister
           )}
 
-          <aside className="mt-10 overflow-hidden border-2 border-[#ffb800] bg-[#0f2847] text-white">
+          <aside className="mt-10 overflow-hidden rounded-card border-2 border-[#ffb800] bg-[#0f2847] text-white">
             <div className="flex flex-col items-center gap-3 px-5 py-5 text-center sm:flex-row sm:justify-between sm:text-left sm:px-6">
               <p className="text-sm font-extrabold sm:text-base">{t("events.supportThisEvent")}</p>
               <Link

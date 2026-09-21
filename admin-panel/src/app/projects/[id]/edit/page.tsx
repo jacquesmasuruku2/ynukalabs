@@ -2,8 +2,9 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import WordEditor from '@/components/WordEditor';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Save, X } from 'lucide-react';
 
 const slugify = (v: string) =>
@@ -14,15 +15,18 @@ const slugify = (v: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
+type CategoryOption = { id: string; title: string };
+
 export default function EditProjectPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [form, setForm] = useState({
     title: '',
     slug: '',
-    category: 'General',
+    category: '',
     description: '',
     status: 'active',
     featuredImage: '',
@@ -33,23 +37,37 @@ export default function EditProjectPage() {
   const update = (k: string, v: string | boolean) => setForm((c) => ({ ...c, [k]: v }));
 
   useEffect(() => {
-    fetch(`/api/projects/${id}`).then(async (res) => {
-      if (!res.ok) return;
-      const d = await res.json();
-      setForm({
-        title: d.title || '',
-        slug: d.slug || '',
-        category: d.category || 'General',
-        description: d.description || '',
-        status: d.status || 'active',
-        featuredImage: d.featuredImage || '',
-        repositoryUrl: d.repositoryUrl || '',
-        liveUrl: d.liveUrl || '',
-        showOnHome: !!d.showOnHome,
-      });
+    Promise.all([
+      fetch(`/api/projects/${id}`).then(async (res) => (res.ok ? res.json() : null)),
+      fetch('/api/categories').then(async (res) => (res.ok ? res.json() : [])),
+    ]).then(([project, cats]) => {
+      const list: CategoryOption[] = Array.isArray(cats)
+        ? cats.map((c: CategoryOption) => ({ id: c.id, title: c.title }))
+        : [];
+      setCategories(list);
+      if (project) {
+        setForm({
+          title: project.title || '',
+          slug: project.slug || '',
+          category: project.category || '',
+          description: project.description || '',
+          status: project.status || 'active',
+          featuredImage: project.featuredImage || '',
+          repositoryUrl: project.repositoryUrl || '',
+          liveUrl: project.liveUrl || '',
+          showOnHome: !!project.showOnHome,
+        });
+      }
       setLoading(false);
     });
   }, [id]);
+
+  const categoryOptions = useMemo(() => {
+    if (!form.category) return categories;
+    const exists = categories.some((c) => c.title === form.category);
+    if (exists) return categories;
+    return [{ id: `legacy-${form.category}`, title: form.category }, ...categories];
+  }, [categories, form.category]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,12 +148,28 @@ export default function EditProjectPage() {
               </div>
               <div className="space-y-5 p-6">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">Catégorie</label>
-                  <input
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">Catégorie *</label>
+                  <select
+                    required
                     value={form.category}
                     onChange={(e) => update('category', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="" disabled>
+                      {categoryOptions.length ? 'Choisir une catégorie' : 'Aucune catégorie — créez-en une'}
+                    </option>
+                    {categoryOptions.map((category) => (
+                      <option key={category.id} value={category.title}>
+                        {category.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-xs text-secondary">
+                    Utilisée pour filtrer les projets sur le site.{' '}
+                    <Link href="/categories" className="text-blue-600 hover:underline">
+                      Gérer les catégories
+                    </Link>
+                  </p>
                 </div>
 
                 <div>

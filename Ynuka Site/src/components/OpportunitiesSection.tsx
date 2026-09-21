@@ -276,15 +276,15 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
   ) : null;
 
   const body = loading ? (
-    <div className="flex min-h-[220px] items-center justify-center border border-dashed border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+    <div className="flex min-h-[220px] items-center justify-center rounded-card border border-dashed border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
       {t("common.loading")}
     </div>
   ) : loadError && displayList.length === 0 ? (
-    <div className="border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+    <div className="rounded-card border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
       <p className="text-lg font-medium">{t("common.loadError")}</p>
     </div>
   ) : displayList.length === 0 ? (
-    <div className="border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+    <div className="rounded-card border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
       <p className="text-lg font-medium">{t("opportunities.empty")}</p>
     </div>
   ) : (

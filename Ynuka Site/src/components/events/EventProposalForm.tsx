@@ -591,11 +591,11 @@ export default function EventProposalForm({ onBackToAgenda }: EventProposalFormP
 
         {/* Aperçu type carte agenda */}
         {(form.title.trim() || imagePreview) && (
-          <div className="border border-slate-200 bg-[#f7f8fa] p-3 dark:border-slate-600 dark:bg-slate-900">
+          <div className="rounded-card border border-slate-200 bg-[#f7f8fa] p-3 dark:border-slate-600 dark:bg-slate-900">
             <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-[#0f2847]/60 dark:text-slate-400">
               {t("events.proposalPreview")}
             </p>
-            <div className="overflow-hidden border border-slate-200 bg-white dark:border-slate-700 dark:bg-[#0c1a2e]">
+            <div className="overflow-hidden rounded-card border border-slate-200 bg-white dark:border-slate-700 dark:bg-[#0c1a2e]">
               <div className="aspect-[16/10] bg-[#0f2847]/10">
                 {imagePreview ? (
                   <img src={imagePreview} alt="" className="h-full w-full object-cover" />

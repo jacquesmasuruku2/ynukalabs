@@ -2,8 +2,9 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import WordEditor from '@/components/WordEditor';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Save, X } from 'lucide-react';
 
 const slugify = (v: string) =>
@@ -14,13 +15,16 @@ const slugify = (v: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
+type CategoryOption = { id: string; title: string };
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [form, setForm] = useState({
     title: '',
     slug: '',
-    category: 'General',
+    category: '',
     description: '',
     status: 'active',
     featuredImage: '',
@@ -29,6 +33,23 @@ export default function NewProjectPage() {
     showOnHome: false,
   });
   const update = (k: string, v: string | boolean) => setForm((c) => ({ ...c, [k]: v }));
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        const list: CategoryOption[] = Array.isArray(data)
+          ? data.map((c: CategoryOption) => ({ id: c.id, title: c.title }))
+          : [];
+        setCategories(list);
+        if (list.length && !form.category) {
+          setForm((c) => ({ ...c, category: list[0].title }));
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- init only
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,12 +127,28 @@ export default function NewProjectPage() {
               </div>
               <div className="space-y-5 p-6">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">Catégorie</label>
-                  <input
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">Catégorie *</label>
+                  <select
+                    required
                     value={form.category}
                     onChange={(e) => update('category', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="" disabled>
+                      {categories.length ? 'Choisir une catégorie' : 'Aucune catégorie — créez-en une'}
+                    </option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.title}>
+                        {category.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-xs text-secondary">
+                    Utilisée pour filtrer les projets sur le site.{' '}
+                    <Link href="/categories" className="text-blue-600 hover:underline">
+                      Gérer les catégories
+                    </Link>
+                  </p>
                 </div>
 
                 <div>

@@ -138,7 +138,7 @@ const BlockchainEcosystemSection = ({
                 whileTap={{ scale: 0.99 }}
                 onClick={() => openChain(id)}
                 className={cn(
-                  "group relative flex min-h-[168px] flex-col items-center justify-between overflow-hidden border border-black/[0.07] bg-white p-5 text-center transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(15,40,71,0.55)] dark:border-white/10 dark:bg-[#151d27]",
+                  "group relative flex min-h-[168px] flex-col items-center justify-between overflow-hidden rounded-card border border-black/[0.07] bg-white p-5 text-center transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(15,40,71,0.55)] dark:border-white/10 dark:bg-[#151d27]",
                   span,
                   selected && "border-[#ffb800] shadow-[0_0_0_1px_#ffb800]"
                 )}

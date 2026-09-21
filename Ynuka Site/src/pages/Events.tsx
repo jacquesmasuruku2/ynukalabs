@@ -268,7 +268,7 @@ const Events = () => {
                 {t("admin.loading")}
               </div>
             ) : loadError ? (
-              <div className="border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-700 dark:bg-[#0c1a2e]">
+              <div className="rounded-card border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-700 dark:bg-[#0c1a2e]">
                 <p className="font-medium text-[#0f2847] dark:text-white">{t("events.loadError")}</p>
                 <p className="mt-2 text-sm text-[#315795] dark:text-slate-400">
                   {t("events.loadErrorHint")}
@@ -283,10 +283,10 @@ const Events = () => {
                 </Button>
               </div>
             ) : events.length === 0 ? (
-              <div className="border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
+              <div className="rounded-card border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
                 {t("events.emptyAll")}
                 {lumaFailed ? (
-                  <div className="mx-auto mt-6 max-w-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                  <div className="mx-auto mt-6 max-w-xl overflow-hidden rounded-card border border-slate-200 dark:border-slate-700">
                     <iframe
                       title={t("events.lumaPageTitle")}
                       src={LUMA_EMBED_URL}
@@ -298,7 +298,7 @@ const Events = () => {
                 ) : null}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
+              <div className="rounded-card border border-slate-200 bg-white py-16 text-center text-sm text-muted-foreground dark:border-slate-700 dark:bg-[#0c1a2e]">
                 {t("events.emptyFilter")}
               </div>
             ) : (

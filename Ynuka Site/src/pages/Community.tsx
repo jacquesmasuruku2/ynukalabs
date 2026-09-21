@@ -72,7 +72,7 @@ function VoiceTestimonialCard({ tm }: { tm: VoiceTestimonial }) {
   return (
     <article
       className={cn(
-        "group relative flex h-full min-h-[210px] shrink-0 overflow-hidden border border-slate-200/90 bg-white shadow-[0_10px_28px_-18px_rgba(15,40,71,0.35)] dark:border-slate-700 dark:bg-[#0c1a2e] dark:shadow-none",
+        "group relative flex h-full min-h-[210px] shrink-0 overflow-hidden rounded-card border border-slate-200/90 bg-white shadow-[0_10px_28px_-18px_rgba(15,40,71,0.35)] dark:border-slate-700 dark:bg-[#0c1a2e] dark:shadow-none",
         VOICE_CARD_WIDTH
       )}
     >
@@ -230,7 +230,7 @@ function ShareTestimonialCard({ onFormOpenChange }: { onFormOpenChange?: (open: 
   return (
     <article
       className={cn(
-        "relative flex h-full min-h-[210px] shrink-0 flex-col justify-between overflow-hidden border border-[#ffb800]/40 bg-[#0f2847] p-5 text-white sm:p-6",
+        "relative flex h-full min-h-[210px] shrink-0 flex-col justify-between overflow-hidden rounded-card border border-[#ffb800]/40 bg-[#0f2847] p-5 text-white sm:p-6",
         VOICE_CARD_WIDTH
       )}
     >
@@ -779,7 +779,7 @@ export function CommunityPageBody() {
                   {...fadeUp}
                   transition={{ ...fadeUp.transition, delay: i * 0.06 }}
                   className={cn(
-                    "grid overflow-hidden border border-slate-200 bg-[#fafafa] dark:border-slate-700 dark:bg-slate-900/30",
+                    "grid overflow-hidden rounded-card border border-slate-200 bg-[#fafafa] dark:border-slate-700 dark:bg-slate-900/30",
                     "md:grid-cols-12 md:min-h-[240px]"
                   )}
                 >
@@ -835,13 +835,13 @@ export function CommunityPageBody() {
             {...fadeUp}
             className="grid grid-cols-2 gap-2 sm:gap-3"
           >
-            <div className="relative col-span-2 aspect-[16/9] overflow-hidden sm:aspect-[2/1]">
+            <div className="relative col-span-2 aspect-[16/9] overflow-hidden rounded-card sm:aspect-[2/1]">
               <img src={teamMosaic[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
             </div>
-            <div className="relative aspect-[4/3] overflow-hidden">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-card">
               <img src={teamMosaic[1]} alt="" className="h-full w-full object-cover" loading="lazy" />
             </div>
-            <div className="relative aspect-[4/3] overflow-hidden">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-card">
               <img src={teamMosaic[2]} alt="" className="h-full w-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-[#ffb800]/20 mix-blend-multiply" />
             </div>
@@ -874,7 +874,7 @@ export function CommunityPageBody() {
       {/* Partenariat — conversation visuelle */}
       <section className="py-16 md:py-20">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
-          <div className="grid overflow-hidden border border-slate-200 dark:border-slate-700 lg:grid-cols-12">
+          <div className="grid overflow-hidden rounded-card border border-slate-200 dark:border-slate-700 lg:grid-cols-12">
             <motion.div
               {...fadeUp}
               className="relative min-h-[280px] lg:col-span-5 lg:min-h-full"
