@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import NewsletterArticleSelector, { type NewsletterArticleOption } from '@/components/NewsletterArticleSelector';
-import { generateCustomNewsletterHtml, generateMalakinfoNewsletterHtml } from '@/lib/newsletter';
+import { generateCustomNewsletterHtml, generateYnukaNewsletterHtml } from '@/lib/newsletter';
 import { Loader2, Send } from 'lucide-react';
 
 type NewsletterSubscriber = {
@@ -16,7 +16,7 @@ type NewsletterSubscriber = {
 export default function NewsletterSendPage() {
   const [articles, setArticles] = useState<NewsletterArticleOption[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [subject, setSubject] = useState('Malakinfo — L’essentiel de la semaine');
+  const [subject, setSubject] = useState('Ynuka Labs — Événements & blog');
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,7 +101,7 @@ export default function NewsletterSendPage() {
     try {
       return mode === 'custom'
         ? generateCustomNewsletterHtml({
-            title: customTitle || 'Newsletter Malakinfo',
+            title: customTitle || 'Newsletter Ynuka Labs',
             content: customContent,
             heroImageUrl,
             imageUrls: imageUrls.split(/\r?\n/),
@@ -109,7 +109,7 @@ export default function NewsletterSendPage() {
             buttonLabel,
             buttonUrl,
           })
-        : generateMalakinfoNewsletterHtml(selectedArticles);
+        : generateYnukaNewsletterHtml(selectedArticles);
     } catch (error) {
       console.error(error);
       return '';
@@ -139,7 +139,7 @@ export default function NewsletterSendPage() {
       const payload = {
         subject,
         html: htmlPreview,
-        text: customContent || 'Newsletter Malakinfo',
+        text: customContent || 'Newsletter Ynuka Labs — événements et blog',
         filter: { activeOnly: true },
         ...(recipientMode === 'include'
           ? { includeEmails: selectedEmails }
@@ -180,7 +180,7 @@ export default function NewsletterSendPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary md:text-3xl">Envoyer une newsletter</h1>
           <p className="text-sm text-secondary mt-1 md:text-base">
-            Choisissez une newsletter éditoriale ou écrivez un message personnalisé avec vos propres images.
+            Newsletters Ynuka Labs : partagez les événements et les articles du blog avec vos abonnés.
           </p>
         </div>
 

@@ -1,27 +1,15 @@
-// Direct API calls to PHP backend without Strapi abstraction
-import { getJwtFromStorage } from "./strapi";
+/**
+ * Ynuka Site → Admin Panel (Prisma / Cockroach) as single content source.
+ * Set VITE_ADMIN_API_URL (e.g. http://localhost:3000 or https://admin.ynukalabs.com).
+ */
 
-const API_BASE_URL = "https://admin.ynukalabs.com/api/api.php";
+const ADMIN_API_BASE = (
+  import.meta.env.VITE_ADMIN_API_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:3000"
+).replace(/\/$/, "");
 
-// Liste des ressources publiques qui ne nécessitent pas d'authentification
-const PUBLIC_RESOURCES = [
-  "site_menu_groups",
-  "events",
-  "blog_posts",
-  "opportunities",
-  "resource_items",
-  "gallery_events",
-  "team_members",
-  "resource_sections",
-  "partners",
-  "projects",
-  "goma_drep_actions",
-  "validators",
-  /** Create public — list/get restent protégés côté backend */
-  "speaker_applications",
-  "event_proposals",
-  "event_registrations",
-];
+const API_ROOT = `${ADMIN_API_BASE}/api`;
 
 function pickOptionalUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -36,335 +24,258 @@ function extractYoutubeUrl(text: string): string | null {
   return match ? match[0] : null;
 }
 
-export async function fetchFromApi<T = unknown>(
-  action: string,
-  params: Record<string, string | number> = {},
-  body?: Record<string, any>
-): Promise<T> {
-  const url = new URL(API_BASE_URL);
-  url.searchParams.set("action", action);
-  
+function contentToString(content: unknown): string {
+  if (content == null) return "";
+  if (typeof content === "string") return content;
+  try {
+    return JSON.stringify(content);
+  } catch {
+    return String(content);
+  }
+}
+
+async function adminGet<T = unknown>(path: string, params: Record<string, string | number | boolean> = {}): Promise<T> {
+  const url = new URL(`${API_ROOT}${path.startsWith("/") ? path : `/${path}`}`);
   Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
     url.searchParams.set(key, String(value));
   });
-
-  const options: RequestInit = {
-    method: body ? "POST" : "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-
-  // N'ajouter l'en-tête Authorization que pour les ressources non publiques
-  const resource = params.resource as string;
-  const isPublicResource = resource && PUBLIC_RESOURCES.includes(resource);
-  
-  if (!isPublicResource) {
-    const token = getJwtFromStorage();
-    if (token) {
-      options.headers = {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      };
-    }
-  }
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(url.toString(), options);
-  
+  const response = await fetch(url.toString());
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `HTTP error! status: ${response.status}`);
+    throw new Error(`Admin API ${url.pathname} failed: ${response.status}`);
   }
-
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
-// Newsletter subscription with automatic email
+async function adminPost<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
+  const response = await fetch(`${API_ROOT}${path.startsWith("/") ? path : `/${path}`}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error || `Admin API POST failed: ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+/** @deprecated kept for rare PHP-only endpoints; prefer adminGet/adminPost */
+export async function fetchFromApi<T = unknown>(
+  _action: string,
+  _params: Record<string, string | number> = {},
+  _body?: Record<string, unknown>
+): Promise<T> {
+  throw new Error("fetchFromApi (PHP) is deprecated — use Admin Panel API via VITE_ADMIN_API_URL");
+}
+
 export async function subscribeToNewsletter(name: string, email: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const result = await fetchFromApi<{ success: boolean; message?: string }>(
-      "subscribe_newsletter",
-      {},
-      { name, email }
-    );
-    return result;
-  } catch (error) {
-    console.error("Newsletter subscription error:", error);
-    throw error;
+    await adminPost("/newsletter", { name, email });
+    return { success: true };
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Erreur" };
   }
 }
 
-// Contact form submission with automatic confirmation email
 export async function submitContactForm(data: {
   name: string;
   email: string;
   phone?: string;
-  subject: string;
+  subject?: string;
   message: string;
 }): Promise<{ success: boolean; message?: string }> {
   try {
-    const result = await fetchFromApi<{ success: boolean; message?: string }>(
-      "submit_contact_form",
-      {},
-      data
-    );
-    return result;
-  } catch (error) {
-    console.error("Contact form submission error:", error);
-    throw error;
+    await adminPost("/contact", data);
+    return { success: true };
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Erreur" };
   }
 }
 
-// Events API
 export async function fetchEvents(limit = 100) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "events",
-    limit,
-  });
-
-  return result.rows.map((item: any) => ({
+  const rows = await adminGet<any[]>("/events", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
     title: item.title || "",
-    title_fr: item.title_fr || null,
+    title_fr: item.titleFr || item.title_fr || null,
     description: item.description || null,
-    description_fr: item.description_fr || null,
+    description_fr: item.descriptionFr || item.description_fr || null,
     date: item.date || "",
     location: item.location || "",
     type: item.type || "",
     upcoming: !!item.upcoming,
     time: item.time || null,
-    imageUrl: item.image_url || null,
+    imageUrl: item.imageUrl || item.image_url || null,
     capacity: item.capacity || null,
-    recapUrl: pickOptionalUrl(item.recap_url || item.recapUrl || item.summary_url || item.summaryUrl),
+    recapUrl: pickOptionalUrl(item.recapUrl || item.recap_url),
     youtubeUrl: pickOptionalUrl(
-      item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl || extractYoutubeUrl(`${item.description || ""} ${item.description_fr || ""}`)
+      item.youtubeUrl ||
+        item.youtube_url ||
+        extractYoutubeUrl(`${item.description || ""} ${item.descriptionFr || item.description_fr || ""}`)
     ),
   }));
 }
 
-// Fetch single event
 export async function fetchEvent(id: string) {
-  const result = await fetchFromApi<{ row: unknown }>("get", {
-    resource: "events",
-    id,
-  });
-
-  const item = result.row as any;
+  const item = await adminGet<any>("/events", { id });
   return {
     id: String(item.id),
     title: item.title || "",
-    title_fr: item.title_fr || null,
+    title_fr: item.titleFr || null,
     description: item.description || null,
-    description_fr: item.description_fr || null,
+    description_fr: item.descriptionFr || null,
     date: item.date || "",
     location: item.location || "",
     type: item.type || "",
     upcoming: !!item.upcoming,
     time: item.time || null,
-    imageUrl: item.image_url || null,
+    imageUrl: item.imageUrl || null,
     capacity: item.capacity || null,
-    recapUrl: pickOptionalUrl(item.recap_url || item.recapUrl || item.summary_url || item.summaryUrl),
+    recapUrl: pickOptionalUrl(item.recapUrl),
     youtubeUrl: pickOptionalUrl(
-      item.youtube_url || item.youtubeUrl || item.video_url || item.videoUrl || extractYoutubeUrl(`${item.description || ""} ${item.description_fr || ""}`)
+      item.youtubeUrl || extractYoutubeUrl(`${item.description || ""} ${item.descriptionFr || ""}`)
     ),
   };
 }
 
-// Blog posts API
 export async function fetchBlogPosts(limit = 100) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "blog_posts",
-    limit,
-    filter: "published=1",
-  });
-
-  return result.rows.map((item: any) => ({
+  const rows = await adminGet<any[]>("/articles", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
     title: item.title || "",
-    title_fr: item.title_fr || null,
+    title_fr: item.title || null,
     excerpt: item.excerpt || null,
-    excerpt_fr: item.excerpt_fr || null,
-    category: item.category || "Blog",
-    content: item.content || null,
-    cover_url: item.cover_url || null,
-    created_at: item.created_at || "",
-    views: item.views || 0,
-    likes: item.likes || 0,
+    excerpt_fr: item.excerpt || null,
+    category: item.category?.title || item.category || "Blog",
+    content: contentToString(item.content),
+    cover_url: item.mainImageUrl || item.cover_url || null,
+    created_at: item.publishedAt || item.createdAt || "",
+    views: Number(item.views || 0),
+    likes: 0,
   }));
 }
 
-// Fetch single blog post
 export async function fetchBlogPost(id: string) {
-  const result = await fetchFromApi<{ row: unknown }>("get", {
-    resource: "blog_posts",
-    id,
-  });
-
-  const item = result.row as any;
-  
-  // Return null if the blog post doesn't exist
-  if (!item) {
+  try {
+    const item = await adminGet<any>("/articles", { id });
+    if (!item || item.error) return null;
+    return {
+      id: String(item.id),
+      title: item.title || "",
+      title_fr: item.title || null,
+      excerpt: item.excerpt || null,
+      excerpt_fr: item.excerpt || null,
+      category: item.category?.title || "Blog",
+      content: contentToString(item.content),
+      cover_url: item.mainImageUrl || null,
+      created_at: item.publishedAt || item.createdAt || "",
+      views: Number(item.views || 0),
+      likes: 0,
+    };
+  } catch {
     return null;
   }
-  
-  return {
-    id: String(item.id),
-    title: item.title || "",
-    title_fr: item.title_fr || null,
-    excerpt: item.excerpt || null,
-    excerpt_fr: item.excerpt_fr || null,
-    category: item.category || "Blog",
-    content: item.content || null,
-    cover_url: item.cover_url || null,
-    created_at: item.created_at || "",
-    views: item.views || 0,
-    likes: item.likes || 0,
-  };
 }
 
-// Opportunities API
 export async function fetchOpportunities(limit = 100) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "opportunities",
-    limit,
-    filter: "published=1",
-  });
-
-  return result.rows.map((item: any) => ({
+  const rows = await adminGet<any[]>("/opportunities", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
     title: item.title || "",
-    title_fr: item.title_fr || null,
+    title_fr: item.titleFr || null,
     slug: item.slug || "",
     excerpt: item.excerpt || null,
-    excerpt_fr: item.excerpt_fr || null,
+    excerpt_fr: item.excerptFr || null,
     category: item.category || "General",
     content: item.content || null,
-    content_fr: item.content_fr || null,
-    cover_url: item.cover_url || null,
-    created_at: item.created_at || "",
-    deadline: item.deadline || item.end_date || item.closes_at || item.expiry_date || null,
-    status: item.status || null,
-    published: item.published == null ? true : Boolean(Number(item.published)),
+    content_fr: item.contentFr || null,
+    cover_url: item.coverUrl || null,
+    created_at: item.createdAt || "",
+    deadline: null,
+    status: null,
+    published: !!item.published,
   }));
 }
 
-// Fetch single opportunity
 export async function fetchOpportunity(id: string) {
-  const result = await fetchFromApi<{ row: unknown }>("get", {
-    resource: "opportunities",
-    id,
-  });
-
-  const item = result.row as any;
+  const item = await adminGet<any>("/opportunities", { id });
   return {
     id: String(item.id),
     title: item.title || "",
-    title_fr: item.title_fr || null,
+    title_fr: item.titleFr || null,
     slug: item.slug || "",
     excerpt: item.excerpt || null,
-    excerpt_fr: item.excerpt_fr || null,
+    excerpt_fr: item.excerptFr || null,
     category: item.category || "General",
     content: item.content || null,
-    content_fr: item.content_fr || null,
-    cover_url: item.cover_url || null,
-    created_at: item.created_at || "",
+    content_fr: item.contentFr || null,
+    cover_url: item.coverUrl || null,
+    created_at: item.createdAt || "",
   };
 }
 
-// Projects API — status=active = publiés (page Projets)
-// show_on_home = choisis par l'admin pour l'accueil (sous-ensemble)
 export async function fetchProjects(limit = 100) {
-  const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[] }>("list", {
-    resource: "projects",
-    limit,
-    filter: "status=active",
-  });
+  const rows = await adminGet<any[]>("/projects", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
+    id: String(item.id),
+    slug: item.slug || String(item.id),
+    title: item.title || "",
+    category: item.category || "",
+    description: item.description || "",
+    featured_image: item.featuredImage || null,
+    repository_url: item.repositoryUrl || null,
+    live_url: item.liveUrl || null,
+    created_at: item.createdAt || "",
+    show_on_home: !!item.showOnHome,
+    tags: [] as string[],
+  }));
+}
 
-  const rows = result.rows ?? result.data ?? [];
-  return rows.map((item: any) => {
-    const showOnHomeRaw =
-      item.show_on_home ??
-      item.show_on_homepage ??
-      item.featured_home ??
-      item.on_home ??
-      0;
-
-    return {
+export async function fetchHomeProjects(limit = 4) {
+  const rows = await adminGet<any[]>("/projects", { limit, home: 1 });
+  return (Array.isArray(rows) ? rows : [])
+    .map((item) => ({
       id: String(item.id),
       slug: item.slug || String(item.id),
       title: item.title || "",
-      category: item.category || item.type || "",
-      description: item.description || item.excerpt || "",
-      featured_image: item.featured_image || item.image_url || item.logo_url || null,
-      repository_url: item.repository_url || null,
-      live_url: item.live_url || null,
-      created_at: item.created_at || "",
-      show_on_home:
-        showOnHomeRaw === true ||
-        showOnHomeRaw === 1 ||
-        showOnHomeRaw === "1" ||
-        String(showOnHomeRaw).toLowerCase() === "true",
-      tags: Array.isArray(item.tags)
-        ? item.tags.map(String).filter(Boolean)
-        : String(item.tags || item.keywords || "")
-            .split(/[,|;]/)
-            .map((tag: string) => tag.trim())
-            .filter(Boolean),
-    };
-  });
-}
-
-/** Projets mis en avant sur l'accueil (uniquement ceux flagués par l'admin). */
-export async function fetchHomeProjects(limit = 4) {
-  const projects = await fetchProjects(100);
-  return projects
-    .filter((project) => project.show_on_home && project.title)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      category: item.category || "",
+      description: item.description || "",
+      featured_image: item.featuredImage || null,
+      repository_url: item.repositoryUrl || null,
+      live_url: item.liveUrl || null,
+      created_at: item.createdAt || "",
+      show_on_home: true,
+      tags: [] as string[],
+    }))
     .slice(0, limit);
 }
 
-// Apply for opportunity
 export async function applyForOpportunity(data: {
   opportunity_id: string;
   user_email: string;
   user_name?: string;
   user_avatar?: string;
 }) {
-  const result = await fetchFromApi<{ row: unknown }>("insert", {
-    resource: "opportunity_applications",
-    ...data,
+  return adminPost("/opportunity-applications", {
+    opportunityId: data.opportunity_id,
+    userEmail: data.user_email,
+    userName: data.user_name,
+    userAvatar: data.user_avatar,
   });
-  return result.row;
 }
 
-// Upload CV file
 export async function uploadCVFile(file: File): Promise<string> {
   const formData = new FormData();
-  formData.append('cv_file', file);
-
-  const response = await fetch('https://admin.ynukalabs.com/php/upload-cv.php', {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
-  }
-
-  const result = await response.json() as { success: boolean; file_url?: string; error?: string };
-  
-  if (!result.success || !result.file_url) {
-    throw new Error(result.error || 'Upload failed');
-  }
-
-  return result.file_url;
+  formData.append("file", file);
+  const response = await fetch(`${API_ROOT}/upload`, { method: "POST", body: formData });
+  if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
+  const result = (await response.json()) as { url?: string; file_url?: string; error?: string };
+  const url = result.url || result.file_url;
+  if (!url) throw new Error(result.error || "Upload failed");
+  return url;
 }
 
-// Submit motivation form for opportunity
 export async function submitMotivationForm(data: {
   opportunity_id: string;
   user_email: string;
@@ -376,30 +287,31 @@ export async function submitMotivationForm(data: {
   message?: string;
   cv_file_url?: string;
 }) {
-  const result = await fetchFromApi<{ row: unknown }>("insert", {
-    resource: "opportunity_motivation_forms",
-    ...data,
+  return adminPost("/opportunity-applications", {
+    type: "motivation",
+    opportunityId: data.opportunity_id,
+    userEmail: data.user_email,
+    userName: data.user_name,
+    userAvatar: data.user_avatar,
+    linkedinUrl: data.linkedin_url,
+    twitterUrl: data.twitter_url,
+    portfolioUrl: data.portfolio_url,
+    message: data.message,
+    cvFileUrl: data.cv_file_url,
   });
-  return result.row;
 }
 
-
-// Documentation API
 export async function fetchDocumentation(limit = 50) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "resource_items",
-    limit,
-  });
-  
-  return result.rows.map((item: any) => ({
+  const sections = await adminGet<any[]>("/resource-sections", { limit });
+  const items = (Array.isArray(sections) ? sections : []).flatMap((s) => s.items || []);
+  return items.slice(0, limit).map((item: any) => ({
     id: String(item.id),
-    title: item.title_fr || item.title || "",
-    description: item.description_fr || item.description || "",
+    title: item.titleFr || item.title || "",
+    description: item.descriptionFr || item.description || "",
     iconKey: item.iconKey || "bookOpen",
   }));
 }
 
-// Gallery events API — une ligne = une image (admin)
 export type GalleryImageItem = {
   id: string;
   title: string;
@@ -411,95 +323,60 @@ export type GalleryImageItem = {
   displayOrder: number;
 };
 
-function normalizeGalleryRow(item: any): GalleryImageItem[] {
-  const flatUrl = String(item.image_url || item.imageUrl || item.url || "").trim();
-  if (flatUrl) {
-    return [
-      {
-        id: String(item.id),
-        title: String(item.title || "").trim(),
-        description: String(item.description || item.caption || item.alt || "").trim(),
-        category: String(item.category || item.type || "").trim(),
-        imageUrl: flatUrl,
-        date: String(item.event_date || item.date || "").trim(),
-        featured:
-          item.featured === true ||
-          item.featured === 1 ||
-          item.featured === "1" ||
-          String(item.featured).toLowerCase() === "true",
-        displayOrder: Number(item.display_order ?? item.order ?? 0) || 0,
-      },
-    ];
-  }
-
-  // Ancien schéma (événement + tableau images JSON) — rétrocompat
-  let images: unknown[] = [];
-  try {
-    images = item.images
-      ? typeof item.images === "string"
-        ? JSON.parse(item.images)
-        : item.images
-      : [];
-  } catch {
-    images = [];
-  }
-  if (!Array.isArray(images)) return [];
-
-  return images
-    .map((img: any, index: number) => {
-      const url =
-        typeof img === "string"
-          ? img
-          : String(img?.imageUrl || img?.image_url || img?.url || "").trim();
-      if (!url) return null;
-      return {
-        id: `${item.id}-${index}`,
-        title: String(img?.title || item.title || "").trim(),
-        description: String(
-          img?.description || img?.caption || img?.alt || item.description || ""
-        ).trim(),
-        category: String(img?.category || item.category || "").trim(),
-        imageUrl: url,
-        date: String(item.date || item.event_date || "").trim(),
-        featured: false,
-        displayOrder: index,
-      } satisfies GalleryImageItem;
+export async function fetchGalleryEvents(limit = 50): Promise<GalleryImageItem[]> {
+  const rows = await adminGet<any[]>("/gallery-events", { limit });
+  return (Array.isArray(rows) ? rows : [])
+    .flatMap((item, eventIndex) => {
+      const images = Array.isArray(item.images) ? item.images : [];
+      if (!images.length) return [];
+      return images.map((img: unknown, index: number) => {
+        const url = typeof img === "string" ? img : String((img as { url?: string })?.url || "").trim();
+        if (!url) return null;
+        return {
+          id: `${item.id}-${index}`,
+          title: String(item.title || "").trim(),
+          description: String(item.description || "").trim(),
+          category: String(item.subtitle || "").trim(),
+          imageUrl: url,
+          date: String(item.date || "").trim(),
+          featured: eventIndex === 0 && index === 0,
+          displayOrder: index,
+        } satisfies GalleryImageItem;
+      });
     })
     .filter((x): x is GalleryImageItem => Boolean(x));
 }
 
-export async function fetchGalleryEvents(limit = 50): Promise<GalleryImageItem[]> {
-  const result = await fetchFromApi<{ rows?: unknown[]; data?: unknown[]; total?: number }>("list", {
-    resource: "gallery_events",
-    limit,
-  });
-
-  const rows = result.rows ?? result.data ?? [];
-  return rows
-    .flatMap((item) => normalizeGalleryRow(item))
-    .sort((a, b) => {
-      if (a.featured !== b.featured) return a.featured ? -1 : 1;
-      return a.displayOrder - b.displayOrder;
-    });
-}
-
-// Team members API
 export async function fetchTeamMembers(limit = 50) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "team_members",
-    limit,
-  });
-  
-  return result.rows.map((item: any) => ({
+  const rows = await adminGet<any[]>("/team-members", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
     name: item.name || "",
     role: item.role || "",
-    image: item.image || "",
-    social: item.social ? JSON.parse(item.social) : {},
+    image: item.imageUrl || item.image || "",
+    slug: item.slug || "",
+    description: item.description || "",
+    social: {
+      x: item.xUrl || "",
+      linkedin: item.linkedinUrl || "",
+      telegram: item.telegramUrl || "",
+    },
   }));
 }
 
-// Event registration API
+export async function fetchPartners(limit = 100) {
+  const rows = await adminGet<any[]>("/partners", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
+    id: String(item.id),
+    name: item.name || "",
+    slug: item.slug || "",
+    description: item.description || "",
+    logo_url: item.logoUrl || null,
+    website_url: item.websiteUrl || null,
+    display_order: item.displayOrder ?? 0,
+  }));
+}
+
 export async function registerForEvent(data: {
   event_id: string;
   full_name: string;
@@ -508,36 +385,35 @@ export async function registerForEvent(data: {
   organization?: string | null;
   message?: string | null;
 }) {
-  const payload = {
-    ...data,
-    event_id: parseInt(data.event_id, 10),
-  };
-  
-  const result = await fetchFromApi("create", { resource: "event_registrations" }, payload);
-  return result;
+  return adminPost("/event-registrations", {
+    eventId: data.event_id,
+    fullName: data.full_name,
+    email: data.email,
+    phone: data.phone,
+    organization: data.organization,
+    message: data.message,
+  });
 }
 
-// Event registration count API
 export async function fetchEventRegistrationCount(eventId: string) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "event_registrations",
-    filter: `event_id=${eventId}`,
-  });
-  return result.total;
+  const result = await adminGet<{ count: number }>("/event-registrations", { eventId });
+  return result.count ?? 0;
 }
 
-// Resource sections API
 export async function fetchResourceSections(limit = 50) {
-  const result = await fetchFromApi<{ rows: unknown[]; total: number }>("list", {
-    resource: "resource_sections",
-    limit,
-  });
-  
-  return result.rows.map((item: any) => ({
+  const rows = await adminGet<any[]>("/resource-sections", { limit });
+  return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
-    iconKey: item.iconKey || "bookOpen",
-    category: item.category_fr || item.category || "",
-    items: item.items ? JSON.parse(item.items) : [],
+    iconKey: "bookOpen",
+    category: item.title || "",
+    items: (item.items || []).map((sub: any) => ({
+      id: String(sub.id),
+      title: sub.titleFr || sub.title || "",
+      description: sub.descriptionFr || sub.description || "",
+      url: sub.url || sub.filePath || "",
+      iconKey: sub.iconKey || "bookOpen",
+    })),
   }));
 }
 
+export { ADMIN_API_BASE, API_ROOT };

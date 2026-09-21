@@ -1,3 +1,8 @@
+/**
+ * Resolve admin-panel API paths.
+ * Always prefer same-origin (browser) so local `/api/*` is used —
+ * never the public marketing site (`NEXT_PUBLIC_MAIN_SITE_URL`).
+ */
 export function getApiUrl(path: string): string {
   if (!path) return path;
 
@@ -7,8 +12,7 @@ export function getApiUrl(path: string): string {
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
-  const configuredBaseUrl = process.env.NEXT_PUBLIC_ADMIN_API_URL || process.env.NEXT_PUBLIC_MAIN_SITE_URL;
-
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_ADMIN_API_URL;
   if (configuredBaseUrl) {
     return `${configuredBaseUrl.replace(/\/$/, '')}${normalizedPath}`;
   }

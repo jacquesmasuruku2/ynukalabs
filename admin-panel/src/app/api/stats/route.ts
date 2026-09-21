@@ -10,7 +10,9 @@ export async function GET() {
       categoriesCount,
       totalViews,
       featuredArticlesCount,
-      publishedThisMonth
+      publishedThisMonth,
+      eventsCount,
+      upcomingEventsCount,
     ] = await Promise.all([
       prisma.article.count(),
       prisma.author.count(),
@@ -31,7 +33,14 @@ export async function GET() {
             gte: new Date(new Date().setDate(new Date().getDate() - 30))
           }
         }
-      })
+      }),
+      prisma.event.count(),
+      prisma.event.count({
+        where: {
+          upcoming: true,
+          published: true,
+        },
+      }),
     ]);
 
     const stats = {
@@ -41,8 +50,8 @@ export async function GET() {
       totalViews: Number(totalViews._sum.views || 0),
       featuredArticles: featuredArticlesCount,
       publishedThisMonth: publishedThisMonth,
-      lives: 0,
-      activeLives: 0
+      events: eventsCount,
+      upcomingEvents: upcomingEventsCount,
     };
 
     return NextResponse.json(stats);

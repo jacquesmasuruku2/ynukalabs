@@ -1,15 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-function cors(response: NextResponse) {
-  response.headers.set('Access-Control-Allow-Origin', '*');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-  return response;
-}
+import { corsOptions, jsonCors } from '@/lib/cors';
 
 export async function OPTIONS() {
-  return cors(new NextResponse(null, { status: 204 }));
+  return corsOptions();
 }
 
 export async function GET(request: NextRequest) {
@@ -17,11 +11,11 @@ export async function GET(request: NextRequest) {
     const slug = request.nextUrl.searchParams.get('slug');
     const members = await prisma.teamMember.findMany({
       where: { isActive: true, ...(slug ? { slug } : {}) },
-      orderBy: { name: 'asc' },
+      orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
     });
-    return cors(NextResponse.json(members));
+    return jsonCors(members);
   } catch (error) {
-    return cors(NextResponse.json({ error: 'Failed to fetch team members', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 }));
+    return jsonCors({ error: 'Failed to fetch team members', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 
@@ -40,11 +34,13 @@ export async function POST(request: NextRequest) {
         linkedinUrl: body.linkedinUrl || null,
         telegramUrl: body.telegramUrl || null,
         portfolioUrl: body.portfolioUrl || null,
+        displayOrder: body.displayOrder != null ? Number(body.displayOrder) : 0,
         isActive: body.isActive !== false,
+        legacyId: body.legacyId || null,
       },
     });
-    return NextResponse.json(member, { status: 201 });
+    return jsonCors(member, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create team member', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    return jsonCors({ error: 'Failed to create team member', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }

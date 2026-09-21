@@ -26,15 +26,14 @@ const normalizeText = (value: string | null | undefined, maxLength = 200) => {
 };
 
 const buildArticleUrl = (article: NewsletterArticle) => {
-  const baseUrl = 'https://malakinfo.com';
-  const locale = 'fr';
+  const baseUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com';
   const slug = article.slug || '';
 
   if (!slug) {
-    return `${baseUrl.replace(/\/$/, '')}`;
+    return `${baseUrl.replace(/\/$/, '')}/blog`;
   }
 
-  return `${baseUrl.replace(/\/$/, '')}/${locale}/${slug}`;
+  return `${baseUrl.replace(/\/$/, '')}/blog/${slug}`;
 };
 
 const responsiveNewsletterCss = `
@@ -148,7 +147,7 @@ const responsiveNewsletterCss = `
   </style>
 `;
 
-export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
+export function generateYnukaNewsletterHtml(articles: NewsletterArticle[]) {
   if (!articles || articles.length === 0) {
     return '<p>Pas d’articles sélectionnés.</p>';
   }
@@ -161,42 +160,37 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
 
   const hero = orderedArticles[0];
   const secondary = orderedArticles.slice(1);
+  const siteUrl = (process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com').replace(/\/$/, '');
 
   const heroUrl = buildArticleUrl(hero);
-  const heroImage = hero.mainImageUrl || 'https://placehold.co/1200x700/0f172a/ffffff?text=Malakinfo';
-  const heroCategory = hero.category?.title || 'Actualités';
+  const heroImage = hero.mainImageUrl || 'https://placehold.co/1200x700/0b3b8b/ffb800?text=Ynuka+Labs';
+  const heroCategory = hero.category?.title || 'Blog';
   const heroExcerpt = normalizeText(hero.excerpt, 220);
   const footerSocialLinks = [
     {
       label: 'Site web',
-      href: 'https://www.malakinfo.com',
-      bgColor: '#0F172A',
+      href: siteUrl,
+      bgColor: '#0B3B8B',
       iconImage: 'https://cdn-icons-png.flaticon.com/512/1006/1006771.png',
     },
     {
-      label: 'Facebook',
-      href: 'https://web.facebook.com/profile.php?id=61593119312402&locale=fr_FR',
-      bgColor: '#1877F2',
-      iconImage: 'https://cdn-icons-png.flaticon.com/512/733/733547.png',
+      label: 'Événements',
+      href: `${siteUrl}/events`,
+      bgColor: '#ffb800',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/747/747310.png',
     },
     {
-      label: 'X',
-      href: 'https://x.com/Malakinfo1',
-      bgColor: '#000000',
-      iconImage: 'https://cdn-icons-png.flaticon.com/512/5968/5968804.png',
-    },
-    {
-      label: 'Instagram',
-      href: 'https://www.instagram.com/malakinfo/',
-      bgColor: '#E1306C',
-      iconImage: 'https://cdn-icons-png.flaticon.com/512/2111/2111463.png',
+      label: 'Blog',
+      href: `${siteUrl}/blog`,
+      bgColor: '#0F172A',
+      iconImage: 'https://cdn-icons-png.flaticon.com/512/2965/2965879.png',
     },
   ];
 
   const secondaryCards = secondary.map((article) => {
     const articleUrl = buildArticleUrl(article);
-    const image = article.mainImageUrl || 'https://placehold.co/600x400/dc2626/ffffff?text=Malakinfo';
-    const category = article.category?.title || 'Actualités';
+    const image = article.mainImageUrl || 'https://placehold.co/600x400/0b3b8b/ffb800?text=Ynuka+Labs';
+    const category = article.category?.title || 'Blog';
     const title = escapeHtml(article.title);
     const excerpt = escapeHtml(normalizeText(article.excerpt, 120));
 
@@ -213,7 +207,7 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
             </tr>
             <tr>
               <td colspan="2" valign="top" class="newsletter-text-content newsletter-secondary-text-cell" style="width: 100%; display:block;">
-                <div style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; color: #c81f2d; letter-spacing: 0.8px; text-transform: uppercase; margin: 0 0 8px 0;">
+                <div style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; color: #0b3b8b; letter-spacing: 0.8px; text-transform: uppercase; margin: 0 0 8px 0;">
                   ${escapeHtml(category)}
                 </div>
                 <a href="${articleUrl}" style="font-family: Arial, sans-serif; font-size: 20px; line-height: 28px; color: #111827; text-decoration: none; font-weight: bold;">
@@ -237,9 +231,12 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
         <td align="center" style="padding: 32px 16px;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="newsletter-content" style="max-width:600px; background:#ffffff; border-collapse:collapse; margin:0 auto;">
             <tr>
-              <td style="padding: 18px 24px; background:#0d1b3d; text-align:center;">
+              <td style="padding: 18px 24px; background:#0b3b8b; text-align:center;">
                 <div style="font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 2px; color:#ffffff; text-transform: uppercase; font-weight: bold;">
-                  MALAKINFO
+                  YNUKA LABS
+                </div>
+                <div style="font-family: Arial, sans-serif; font-size: 11px; color:#ffb800; margin-top: 6px;">
+                  Événements &amp; Blog
                 </div>
               </td>
             </tr>
@@ -254,7 +251,7 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
 
             <tr>
               <td class="newsletter-mobile-padding" style="padding: 20px 24px 8px 24px;">
-                <div style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; color:#c81f2d; text-transform: uppercase; letter-spacing: 1px;">
+                <div style="font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; color:#0b3b8b; text-transform: uppercase; letter-spacing: 1px;">
                   ${escapeHtml(heroCategory)}
                 </div>
               </td>
@@ -280,7 +277,7 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
               <td class="newsletter-mobile-padding" style="padding: 0 24px 24px 24px;">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                   <tr>
-                    <td bgcolor="#c81f2d" class="newsletter-button-cell" style="border-radius: 4px;">
+                    <td bgcolor="#0b3b8b" class="newsletter-button-cell" style="border-radius: 4px;">
                       <a href="${heroUrl}" class="newsletter-button-link" style="display:inline-block; padding: 12px 20px; font-family: Arial, sans-serif; font-size: 13px; line-height: 18px; color:#ffffff; text-decoration:none; font-weight:bold; text-transform: uppercase;">
                         LIRE LA SUITE
                       </a>
@@ -301,7 +298,7 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
             <tr>
               <td class="newsletter-mobile-padding" style="padding: 0 24px 18px 24px; text-align:center;">
                 <div style="font-family: Arial, sans-serif; font-size: 13px; line-height: 20px; color:#0f172a; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 14px 0; border-top: 1px solid #e5e7eb; padding-top: 18px;">
-                  Suivez-nous
+                  Découvrir Ynuka Labs
                 </div>
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto; border-collapse: separate;">
                   <tr>
@@ -322,7 +319,7 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
 
             <tr>
               <td class="newsletter-mobile-padding" style="padding: 18px 24px 28px 24px; font-family: Arial, sans-serif; font-size: 12px; line-height: 18px; color:#666666; text-align:center;">
-                Malakinfo • Actualités, analyses et perspectives
+                Ynuka Labs • Newsletters événements &amp; blog
               </td>
             </tr>
           </table>
@@ -331,6 +328,9 @@ export function generateMalakinfoNewsletterHtml(articles: NewsletterArticle[]) {
     </table>
   `;
 }
+
+/** @deprecated Utiliser generateYnukaNewsletterHtml */
+export const generateMalakinfoNewsletterHtml = generateYnukaNewsletterHtml;
 
 export type CustomNewsletter = {
   title: string;
@@ -365,7 +365,7 @@ export function generateCustomNewsletterHtml(newsletter: CustomNewsletter) {
     ? `<tr><td style="padding:0;">${imageLinkUrl ? `<a href="${imageLinkUrl}" style="display:block;text-decoration:none;">` : ''}<img src="${heroImageUrl}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" />${imageLinkUrl ? '</a>' : ''}</td></tr>`
     : '';
   const button = buttonUrl && newsletter.buttonLabel?.trim()
-    ? `<p style="margin:24px 0 4px 0;"><a href="${buttonUrl}" style="display:inline-block;background:#c81f2d;color:#ffffff;padding:12px 20px;border-radius:4px;text-decoration:none;font-weight:bold;font-size:13px;text-transform:uppercase;">${escapeHtml(newsletter.buttonLabel)}</a></p>`
+    ? `<p style="margin:24px 0 4px 0;"><a href="${buttonUrl}" style="display:inline-block;background:#0b3b8b;color:#ffffff;padding:12px 20px;border-radius:4px;text-decoration:none;font-weight:bold;font-size:13px;text-transform:uppercase;">${escapeHtml(newsletter.buttonLabel)}</a></p>`
     : '';
 
   return `
@@ -373,12 +373,12 @@ export function generateCustomNewsletterHtml(newsletter: CustomNewsletter) {
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f5f6f8;margin:0;padding:0;">
       <tr><td align="center" style="padding:32px 16px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#ffffff;border-collapse:collapse;margin:0 auto;">
-          <tr><td style="padding:18px 24px;background:#0d1b3d;text-align:center;font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;color:#ffffff;text-transform:uppercase;font-weight:bold;">MALAKINFO</td></tr>
+          <tr><td style="padding:18px 24px;background:#0b3b8b;text-align:center;font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;color:#ffffff;text-transform:uppercase;font-weight:bold;">YNUKA LABS<span style="display:block;margin-top:6px;font-size:11px;letter-spacing:1px;color:#ffb800;font-weight:600;">Événements &amp; Blog</span></td></tr>
           ${hero}
           <tr><td class="newsletter-mobile-padding" style="padding:28px 24px 10px 24px;font-family:Arial,sans-serif;font-size:30px;line-height:38px;color:#111827;font-weight:bold;">${escapeHtml(newsletter.title)}</td></tr>
           <tr><td class="newsletter-mobile-padding" style="padding:10px 24px 24px 24px;font-family:Arial,sans-serif;font-size:16px;line-height:26px;color:#222222;">${paragraphs}${button}</td></tr>
           ${images}
-          <tr><td style="padding:18px 24px 28px 24px;font-family:Arial,sans-serif;font-size:12px;line-height:18px;color:#666666;text-align:center;border-top:1px solid #e5e7eb;">Malakinfo • Actualités, analyses et perspectives</td></tr>
+          <tr><td style="padding:18px 24px 28px 24px;font-family:Arial,sans-serif;font-size:12px;line-height:18px;color:#666666;text-align:center;border-top:1px solid #e5e7eb;">Ynuka Labs • Newsletters événements &amp; blog</td></tr>
         </table>
       </td></tr>
     </table>

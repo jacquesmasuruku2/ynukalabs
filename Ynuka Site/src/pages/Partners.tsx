@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchPartners } from "@/lib/api";
 
 const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
@@ -67,20 +67,15 @@ const Partners = () => {
   const [marqueePartners, setMarqueePartners] = useState<PartnerMarquee[]>(hardcodedMarqueePartners);
 
   useEffect(() => {
-    const fetchPartners = async () => {
+    const loadPartners = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/partners?populate=logo&pagination[pageSize]=50"
-        );
-        const items = res.data || [];
+        const items = await fetchPartners(50);
         const mapped: PartnerMarquee[] = items
           .map((item) => {
-            const it = item as { attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const name = String(attrs.name ?? "");
-            const url = String(attrs.url ?? "");
-            const description = String(attrs.description ?? "");
-            const logoUrl = mediaToUrl(attrs.logo) ?? "";
+            const name = item.name || "";
+            const url = item.website_url || "";
+            const description = item.description || "";
+            const logoUrl = item.logo_url || "";
             if (!name || !url || !logoUrl) return null;
             return { name, url, description, logo: logoUrl };
           })
@@ -92,7 +87,7 @@ const Partners = () => {
       }
     };
 
-    fetchPartners();
+    loadPartners();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

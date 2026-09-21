@@ -54,7 +54,16 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-100 py-12 px-4">
       <div className="mx-auto max-w-md rounded-sm bg-white p-6 shadow-sm md:p-8">
-        <h1 className="mb-6 border-b border-gray-300 pb-2 font-serif text-3xl font-extrabold text-gray-900">
+        <div className="mb-6 flex items-center gap-3 border-b border-gray-300 pb-4">
+          <img src="/logo.png" alt="Ynuka Labs" className="h-12 w-12 rounded-full object-cover" />
+          <div>
+            <p className="font-serif text-2xl font-extrabold text-gray-900">
+              Ynuka <span className="text-[#ffb800]">Labs</span>
+            </p>
+            <p className="text-sm text-gray-500">Panneau d’administration</p>
+          </div>
+        </div>
+        <h1 className="mb-6 font-serif text-2xl font-bold text-gray-900">
           Connexion
         </h1>
 

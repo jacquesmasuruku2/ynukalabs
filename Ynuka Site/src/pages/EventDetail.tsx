@@ -17,6 +17,7 @@ import {
   registerForEvent,
 } from "@/services/events/eventsApi";
 import type { YnukaEvent } from "@/services/events/types";
+import RichTextDisplay from "@/components/RichTextDisplay";
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -251,9 +252,16 @@ const EventDetail = () => {
             </div>
           ) : null}
 
-          <div className="mb-10 whitespace-pre-wrap text-base leading-relaxed text-[#1e3a5f] dark:text-slate-200">
-            {desc || t("events.noDescription")}
-          </div>
+          {desc ? (
+            <RichTextDisplay
+              content={desc}
+              className="mb-10 text-base leading-relaxed text-[#1e3a5f] dark:text-slate-200"
+            />
+          ) : (
+            <div className="mb-10 text-base leading-relaxed text-[#1e3a5f] dark:text-slate-200">
+              {t("events.noDescription")}
+            </div>
+          )}
 
           {eventIsPast ? (
             <div className="space-y-4 border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-[#0c1a2e]">

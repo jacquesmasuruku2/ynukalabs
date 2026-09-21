@@ -1,31 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { corsOptions, jsonCors } from '@/lib/cors';
 
-export async function GET() {
+function serializeArticle<T extends { views: bigint }>(article: T) {
+  return { ...article, views: Number(article.views) };
+}
+
+export async function OPTIONS() {
+  return corsOptions();
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = request.nextUrl;
+    const id = searchParams.get('id');
+    const slug = searchParams.get('slug');
+    const admin = searchParams.get('admin') === '1';
+    const limit = Math.min(Number(searchParams.get('limit') || 100), 500);
+    const now = new Date();
+
+    if (id || slug) {
+      const article = await prisma.article.findFirst({
+        where: id ? { id } : { slug: slug! },
+        include: { category: true, author: true },
+      });
+      if (!article || (!admin && article.publishedAt > now)) {
+        return jsonCors({ error: 'Article not found' }, { status: 404 });
+      }
+      return jsonCors(serializeArticle(article));
+    }
+
     const articles = await prisma.article.findMany({
-      include: {
-        category: true,
-        author: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: admin ? {} : { publishedAt: { lte: now } },
+      include: { category: true, author: true },
+      orderBy: { publishedAt: 'desc' },
+      take: limit,
     });
-    
-    // Convert BigInt to number for JSON serialization
-    const serializedArticles = articles.map(article => ({
-      ...article,
-      views: Number(article.views),
-    }));
-    
-    return NextResponse.json(serializedArticles);
+
+    return jsonCors(articles.map(serializeArticle));
   } catch (error) {
     console.error('Error fetching articles:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch articles',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return jsonCors(
+      {
+        error: 'Failed to fetch articles',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -52,20 +73,17 @@ export async function POST(request: NextRequest) {
         additionalImages: body.additionalImages || [],
         additionalImageDescriptions: body.additionalImageDescriptions || [],
       },
-      include: {
-        category: true,
-        author: true,
-      },
+      include: { category: true, author: true },
     });
-    return NextResponse.json({
-      ...article,
-      views: Number(article.views),
-    }, { status: 201 });
+    return jsonCors(serializeArticle(article), { status: 201 });
   } catch (error) {
     console.error('Error creating article:', error);
-    return NextResponse.json({ 
-      error: 'Failed to create article',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return jsonCors(
+      {
+        error: 'Failed to create article',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

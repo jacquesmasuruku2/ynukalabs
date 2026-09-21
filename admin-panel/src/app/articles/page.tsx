@@ -319,7 +319,7 @@ export default function ArticlesPage() {
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-1 sm:gap-2">
                         <a 
-                          href={`https://malakinfo.com/${article.slug}`}
+                          href={`https://ynukalabs.com/blog/${article.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 transition-colors" 

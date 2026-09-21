@@ -15,7 +15,7 @@ import {
 import Container from "@/components/ui/Container";
 import "@/styles/AboutDesign.css";
 import { teamMembers, type TeamMember } from "@/data/teamMembers";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchPartners, fetchTeamMembers } from "@/lib/api";
 
 const FALLBACK_ABOUT_HERO_BG = "/about/about.jpg";
 
@@ -106,28 +106,20 @@ const About = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/team-members?populate=image&pagination[pageSize]=100"
-        );
-        const items = res.data || [];
-
+        const items = await fetchTeamMembers(100);
         const mapped: TeamMember[] = items
-          .map((item) => {
-            const it = item as { id?: string | number; attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const imageUrl = mediaToUrl(attrs.image) ?? "";
-
-            return {
-              name: String(attrs.name ?? ""),
-              role: String(attrs.role ?? ""),
-              image: imageUrl,
-              social: {
-                x: String(attrs.social_x ?? attrs.x ?? ""),
-                telegram: String(attrs.social_telegram ?? attrs.telegram ?? ""),
-                linkedin: String(attrs.social_linkedin ?? attrs.linkedin ?? ""),
-              },
-            } satisfies TeamMember;
-          })
+          .map((item) => ({
+            slug: item.slug || String(item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+            name: item.name || "",
+            role: item.role || "",
+            image: item.image || "",
+            description: item.description || "",
+            social: {
+              x: item.social?.x || "",
+              telegram: item.social?.telegram || "",
+              linkedin: item.social?.linkedin || "",
+            },
+          }))
           .filter((m) => m.name && m.role);
 
         if (mapped.length) setTeam(mapped);
@@ -140,19 +132,14 @@ const About = () => {
   }, []);
 
   useEffect(() => {
-    const fetchPartners = async () => {
+    const loadPartners = async () => {
       try {
-        const res = await strapiFetch<{ data: unknown[] }>(
-          "/api/partners?populate=logo&pagination[pageSize]=50"
-        );
-        const items = res.data || [];
+        const items = await fetchPartners(50);
         const mapped: AboutPartner[] = items
           .map((item) => {
-            const it = item as { attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? {}) as Record<string, unknown>;
-            const name = String(attrs.name ?? "");
-            const url = String(attrs.url ?? "");
-            const logoUrl = mediaToUrl(attrs.logo) ?? "";
+            const name = item.name || "";
+            const url = item.website_url || "";
+            const logoUrl = item.logo_url || "";
             if (!name || !url || !logoUrl) return null;
             return { name, url, logo: logoUrl };
           })
@@ -164,7 +151,7 @@ const About = () => {
       }
     };
 
-    fetchPartners();
+    loadPartners();
   }, []);
 
   useEffect(() => {

@@ -24,6 +24,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         linkedinUrl: body.linkedinUrl || null,
         telegramUrl: body.telegramUrl || null,
         portfolioUrl: body.portfolioUrl || null,
+        displayOrder: body.displayOrder != null ? Number(body.displayOrder) : 0,
         isActive: body.isActive !== false,
       },
     });

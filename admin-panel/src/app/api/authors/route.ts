@@ -22,6 +22,11 @@ export async function GET() {
       orderBy: {
         name: 'asc',
       },
+      include: {
+        _count: {
+          select: { articles: true },
+        },
+      },
     });
     console.log('Authors fetched:', authors.length);
     return cors(NextResponse.json(authors));

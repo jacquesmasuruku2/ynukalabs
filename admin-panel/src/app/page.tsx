@@ -7,10 +7,9 @@ import { useState, useEffect } from 'react';
 import { 
   FileText, 
   Users, 
-  BarChart3,
   LayoutDashboard,
   FolderTree,
-  Radio
+  Calendar,
 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
@@ -21,8 +20,8 @@ interface Stats {
   totalViews: number;
   featuredArticles: number;
   publishedThisMonth: number;
-  lives: number;
-  activeLives: number;
+  events: number;
+  upcomingEvents: number;
 }
 
 export default function AdminDashboard() {
@@ -69,10 +68,10 @@ export default function AdminDashboard() {
       color: 'bg-purple-500',
     },
     {
-      name: 'Lives',
-      value: stats?.lives || 0,
-      icon: Radio,
-      color: 'bg-red-500',
+      name: 'Événements',
+      value: stats?.events || 0,
+      icon: Calendar,
+      color: 'bg-amber-500',
     },
   ];
 
@@ -128,8 +127,8 @@ export default function AdminDashboard() {
                 <p className="text-3xl font-bold text-green-600">{stats.publishedThisMonth}</p>
               </div>
               <div className="card rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-primary mb-4">Lives actifs</h3>
-                <p className="text-3xl font-bold text-red-600">{stats.activeLives}</p>
+                <h3 className="text-lg font-semibold text-primary mb-4">Événements à venir</h3>
+                <p className="text-3xl font-bold text-amber-600">{stats.upcomingEvents}</p>
               </div>
               <div className="card rounded-lg shadow-sm border p-6">
                 <h3 className="text-lg font-semibold text-primary mb-4">Vues totales</h3>
@@ -150,9 +149,9 @@ export default function AdminDashboard() {
                 <Users className="w-4 h-4 mr-2" />
                 Ajouter un auteur
               </Link>
-              <Link href="/lives/new" className="flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
-                <Radio className="w-4 h-4 mr-2" />
-                Nouveau live
+              <Link href="/events/new" className="flex items-center justify-center px-4 py-3 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors">
+                <Calendar className="w-4 h-4 mr-2" />
+                Nouvel événement
               </Link>
               <Link href="/categories/new" className="flex items-center justify-center px-4 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
                 <LayoutDashboard className="w-4 h-4 mr-2" />

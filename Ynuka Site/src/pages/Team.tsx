@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Users, X, MessageCircle } from "lucide-react";
 import Container from "@/components/ui/Container";
 import { teamMembers, type TeamMember } from "@/data/teamMembers";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchTeamMembers } from "@/lib/api";
 
 // Custom LinkedIn icon since it's not available in lucide-react
 const LinkedinIcon = ({ className }: { className?: string }) => (
@@ -35,32 +35,21 @@ const Team = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const adminApiUrl = import.meta.env.VITE_ADMIN_API_URL as string | undefined;
-        const res = adminApiUrl
-          ? await fetch(`${adminApiUrl.replace(/\/$/, "")}/api/team-members`).then((response) => response.json())
-          : await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>("/api/team-members?populate=image&pagination[pageSize]=100");
-        const items = res.data ?? res.rows ?? [];
-
+        const items = await fetchTeamMembers(100);
         const mapped: TeamMember[] = items
-          .map((item) => {
-            const it = item as { id?: string | number; attributes?: Record<string, unknown> };
-            const attrs = (it.attributes ?? it) as Record<string, unknown>;
-            const imageUrl = mediaToUrl(attrs.image ?? attrs.imageUrl) ?? "";
-
-            return {
-              slug: String(attrs.slug ?? String(attrs.name ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")),
-              name: String(attrs.name ?? ""),
-              role: String(attrs.role ?? ""),
-              image: imageUrl,
-              description: String(attrs.description ?? attrs.bio ?? ""),
-              portfolioUrl: String(attrs.portfolioUrl ?? attrs.portfolio_url ?? ""),
-              social: {
-                x: String(attrs.social_x ?? attrs.x ?? attrs.xUrl ?? ""),
-                telegram: String(attrs.social_telegram ?? attrs.telegram ?? attrs.telegramUrl ?? ""),
-                linkedin: String(attrs.social_linkedin ?? attrs.linkedin ?? attrs.linkedinUrl ?? ""),
-              },
-            } satisfies TeamMember;
-          })
+          .map((item) => ({
+            slug: item.slug || String(item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+            name: item.name || "",
+            role: item.role || "",
+            image: item.image || "",
+            description: item.description || "",
+            portfolioUrl: "",
+            social: {
+              x: item.social?.x || "",
+              telegram: item.social?.telegram || "",
+              linkedin: item.social?.linkedin || "",
+            },
+          }))
           .filter((m) => m.name && m.role);
 
         const filtered = mapped.filter(

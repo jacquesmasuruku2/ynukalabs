@@ -12,19 +12,19 @@ import {
   LogOut,
   Menu,
   X,
-  Shield,
   Inbox,
   Briefcase,
   Handshake,
   Mail,
   Send,
-  ListVideo,
-  Video,
   ExternalLink,
   ClipboardList,
   Music,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  FolderKanban,
+  Images,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -58,12 +58,15 @@ export default function AdminLayout({
   const sidebarItems = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Articles', href: '/articles', icon: FileText },
+    { name: 'Événements', href: '/events', icon: Calendar },
+    { name: 'Projets', href: '/projects', icon: FolderKanban },
+    { name: 'Opportunités', href: '/opportunities', icon: Briefcase },
+    { name: 'Partenaires', href: '/partners', icon: Handshake },
+    { name: 'Galeries', href: '/gallery-events', icon: Images },
     { name: 'Catégories', href: '/categories', icon: FolderOpen },
     { name: 'Auteurs', href: '/authors', icon: Users },
     { name: 'Équipe', href: '/team-members', icon: Users },
     { name: 'Documentation', href: '/documentation', icon: FolderOpen },
-    { name: 'Émissions radio', href: '/radio/programs', icon: ListVideo },
-    { name: 'Lives', href: '/lives', icon: Video },
     { name: 'Médias', href: '/media', icon: Music },
     { name: 'Sponsors', href: '/sponsored', icon: Handshake },
     { name: 'Abonnement', href: '/newsletter', icon: Mail },
@@ -96,7 +99,7 @@ export default function AdminLayout({
             {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
           <h1 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Admin Panel
+            Ynuka Labs
           </h1>
           <div className="w-10" />
         </div>
@@ -121,19 +124,18 @@ export default function AdminLayout({
               className={`flex items-center border-b p-4 ${isSidebarCollapsed ? 'justify-center' : 'space-x-2'} lg:p-6`}
               style={{ borderColor: 'var(--sidebar-border)' }}
             >
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl shadow-sm"
-                style={{ backgroundColor: 'var(--primary)' }}
-              >
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <div className={isSidebarCollapsed ? 'hidden' : 'flex items-center'}>
-                <span className="font-heading text-xl font-bold" style={{ color: 'var(--primary)' }}>
-                  Malakin
-                </span>
-                <span className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                  .info
-                </span>
+              <img
+                src="/logo.png"
+                alt="Ynuka Labs"
+                className="h-10 w-10 rounded-full object-cover shadow-sm ring-1 ring-black/5"
+              />
+              <div className={isSidebarCollapsed ? 'hidden' : 'min-w-0'}>
+                <p className="font-heading text-lg font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+                  Ynuka <span style={{ color: '#ffb800' }}>Labs</span>
+                </p>
+                <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                  Admin Panel
+                </p>
               </div>
               <button
                 type="button"
@@ -198,7 +200,7 @@ export default function AdminLayout({
                 <span className={isSidebarCollapsed ? 'hidden' : ''}>Se déconnecter</span>
               </button>
               <a
-                href="https://malakin-info.vercel.app"
+                href="https://ynukalabs.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`mt-2 flex items-center rounded-xl py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${

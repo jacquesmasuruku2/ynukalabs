@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Users } from "lucide-react";
 import { Globe, LinkedinLogo, TelegramLogo, XLogo } from "@phosphor-icons/react";
 import { teamMembers, type TeamMember } from "@/data/teamMembers";
-import { mediaToUrl, strapiFetch } from "@/lib/strapi";
+import { fetchTeamMembers } from "@/lib/api";
 
 const TeamMemberDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -12,24 +12,22 @@ const TeamMemberDetail = () => {
   useEffect(() => {
     const loadMember = async () => {
       try {
-        const adminApiUrl = import.meta.env.VITE_ADMIN_API_URL as string | undefined;
-        const response = adminApiUrl
-          ? { rows: await fetch(`${adminApiUrl.replace(/\/$/, "")}/api/team-members?slug=${encodeURIComponent(slug ?? "")}`).then((result) => result.json()) }
-          : await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>(`/api/team-members?filters[slug][$eq]=${slug}&populate=image`);
-        const item = (response.data ?? response.rows ?? [])[0] as { attributes?: Record<string, unknown>; slug?: string; name?: string; role?: string; description?: string; imageUrl?: string; xUrl?: string; linkedinUrl?: string; telegramUrl?: string; portfolioUrl?: string } | undefined;
-        const attrs = item?.attributes ?? item;
+        const rows = await fetchTeamMembers(100);
+        const attrs = rows.find((m) => m.slug === slug) ?? rows.find((m) =>
+          String(m.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === slug
+        );
         if (!attrs) return;
         setMember({
-          slug: String(attrs.slug ?? slug),
-          name: String(attrs.name ?? ""),
-          role: String(attrs.role ?? ""),
-          description: String(attrs.description ?? ""),
-          portfolioUrl: String(attrs.portfolioUrl ?? attrs.portfolio_url ?? ""),
-          image: mediaToUrl(attrs.image ?? attrs.imageUrl) ?? "",
+          slug: String(attrs.slug || slug),
+          name: String(attrs.name || ""),
+          role: String(attrs.role || ""),
+          description: String(attrs.description || ""),
+          portfolioUrl: "",
+          image: attrs.image || "",
           social: {
-            x: String(attrs.social_x ?? attrs.x ?? attrs.xUrl ?? ""),
-            telegram: String(attrs.social_telegram ?? attrs.telegram ?? attrs.telegramUrl ?? ""),
-            linkedin: String(attrs.social_linkedin ?? attrs.linkedin ?? attrs.linkedinUrl ?? ""),
+            x: attrs.social?.x || "",
+            telegram: attrs.social?.telegram || "",
+            linkedin: attrs.social?.linkedin || "",
           },
         });
       } catch {

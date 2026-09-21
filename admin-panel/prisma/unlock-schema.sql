@@ -1,0 +1,9 @@
+ALTER TABLE IF EXISTS "Event" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "EventRegistration" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "Project" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "Opportunity" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "OpportunityApplication" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "OpportunityMotivationForm" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "Partner" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "GalleryEvent" SET (schema_locked = false);
+ALTER TABLE IF EXISTS "TeamMember" SET (schema_locked = false);

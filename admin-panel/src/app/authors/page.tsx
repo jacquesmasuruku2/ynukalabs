@@ -40,14 +40,17 @@ export default function AuthorsPage() {
 
   const fetchAuthors = async () => {
     try {
-      console.log('Fetching authors from API...');
       const response = await fetch('/api/authors');
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Authors data received:', data);
+      if (!response.ok || !Array.isArray(data)) {
+        console.error('Failed to fetch authors:', data);
+        setAuthors([]);
+        return;
+      }
       setAuthors(data);
     } catch (error) {
       console.error('Failed to fetch authors:', error);
+      setAuthors([]);
     } finally {
       setLoading(false);
     }

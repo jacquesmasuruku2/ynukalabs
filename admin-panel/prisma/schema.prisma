@@ -55,23 +55,27 @@ model Author {
 }
 
 model TeamMember {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  role        String
-  description String?
-  imageUrl    String?
-  imageAlt    String?
-  xUrl        String?
-  linkedinUrl String?
-  telegramUrl String?
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  role         String
+  description  String?
+  imageUrl     String?
+  imageAlt     String?
+  xUrl         String?
+  linkedinUrl  String?
+  telegramUrl  String?
   portfolioUrl String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  legacyId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([isActive])
+  @@index([displayOrder])
   @@index([name])
+  @@index([legacyId])
 }
 
 model ResourceSection {
@@ -206,8 +210,8 @@ model AdminUser {
 
 model AdminSettings {
   id                   String    @id @default("global")
-  siteName             String    @default("Malakinfo.com")
-  contactEmail         String    @default("contact@malakinfo.com")
+  siteName             String    @default("Ynuka Labs")
+  contactEmail         String    @default("contact@ynukalabs.com")
   emailNotifications   Boolean   @default(true)
   securityAlerts       Boolean   @default(true)
   weeklyReports        Boolean   @default(false)
@@ -537,4 +541,164 @@ enum LiveStatus {
   SCHEDULED
   LIVE
   ENDED
+}
+
+model Event {
+  id              String              @id @default(cuid())
+  title           String
+  titleFr         String?
+  slug            String?             @unique
+  description     String?
+  descriptionFr   String?
+  date            DateTime?
+  startDate       DateTime?
+  endDate         DateTime?
+  time            String?
+  location        String?
+  type            String?
+  capacity        Int?
+  imageUrl        String?
+  featuredImage   String?
+  recapUrl        String?
+  youtubeUrl      String?
+  upcoming        Boolean             @default(true)
+  published       Boolean             @default(true)
+  legacyId        String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  registrations   EventRegistration[]
+
+  @@index([published])
+  @@index([upcoming])
+  @@index([date])
+  @@index([legacyId])
+}
+
+model EventRegistration {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fullName     String
+  email        String
+  phone        String?
+  organization String?
+  message      String?
+  status       String   @default("registered")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@index([status])
+}
+
+model Project {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  category      String   @default("General")
+  description   String?
+  status        String   @default("active")
+  featuredImage String?
+  repositoryUrl String?
+  liveUrl       String?
+  showOnHome    Boolean  @default(false)
+  legacyId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([showOnHome])
+  @@index([createdAt(sort: Desc)])
+  @@index([legacyId])
+}
+
+model Opportunity {
+  id               String                       @id @default(cuid())
+  title            String
+  titleFr          String?
+  slug             String                       @unique
+  excerpt          String?
+  excerptFr        String?
+  content          String?
+  contentFr        String?
+  category         String                       @default("General")
+  coverUrl         String?
+  published        Boolean                      @default(false)
+  legacyId         String?
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  applications     OpportunityApplication[]
+  motivationForms  OpportunityMotivationForm[]
+
+  @@index([published])
+  @@index([category])
+  @@index([createdAt(sort: Desc)])
+  @@index([legacyId])
+}
+
+model OpportunityApplication {
+  id            String      @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  userEmail     String
+  userName      String?
+  userAvatar    String?
+  status        String      @default("pending")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([opportunityId])
+  @@index([status])
+}
+
+model OpportunityMotivationForm {
+  id            String      @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  userEmail     String
+  userName      String?
+  userAvatar    String?
+  linkedinUrl   String?
+  twitterUrl    String?
+  portfolioUrl  String?
+  message       String?
+  cvFileUrl     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([opportunityId])
+}
+
+model Partner {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String?  @unique
+  description  String?
+  logoUrl      String?
+  websiteUrl   String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  legacyId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([legacyId])
+}
+
+model GalleryEvent {
+  id          String    @id @default(cuid())
+  title       String
+  subtitle    String?
+  date        DateTime?
+  description String?
+  images      Json      @default("[]")
+  legacyId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([date(sort: Desc)])
+  @@index([legacyId])
 }

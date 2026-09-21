@@ -1,5 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { corsOptions, jsonCors } from '@/lib/cors';
+
+export async function OPTIONS() {
+  return corsOptions();
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,10 +19,10 @@ export async function GET(request: NextRequest) {
       orderBy: { displayOrder: 'asc' },
     });
 
-    return NextResponse.json(sections);
+    return jsonCors(sections);
   } catch (error) {
     console.error('Error fetching resource sections:', error);
-    return NextResponse.json(
+    return jsonCors(
       {
         error: 'Failed to fetch resource sections',
         details: error instanceof Error ? error.message : 'Unknown error',
@@ -40,10 +45,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(section, { status: 201 });
+    return jsonCors(section, { status: 201 });
   } catch (error) {
     console.error('Error creating resource section:', error);
-    return NextResponse.json(
+    return jsonCors(
       {
         error: 'Failed to create resource section',
         details: error instanceof Error ? error.message : 'Unknown error',

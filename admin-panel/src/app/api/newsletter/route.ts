@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { corsOptions, jsonCors } from '@/lib/cors';
 
 const interestOptions = [
   { value: 'actualites', label: 'Actualités' },
@@ -8,6 +8,10 @@ const interestOptions = [
   { value: 'sport', label: 'Sport' },
   { value: 'tech', label: 'Science & Tech' },
 ];
+
+export async function OPTIONS() {
+  return corsOptions();
+}
 
 export async function GET() {
   try {
@@ -25,10 +29,10 @@ export async function GET() {
       unsubscribedAt: s.unsubscribedAt?.toISOString() || null,
     }));
 
-    return NextResponse.json(serialized);
+    return jsonCors(serialized);
   } catch (error) {
     console.error('Error fetching newsletter subscribers:', error);
-    return NextResponse.json({ error: 'Failed to fetch subscribers', details: error instanceof Error ? error.message : 'Unknown' }, { status: 500 });
+    return jsonCors({ error: 'Failed to fetch subscribers', details: error instanceof Error ? error.message : 'Unknown' }, { status: 500 });
   }
 }
 
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
       : [];
 
     if (!email || !email.includes('@')) {
-      return NextResponse.json({ error: 'Email invalide.' }, { status: 400 });
+      return jsonCors({ error: 'Email invalide.' }, { status: 400 });
     }
 
     const validInterests = interests.filter((interest: string) =>
@@ -64,7 +68,7 @@ export async function POST(request: Request) {
         },
       });
 
-      return NextResponse.json({
+      return jsonCors({
         message: 'Abonné mis à jour avec succès.',
         subscriber: updated,
       });
@@ -80,13 +84,13 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    return jsonCors({
       message: 'Abonné ajouté avec succès.',
       subscriber,
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating newsletter subscriber:', error);
-    return NextResponse.json({
+    return jsonCors({
       error: 'Impossible d’ajouter cet abonné.',
       details: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
@@ -99,17 +103,17 @@ export async function DELETE(request: Request) {
     const id = typeof body?.id === 'string' ? body.id : null;
 
     if (!id) {
-      return NextResponse.json({ error: 'Identifiant manquant.' }, { status: 400 });
+      return jsonCors({ error: 'Identifiant manquant.' }, { status: 400 });
     }
 
     await prisma.newsletterSubscription.delete({
       where: { id },
     });
 
-    return NextResponse.json({ message: 'Abonné supprimé avec succès.' });
+    return jsonCors({ message: 'Abonné supprimé avec succès.' });
   } catch (error) {
     console.error('Error deleting newsletter subscriber:', error);
-    return NextResponse.json({
+    return jsonCors({
       error: 'Impossible de supprimer cet abonné.',
       details: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
