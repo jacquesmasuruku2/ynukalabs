@@ -54,8 +54,15 @@ async function adminPost<T = unknown>(path: string, body: Record<string, unknown
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error || `Admin API POST failed: ${response.status}`);
+    const err = (await response.json().catch(() => ({}))) as {
+      error?: string;
+      code?: string;
+    };
+    const message = err.error || `Admin API POST failed: ${response.status}`;
+    const error = new Error(message) as Error & { status?: number; code?: string };
+    error.status = response.status;
+    error.code = err.code;
+    throw error;
   }
   return response.json() as Promise<T>;
 }

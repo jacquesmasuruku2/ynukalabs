@@ -1,8 +1,21 @@
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { sendNewsletterConfirmationEmail } from '@/lib/email';
 import {
   isKnownNewsletterInterest,
 } from '@/lib/newsletterInterests';
+
+async function sendConfirmationSafely(email: string, name?: string | null) {
+  try {
+    await sendNewsletterConfirmationEmail({ to: email, name });
+  } catch (error) {
+    console.error('Newsletter confirmation email failed:', error);
+  }
+}
+
+function queueConfirmationEmail(email: string, name?: string | null) {
+  void sendConfirmationSafely(email, name);
+}
 
 export async function OPTIONS() {
   return corsOptions();
@@ -53,6 +66,19 @@ export async function POST(request: Request) {
     });
 
     if (existingSubscriber) {
+      const wasInactive = !existingSubscriber.isActive || !!existingSubscriber.unsubscribedAt;
+
+      if (!wasInactive) {
+        return jsonCors(
+          {
+            error: 'Cette adresse email est déjà inscrite à la newsletter.',
+            code: 'ALREADY_SUBSCRIBED',
+            subscriber: existingSubscriber,
+          },
+          { status: 409 }
+        );
+      }
+
       const updated = await prisma.newsletterSubscription.update({
         where: { email },
         data: {
@@ -63,9 +89,12 @@ export async function POST(request: Request) {
         },
       });
 
+      queueConfirmationEmail(email, updated.name);
+
       return jsonCors({
-        message: 'Abonné mis à jour avec succès.',
+        message: 'Abonnement réactivé avec succès.',
         subscriber: updated,
+        reactivated: true,
       });
     }
 
@@ -78,6 +107,8 @@ export async function POST(request: Request) {
         subscribedAt: new Date(),
       },
     });
+
+    queueConfirmationEmail(email, subscriber.name);
 
     return jsonCors({
       message: 'Abonné ajouté avec succès.',

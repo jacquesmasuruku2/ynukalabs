@@ -231,12 +231,13 @@ const Footer = () => {
                   setNewsletterEmail("");
                 } catch (err: unknown) {
                   console.error("Newsletter subscription error:", err);
-                  const errorMessage = err instanceof Error ? err.message : "Unknown error";
+                  const error = err as Error & { code?: string; status?: number };
+                  const errorMessage = error instanceof Error ? error.message : "Unknown error";
                   if (
-                    errorMessage.toLowerCase().includes("duplicate") ||
-                    errorMessage.includes("1062") ||
-                    errorMessage.toLowerCase().includes("unique") ||
-                    errorMessage.toLowerCase().includes("déjà")
+                    error.code === "ALREADY_SUBSCRIBED" ||
+                    error.status === 409 ||
+                    errorMessage.toLowerCase().includes("déjà inscrite") ||
+                    errorMessage.toLowerCase().includes("already subscribed")
                   ) {
                     toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
                   } else {

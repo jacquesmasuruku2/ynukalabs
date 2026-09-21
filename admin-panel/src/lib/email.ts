@@ -65,3 +65,37 @@ export async function sendEventSelectionEmail({
     html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f2847;background:#f7f8fa;padding:24px"><div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:28px"><p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#ffb800;font-weight:700">Ynuka Labs</p><h1 style="margin:0 0 16px;font-size:22px;color:#0f2847">Vous êtes sélectionné(e) !</h1><p>Bonjour ${name},</p><p>${intro}</p><p><a href="${exchangeUrl}" style="display:inline-block;background:#ffb800;color:#0f2847;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Ouvrir mon espace d'échange</a></p><p style="color:#64748b;font-size:14px">À bientôt,<br/>L'équipe Ynuka Labs</p></div></div>`,
   });
 }
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export async function sendNewsletterConfirmationEmail({
+  to,
+  name,
+  siteUrl,
+}: {
+  to: string;
+  name?: string | null;
+  siteUrl?: string;
+}) {
+  if (!host || !user || !pass) {
+    throw new Error('SMTP configuration is missing');
+  }
+
+  const displayName = (name || '').trim() || 'ami(e)';
+  const safeName = escapeHtml(displayName);
+  const base = (siteUrl || process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com').replace(/\/$/, '');
+
+  return transporter.sendMail({
+    from,
+    to,
+    subject: 'Bienvenue dans la newsletter Ynuka Labs',
+    text: `Bonjour ${displayName},\n\nMerci de vous être abonné(e) à la newsletter Ynuka Labs.\nVous recevrez désormais nos actualités, événements, formations et opportunités.\n\nDécouvrir Ynuka Labs : ${base}\n\nÀ bientôt,\nL'équipe Ynuka Labs`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f2847;background:#f7f8fa;padding:24px"><div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:28px"><p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#ffb800;font-weight:700">Ynuka Labs</p><h1 style="margin:0 0 16px;font-size:22px;color:#0f2847">Abonnement confirmé</h1><p>Bonjour ${safeName},</p><p>Merci de vous être abonné(e) à la newsletter <strong>Ynuka Labs</strong>.</p><p>Vous recevrez désormais nos actualités, événements, formations et opportunités Web3.</p><p><a href="${base}" style="display:inline-block;background:#ffb800;color:#0f2847;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Visiter ynukalabs.com</a></p><p style="color:#64748b;font-size:14px">À bientôt,<br/>L'équipe Ynuka Labs</p></div></div>`,
+  });
+}

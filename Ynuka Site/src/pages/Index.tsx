@@ -136,9 +136,15 @@ const Index = () => {
       toast({ title: t("home.subscribeSuccess") });
       setNewsletterEmail("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("409") || msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("déjà")) {
-        toast({ title: t("home.alreadySubscribed") });
+      const error = err as Error & { code?: string; status?: number };
+      const msg = error instanceof Error ? error.message : "";
+      if (
+        error.code === "ALREADY_SUBSCRIBED" ||
+        error.status === 409 ||
+        msg.toLowerCase().includes("déjà inscrite") ||
+        msg.toLowerCase().includes("already subscribed")
+      ) {
+        toast({ title: t("home.alreadySubscribed"), variant: "destructive" });
       } else {
         toast({ title: msg || t("admin.error"), variant: "destructive" });
       }
