@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
-import { ExternalLink, Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { GithubLogo } from "@phosphor-icons/react";
 import { fetchProjects } from "@/lib/api";
 import { DEMO_PROJECTS, USE_DEMO_PROJECTS } from "@/data/demoProjects";
@@ -62,8 +62,7 @@ function ProjectCard({
   labels: { viewProject: string; viewGithub: string };
 }) {
   const categoryLabel = project.category || fallbackCategory;
-  const exploreHref = project.liveUrl || `/projects#${project.slug}`;
-  const exploreExternal = Boolean(project.liveUrl);
+  const detailHref = `/projects/${project.slug}`;
   const hasImage = Boolean(project.imageUrl);
 
   return (
@@ -75,7 +74,7 @@ function ProjectCard({
       viewport={{ once: true }}
       className="group relative flex h-full flex-col overflow-hidden rounded-card border border-[#0f2847]/12 bg-[#0f2847] transition-all duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:hover:border-[#ffb800]/55"
     >
-      <div className="relative aspect-[16/7] overflow-hidden bg-[#152a48]">
+      <Link to={detailHref} className="relative block aspect-[16/7] overflow-hidden bg-[#152a48]">
         <img
           src={project.imageUrl || FALLBACK_IMAGE}
           alt={project.title}
@@ -101,31 +100,29 @@ function ProjectCard({
         </span>
 
         <div className="absolute inset-x-0 bottom-0 px-3 pb-3 pt-8">
-          <h3 className="font-display text-base font-bold leading-snug tracking-tight text-white md:text-lg">
+          <h3 className="font-display text-base font-bold leading-snug tracking-tight text-white transition-colors group-hover:text-[#ffb800] md:text-lg">
             {project.title}
           </h3>
         </div>
-      </div>
+      </Link>
 
       <div className="flex flex-1 flex-col bg-white px-3 py-3 dark:bg-[#12253f]">
         {project.shortPresentation ? (
-          <p className="line-clamp-2 flex-1 text-[0.78rem] leading-snug text-slate-600 dark:text-[#93c5fc]/85">
+          <Link to={detailHref} className="line-clamp-2 flex-1 text-[0.78rem] leading-snug text-slate-600 hover:text-[#0f2847] dark:text-[#93c5fc]/85 dark:hover:text-white">
             {project.shortPresentation}
-          </p>
+          </Link>
         ) : (
           <div className="flex-1" />
         )}
 
         <div className="mt-3 flex items-stretch gap-1.5">
-          <a
-            href={exploreHref}
-            target={exploreExternal ? "_blank" : undefined}
-            rel={exploreExternal ? "noopener noreferrer" : undefined}
+          <Link
+            to={detailHref}
             className="inline-flex flex-1 items-center justify-center gap-1 rounded-none bg-[#ffb800] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#0f2847] transition-colors hover:bg-[#e6a600]"
           >
             {labels.viewProject}
-            <ExternalLink className="h-3 w-3" aria-hidden />
-          </a>
+            <ArrowRight className="h-3 w-3" aria-hidden />
+          </Link>
 
           {project.githubUrl ? (
             <a
@@ -154,6 +151,7 @@ const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [apiProjects, setApiProjects] = useState<ProjectShowcase[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const demoProjects = useMemo((): ProjectShowcase[] => {
     if (!USE_DEMO_PROJECTS) return [];
@@ -185,6 +183,7 @@ const Projects = () => {
     let cancelled = false;
 
     const loadProjects = async () => {
+      setLoadError(false);
       try {
         const projects = await fetchProjects(100);
         if (cancelled) return;
@@ -210,7 +209,10 @@ const Projects = () => {
         );
       } catch (error) {
         console.error("Failed to fetch projects:", error);
-        if (!cancelled) setApiProjects([]);
+        if (!cancelled) {
+          setApiProjects([]);
+          setLoadError(true);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -256,10 +258,12 @@ const Projects = () => {
   const filteredProjects = useMemo(() => {
     const normalizedQuery = normalizeText(searchQuery);
     const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+    const activeNorm = normalizeText(activeCategory);
 
     return projectShowcases.filter((project) => {
       const categoryOk =
-        activeCategory === ALL_CATEGORY || project.category === activeCategory;
+        activeCategory === ALL_CATEGORY ||
+        normalizeText(project.category) === activeNorm;
       if (!categoryOk) return false;
       if (!queryTokens.length) return true;
 
@@ -271,8 +275,11 @@ const Projects = () => {
     });
   }, [activeCategory, searchQuery, projectShowcases]);
 
-  const emptyMessage =
-    activeCategory !== ALL_CATEGORY && !searchQuery.trim()
+  const emptyMessage = loadError
+    ? t("projects.loadError", {
+        defaultValue: "Impossible de charger les projets. Vérifiez que l’admin API est accessible.",
+      })
+    : activeCategory !== ALL_CATEGORY && !searchQuery.trim()
       ? t("projects.emptyCategory")
       : t("projects.empty");
 

@@ -17,6 +17,22 @@ const slugify = (v: string) =>
 
 type CategoryOption = { id: string; title: string };
 
+const FALLBACK_PROJECT_CATEGORIES: CategoryOption[] = [
+  { id: 'fallback-education', title: 'Education' },
+  { id: 'fallback-environnement', title: 'Environnement' },
+  { id: 'fallback-blockchain', title: 'Blockchain' },
+];
+
+function mergeCategoryOptions(fromApi: CategoryOption[]): CategoryOption[] {
+  const byTitle = new Map<string, CategoryOption>();
+  for (const c of [...FALLBACK_PROJECT_CATEGORIES, ...fromApi]) {
+    const key = c.title.trim().toLowerCase();
+    if (!key) continue;
+    if (!byTitle.has(key)) byTitle.set(key, c);
+  }
+  return Array.from(byTitle.values());
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -37,31 +53,41 @@ export default function NewProjectPage() {
   useEffect(() => {
     fetch('/api/categories')
       .then(async (res) => {
-        if (!res.ok) return;
-        const data = await res.json();
-        const list: CategoryOption[] = Array.isArray(data)
-          ? data.map((c: CategoryOption) => ({ id: c.id, title: c.title }))
-          : [];
+        const data = res.ok ? await res.json() : [];
+        const list = mergeCategoryOptions(
+          Array.isArray(data)
+            ? data.map((c: CategoryOption) => ({ id: c.id, title: c.title }))
+            : []
+        );
         setCategories(list);
-        if (list.length && !form.category) {
-          setForm((c) => ({ ...c, category: list[0].title }));
-        }
+        setForm((c) => (c.category ? c : { ...c, category: list[0]?.title || 'Education' }));
       })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- init only
+      .catch(() => {
+        const list = mergeCategoryOptions([]);
+        setCategories(list);
+        setForm((c) => (c.category ? c : { ...c, category: list[0]?.title || 'Education' }));
+      });
   }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.category.trim()) {
+      alert('Choisissez une catégorie.');
+      return;
+    }
     setSaving(true);
+    const payload = { ...form, status: form.status === 'draft' ? 'draft' : 'active' };
     const res = await fetch('/api/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     setSaving(false);
     if (res.ok) router.push('/projects');
-    else alert('Création impossible (slug unique ?).');
+    else {
+      const err = await res.json().catch(() => ({}));
+      alert((err as { error?: string }).error || 'Création impossible (slug unique ?).');
+    }
   };
 
   return (
@@ -135,7 +161,7 @@ export default function NewProjectPage() {
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled>
-                      {categories.length ? 'Choisir une catégorie' : 'Aucune catégorie — créez-en une'}
+                      Choisir une catégorie
                     </option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.title}>
@@ -144,7 +170,7 @@ export default function NewProjectPage() {
                     ))}
                   </select>
                   <p className="mt-1.5 text-xs text-secondary">
-                    Utilisée pour filtrer les projets sur le site.{' '}
+                    Visible sur le site public (/projects) dès que le statut est « Publié ».{' '}
                     <Link href="/categories" className="text-blue-600 hover:underline">
                       Gérer les catégories
                     </Link>
@@ -158,9 +184,9 @@ export default function NewProjectPage() {
                     onChange={(e) => update('status', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="active">active</option>
-                    <option value="draft">draft</option>
-                    <option value="archived">archived</option>
+                    <option value="active">Publié (visible sur le site)</option>
+                    <option value="draft">Brouillon (masqué)</option>
+                    <option value="archived">Archivé</option>
                   </select>
                 </div>
 

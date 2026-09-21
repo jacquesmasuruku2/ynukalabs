@@ -252,7 +252,8 @@ export async function fetchOpportunity(id: string) {
 
 export async function fetchProjects(limit = 100) {
   const rows = await adminGet<any[]>("/projects", { limit });
-  return (Array.isArray(rows) ? rows : []).map((item) => ({
+  const list = Array.isArray(rows) ? rows : [];
+  return list.map((item) => ({
     id: String(item.id),
     slug: item.slug || String(item.id),
     title: item.title || "",
@@ -265,6 +266,54 @@ export async function fetchProjects(limit = 100) {
     show_on_home: !!item.showOnHome,
     tags: [] as string[],
   }));
+}
+
+export async function fetchProjectBySlug(slug: string) {
+  const trimmed = slug.trim();
+  if (!trimmed) return null;
+  try {
+    const row = await adminGet<any>("/projects", { slug: trimmed });
+    if (row && !Array.isArray(row) && row.id) {
+      return {
+        id: String(row.id),
+        slug: row.slug || trimmed,
+        title: row.title || "",
+        category: row.category || "",
+        description: row.description || "",
+        featured_image: row.featuredImage || null,
+        repository_url: row.repositoryUrl || null,
+        live_url: row.liveUrl || null,
+        created_at: row.createdAt || "",
+        show_on_home: !!row.showOnHome,
+        tags: [] as string[],
+      };
+    }
+    if (Array.isArray(row) && row.length === 1) {
+      const item = row[0];
+      return {
+        id: String(item.id),
+        slug: item.slug || trimmed,
+        title: item.title || "",
+        category: item.category || "",
+        description: item.description || "",
+        featured_image: item.featuredImage || null,
+        repository_url: item.repositoryUrl || null,
+        live_url: item.liveUrl || null,
+        created_at: item.createdAt || "",
+        show_on_home: !!item.showOnHome,
+        tags: [] as string[],
+      };
+    }
+  } catch {
+    // fallback below
+  }
+
+  const all = await fetchProjects(200);
+  return (
+    all.find((p) => p.slug === trimmed) ||
+    all.find((p) => p.id === trimmed) ||
+    null
+  );
 }
 
 export async function fetchHomeProjects(limit = 4) {

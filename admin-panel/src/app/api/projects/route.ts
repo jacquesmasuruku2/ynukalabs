@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     if (id) {
       const project = await prisma.project.findUnique({ where: { id } });
-      if (!project || (!admin && project.status !== 'active')) {
+      if (!project || (!admin && project.status !== 'active' && project.status !== 'published')) {
         return jsonCors({ error: 'Project not found' }, { status: 404 });
       }
       return jsonCors(project);
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     const projects = await prisma.project.findMany({
       where: {
-        ...(admin ? {} : { status: 'active' }),
+        ...(admin ? {} : { status: { in: ['active', 'published'] } }),
         ...(home ? { showOnHome: true } : {}),
         ...(slug ? { slug } : {}),
       },

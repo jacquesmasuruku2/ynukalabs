@@ -479,7 +479,7 @@ const Index = () => {
             description,
             tags: tagsFromText(project.tags, project.category, description),
             logoUrl: project.featured_image,
-            href: project.live_url || project.repository_url || `/projects#${project.slug}`,
+            href: `/projects/${project.slug}`,
           };
         });
 

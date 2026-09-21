@@ -17,6 +17,22 @@ const slugify = (v: string) =>
 
 type CategoryOption = { id: string; title: string };
 
+const FALLBACK_PROJECT_CATEGORIES: CategoryOption[] = [
+  { id: 'fallback-education', title: 'Education' },
+  { id: 'fallback-environnement', title: 'Environnement' },
+  { id: 'fallback-blockchain', title: 'Blockchain' },
+];
+
+function mergeCategoryOptions(fromApi: CategoryOption[]): CategoryOption[] {
+  const byTitle = new Map<string, CategoryOption>();
+  for (const c of [...FALLBACK_PROJECT_CATEGORIES, ...fromApi]) {
+    const key = c.title.trim().toLowerCase();
+    if (!key) continue;
+    if (!byTitle.has(key)) byTitle.set(key, c);
+  }
+  return Array.from(byTitle.values());
+}
+
 export default function EditProjectPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -41,9 +57,11 @@ export default function EditProjectPage() {
       fetch(`/api/projects/${id}`).then(async (res) => (res.ok ? res.json() : null)),
       fetch('/api/categories').then(async (res) => (res.ok ? res.json() : [])),
     ]).then(([project, cats]) => {
-      const list: CategoryOption[] = Array.isArray(cats)
-        ? cats.map((c: CategoryOption) => ({ id: c.id, title: c.title }))
-        : [];
+      const list = mergeCategoryOptions(
+        Array.isArray(cats)
+          ? cats.map((c: CategoryOption) => ({ id: c.id, title: c.title }))
+          : []
+      );
       setCategories(list);
       if (project) {
         setForm({
@@ -156,7 +174,7 @@ export default function EditProjectPage() {
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled>
-                      {categoryOptions.length ? 'Choisir une catégorie' : 'Aucune catégorie — créez-en une'}
+                      Choisir une catégorie
                     </option>
                     {categoryOptions.map((category) => (
                       <option key={category.id} value={category.title}>
@@ -165,7 +183,7 @@ export default function EditProjectPage() {
                     ))}
                   </select>
                   <p className="mt-1.5 text-xs text-secondary">
-                    Utilisée pour filtrer les projets sur le site.{' '}
+                    Visible sur le site public (/projects) dès que le statut est « Publié ».{' '}
                     <Link href="/categories" className="text-blue-600 hover:underline">
                       Gérer les catégories
                     </Link>
@@ -179,9 +197,9 @@ export default function EditProjectPage() {
                     onChange={(e) => update('status', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="active">active</option>
-                    <option value="draft">draft</option>
-                    <option value="archived">archived</option>
+                    <option value="active">Publié (visible sur le site)</option>
+                    <option value="draft">Brouillon (masqué)</option>
+                    <option value="archived">Archivé</option>
                   </select>
                 </div>
 

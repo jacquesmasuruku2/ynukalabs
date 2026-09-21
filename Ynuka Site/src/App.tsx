@@ -14,6 +14,7 @@ import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import EventEspace from "./pages/EventEspace";
 import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 import Community from "./pages/Community";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/events/:id/espace" element={<EventEspace />} />
               <Route path="/luma-events" element={<LumaEvents />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:slug" element={<ProjectDetail />} />
               <Route path="/community" element={<Community />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/blog" element={<Blog />} />
