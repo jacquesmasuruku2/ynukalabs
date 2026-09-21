@@ -49,12 +49,68 @@ export async function sendAdminInviteEmail({
 }) {
   if (!host || !user || !pass) throw new Error('SMTP configuration is missing');
   const displayName = (name || '').trim() || 'collègue';
+  const safeInviter = escapeHtml(inviterName.trim() || 'Jacques Masuruku');
+  const safeInviteUrl = escapeHtml(inviteUrl);
   return transporter.sendMail({
     from,
     to,
     subject: 'Invitation admin Ynuka Labs — créez votre mot de passe',
-    text: `Bonjour ${displayName},\n\n${inviterName} vous invite à rejoindre le panneau d'administration Ynuka Labs.\n\nCréez votre mot de passe via ce lien (valable 72 heures) :\n${inviteUrl}`,
-    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f2847;padding:24px"><h1>Invitation administrateur</h1><p>Bonjour ${escapeHtml(displayName)},</p><p><strong>${escapeHtml(inviterName)}</strong> vous invite à rejoindre le panneau d'administration Ynuka Labs.</p><p><a href="${inviteUrl}" style="display:inline-block;background:#0B3B8B;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Créer mon mot de passe</a></p><p>Ce lien est valable 72 heures.</p></div>`,
+    text: `Bonjour ${displayName},\n\n${inviterName} vous invite à rejoindre le panneau d'administration du site web de Ynuka Labs.\n\nCliquez sur ce lien pour définir votre mot de passe sécurisé :\n${inviteUrl}\n\nCe lien est valable pendant 3 jours (72 heures).\n\nSi cette invitation ne vous concerne pas, ignorez simplement ce message.\n\nÀ bientôt,\nL'équipe Ynuka Labs`,
+    html: `<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation administrateur Ynuka Labs</title>
+    <style>
+      @media screen and (max-width: 600px) {
+        .email-shell { width: 100% !important; }
+        .email-card { border-radius: 0 !important; }
+        .email-padding { padding: 28px 20px !important; }
+        .button { display: block !important; text-align: center !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;background:#f3f6fa;font-family:Arial,Helvetica,sans-serif;color:#14213d;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Définissez votre mot de passe sécurisé pour rejoindre le panneau d'administration Ynuka Labs.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f6fa;">
+      <tr>
+        <td align="center" style="padding:28px 12px;">
+          <table role="presentation" class="email-shell" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+            <tr>
+              <td class="email-card" style="background:#ffffff;border:1px solid #dfe6ef;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(15,40,71,.08);">
+                <div style="height:6px;background:#ffb800;"></div>
+                <div class="email-padding" style="padding:34px 36px;">
+                  <p style="margin:0 0 22px;color:#0b3b8b;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Ynuka Labs</p>
+                  <h1 style="margin:0 0 18px;color:#102a43;font-size:28px;line-height:1.2;font-weight:700;">Invitation à rejoindre l'administration</h1>
+                  <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">Bonjour ${escapeHtml(displayName)},</p>
+                  <p style="margin:0 0 16px;font-size:16px;line-height:1.7;"><strong>${safeInviter}</strong> vous invite à rejoindre le panneau d'administration du site web de Ynuka Labs.</p>
+                  <p style="margin:0 0 26px;font-size:16px;line-height:1.7;">Cliquez sur le bouton ci-dessous pour définir votre mot de passe sécurisé.</p>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
+                    <tr>
+                      <td style="border-radius:9px;background:#0b3b8b;">
+                        <a class="button" href="${safeInviteUrl}" style="display:inline-block;padding:15px 24px;border:1px solid #0b3b8b;border-radius:9px;background:#0b3b8b;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;">Définir mon mot de passe</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <p style="margin:0 0 18px;padding:14px 16px;border-left:4px solid #ffb800;background:#fff8df;color:#3c4858;font-size:14px;line-height:1.6;"><strong>À savoir :</strong> ce lien est valable pendant 3 jours (72 heures).</p>
+                  <p style="margin:0 0 24px;color:#65758b;font-size:14px;line-height:1.6;">Si cette invitation ne vous concerne pas, ignorez simplement ce message.</p>
+                  <p style="margin:0;color:#65758b;font-size:14px;line-height:1.6;">À bientôt,<br><strong style="color:#102a43;">L'équipe Ynuka Labs</strong></p>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 12px;text-align:center;color:#8291a5;font-size:12px;line-height:1.5;">
+                Si le bouton ne fonctionne pas, ouvrez ce lien :<br>
+                <a href="${safeInviteUrl}" style="color:#0b3b8b;word-break:break-all;">${safeInviteUrl}</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
   });
 }
 
