@@ -1,4 +1,7 @@
+const fs = require('node:fs');
+const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { Client } = require('pg');
 
 if (!process.env.DATABASE_URL) {
   console.warn('[admin-panel] DATABASE_URL is not configured; skipping Prisma migrations for this preview build.');
@@ -6,9 +9,51 @@ if (!process.env.DATABASE_URL) {
 }
 
 const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const result = spawnSync(command, ['prisma', 'migrate', 'deploy'], {
-  stdio: 'inherit',
-  env: process.env,
-});
+const migrationsPath = path.join(__dirname, '..', 'prisma', 'migrations');
 
-process.exit(result.status ?? 1);
+function runPrisma(args) {
+  return spawnSync(command, ['prisma', ...args], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+}
+
+async function baselineExistingDatabase() {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    const tables = await client.query(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public';
+    `);
+    const tableNames = tables.rows.map((row) => row.table_name);
+    if (tableNames.includes('_prisma_migrations') || tableNames.length === 0) return;
+
+    const migrations = fs
+      .readdirSync(migrationsPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+    const latestMigration = migrations.at(-1);
+    console.log(`[admin-panel] Existing database detected; baselining ${migrations.length - 1} historical migrations.`);
+    for (const migration of migrations.slice(0, -1)) {
+      const result = runPrisma(['migrate', 'resolve', '--applied', migration]);
+      if (result.status !== 0) process.exit(result.status ?? 1);
+    }
+    console.log(`[admin-panel] Latest migration will be applied normally: ${latestMigration}`);
+  } finally {
+    await client.end();
+  }
+}
+
+async function main() {
+  await baselineExistingDatabase();
+  const result = runPrisma(['migrate', 'deploy']);
+  process.exit(result.status ?? 1);
+}
+
+main().catch((error) => {
+  console.error('[admin-panel] Migration preparation failed:', error);
+  process.exit(1);
+});
