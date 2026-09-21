@@ -4,6 +4,24 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 
+function AdminPreloader({ message }: { message: string }) {
+  return (
+    <div className="admin-preloader" role="status" aria-live="polite">
+      <div className="admin-preloader__mark" aria-hidden="true">
+        <span className="admin-preloader__wheel admin-preloader__wheel--blue" />
+        <span className="admin-preloader__wheel admin-preloader__wheel--gold" />
+        <span className="admin-preloader__wheel admin-preloader__wheel--pink" />
+        <span className="admin-preloader__core">
+          <img src="/logo.png" alt="" />
+        </span>
+      </div>
+      <p className="admin-preloader__brand">Ynuka Labs</p>
+      <p className="admin-preloader__message">{message}</p>
+      <span className="admin-preloader__line" aria-hidden="true"><span /></span>
+    </div>
+  );
+}
+
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -25,26 +43,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isLoading, router, pathname]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Chargement...</p>
-        </div>
-      </div>
-    );
+    return <AdminPreloader message="Chargement de votre espace..." />;
   }
 
   if (!isAuthenticated) {
     console.log('[ProtectedRoute] Not authenticated, showing redirect screen');
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Redirection vers la page de connexion...</p>
-        </div>
-      </div>
-    );
+    return <AdminPreloader message="Redirection vers la page de connexion..." />;
   }
 
   console.log('[ProtectedRoute] Authenticated, rendering children');

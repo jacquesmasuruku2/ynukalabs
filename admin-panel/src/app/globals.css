@@ -219,6 +219,129 @@ textarea {
   color: var(--text-secondary);
 }
 
+.admin-preloader {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  background: #f8fafc;
+  color: #102a43;
+}
+
+.admin-preloader__mark {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  margin-bottom: 18px;
+}
+
+.admin-preloader__core {
+  position: absolute;
+  inset: 21px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(16, 42, 67, 0.12);
+}
+
+.admin-preloader__core img {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.admin-preloader__wheel {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px 50% 50% 50%;
+  opacity: 0.9;
+  transform-origin: 50% 50%;
+  animation: admin-preloader-spin 2.8s linear infinite;
+}
+
+.admin-preloader__wheel::after {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.admin-preloader__wheel--blue {
+  top: 2px;
+  left: 9px;
+  background: #45b7e8;
+  animation-duration: 2.4s;
+}
+
+.admin-preloader__wheel--gold {
+  right: 3px;
+  bottom: 7px;
+  background: #f7c744;
+  animation-direction: reverse;
+  animation-duration: 3.1s;
+}
+
+.admin-preloader__wheel--pink {
+  top: 17px;
+  right: 3px;
+  background: #e56aa9;
+  animation-duration: 2.7s;
+}
+
+.admin-preloader__brand {
+  margin: 0;
+  color: #102a43;
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.admin-preloader__message {
+  margin: 7px 0 16px;
+  color: #718096;
+  font-size: 13px;
+}
+
+.admin-preloader__line {
+  display: block;
+  width: 92px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e2e8f0;
+}
+
+.admin-preloader__line span {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: #0b3b8b;
+  animation: admin-preloader-progress 1.5s ease-in-out infinite;
+}
+
+@keyframes admin-preloader-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes admin-preloader-progress {
+  0% { transform: translateX(-130%); }
+  100% { transform: translateX(360%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-preloader__wheel,
+  .admin-preloader__line span { animation: none; }
+}
+
 .text-muted {
   color: var(--text-muted);
 }
