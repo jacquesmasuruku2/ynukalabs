@@ -12,5 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /auth/callback
 
 Sitemap: https://ynukalabs.com/sitemap.xml

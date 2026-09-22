@@ -41,6 +41,7 @@ import TeamMemberDetail from "./pages/TeamMemberDetail";
 import Catalog from "./pages/Catalog";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import Seo from "./components/Seo";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <StrapiAuthProvider>
+          <Seo />
           <Layout>
             <Routes>
               <Route path="/" element={<Index />} />
