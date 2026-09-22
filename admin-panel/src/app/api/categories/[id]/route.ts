@@ -62,7 +62,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('category', id, session!);
+    if (accessResponse) return accessResponse;
     await prisma.category.delete({
       where: { id },
     });
