@@ -22,7 +22,7 @@ const pages: Record<string, { title: string; description: string }> = {
   '/tools': { title: 'Outils numériques et Web3 | Ynuka Labs', description: 'Utilisez les outils numériques et Web3 proposés par Ynuka Labs.' },
   '/onboarding': { title: 'Programme d’intégration | Ynuka Labs', description: 'Découvrez le programme d’intégration de Ynuka Labs pour rejoindre la communauté et ses projets.' },
   '/gallery': { title: 'Galerie | Ynuka Labs', description: 'Découvrez les images et moments forts des activités de Ynuka Labs.' },
-  '/goma-drep': { title: 'Goma DRep | Ynuka Labs', description: 'Découvrez l’initiative Goma DRep et la participation de Ynuka Labs à la gouvernance blockchain.' },
+  '/goma-drep': { title: 'Goma DRep | Ynuka Labs', description: 'Profil de GOMA-DRep, le DRep de Goma Hub : objectifs, motivations, liens et délégation sur Cardano.' },
   '/presentation': { title: 'Présentation | Ynuka Labs', description: 'Présentation de Ynuka Labs, ses programmes, ses projets et sa vision de l’innovation numérique.' },
   '/catalog': { title: 'Catalogue | Ynuka Labs', description: 'Explorez le catalogue des formations, services et ressources de Ynuka Labs.' },
   '/luma-events': { title: 'Événements Ynuka Labs | Luma', description: 'Retrouvez les événements et rencontres de Ynuka Labs.' },
