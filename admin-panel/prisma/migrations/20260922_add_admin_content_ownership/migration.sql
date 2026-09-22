@@ -1,3 +1,5 @@
+ALTER TABLE IF EXISTS "AdminContentOwnership" SET (schema_locked = false);
+
 CREATE TABLE IF NOT EXISTS "AdminContentOwnership" (
   "id" STRING PRIMARY KEY,
   "resourceType" STRING NOT NULL,
