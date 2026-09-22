@@ -124,7 +124,7 @@ function AdminUserMenu({
           ) : (
             <span
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #0f2847, #2563eb)' }}
+              style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))' }}
             >
               {initials}
             </span>
@@ -161,35 +161,35 @@ function AdminUserMenu({
           </div>
           <div className="space-y-2.5 px-4 py-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
             <p className="flex items-start gap-2">
-              <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <span>
                 <span className="block font-medium text-[var(--text-primary)]">Rôle</span>
                 {roleLabel(user?.role)}
               </span>
             </p>
             <p className="flex items-start gap-2">
-              <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <span>
                 <span className="block font-medium text-[var(--text-primary)]">Connexion</span>
                 {providerLabel(user?.provider)}
               </span>
             </p>
             <p className="flex items-start gap-2">
-              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <span>
                 <span className="block font-medium text-[var(--text-primary)]">Dernière connexion</span>
                 {formatDateTime(user?.lastLoginAt)}
               </span>
             </p>
             <p className="flex items-start gap-2">
-              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <span>
                 <span className="block font-medium text-[var(--text-primary)]">Session ouverte</span>
                 {formatDateTime(session?.createdAt)}
               </span>
             </p>
             <p className="flex items-start gap-2">
-              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <span>
                 <span className="block font-medium text-[var(--text-primary)]">Expire le</span>
                 {formatDateTime(session?.expiresAt)}

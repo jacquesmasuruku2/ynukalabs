@@ -24,6 +24,8 @@
   --icon-green: #16a34a;
   --icon-purple: #9333ea;
   --icon-red: #dc2626;
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(37, 99, 235, 0.25);
 }
 
 /* Thème gris */
@@ -44,6 +46,8 @@
   --icon-green: #4b5563;
   --icon-purple: #4b5563;
   --icon-red: #4b5563;
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(75, 85, 99, 0.25);
 }
 
 /* Thème sombre */
@@ -64,6 +68,8 @@
   --icon-green: #34d399;
   --icon-purple: #a78bfa;
   --icon-red: #f87171;
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(96, 165, 250, 0.35);
 
   color-scheme: dark;
 }
@@ -152,6 +158,8 @@
   --icon-green: #16a34a;
   --icon-purple: #16a34a;
   --icon-red: #16a34a;
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(22, 163, 74, 0.25);
 }
 
 /* Thème violet */
@@ -172,6 +180,8 @@
   --icon-green: #9333ea;
   --icon-purple: #9333ea;
   --icon-red: #9333ea;
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(147, 51, 234, 0.25);
 }
 
 /* Thème orange */
@@ -192,10 +202,15 @@
   --icon-green: #ea580c;
   --icon-purple: #ea580c;
   --icon-red: #ea580c;
+  --accent-contrast: #ffffff;
+  --accent-ring: rgba(234, 88, 12, 0.25);
 }
 
 body {
   font-family: Arial, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 button,
@@ -217,6 +232,68 @@ textarea {
 
 .text-secondary {
   color: var(--text-secondary);
+}
+
+/* Apply the selected accent to shared Tailwind surfaces without changing semantic danger/success states. */
+[data-theme] .bg-blue-600 { background-color: var(--primary) !important; }
+[data-theme] .hover\:bg-blue-700:hover { background-color: var(--primary-dark) !important; }
+[data-theme] .bg-blue-700 { background-color: var(--primary-dark) !important; }
+[data-theme] .text-blue-600 { color: var(--primary) !important; }
+[data-theme] .text-blue-700 { color: var(--primary-dark) !important; }
+[data-theme] .text-blue-800 { color: var(--primary-dark) !important; }
+[data-theme] .border-blue-600 { border-color: var(--primary) !important; }
+[data-theme] .border-blue-200 { border-color: color-mix(in srgb, var(--primary) 28%, white) !important; }
+[data-theme] .bg-blue-50 { background-color: var(--primary-bg) !important; }
+[data-theme] .bg-blue-100 { background-color: color-mix(in srgb, var(--primary) 14%, white) !important; }
+[data-theme] .hover\:bg-blue-50:hover { background-color: var(--primary-bg) !important; }
+[data-theme] .focus\:ring-blue-600:focus { --tw-ring-color: var(--accent-ring) !important; }
+[data-theme] .focus\:ring-blue-500:focus { --tw-ring-color: var(--accent-ring) !important; }
+[data-theme] .text-purple-600 { color: var(--primary) !important; }
+[data-theme] .text-indigo-600 { color: var(--primary) !important; }
+[data-theme] .bg-indigo-600 { background-color: var(--primary) !important; }
+[data-theme] .hover\:bg-indigo-700:hover { background-color: var(--primary-dark) !important; }
+[data-theme] .border-indigo-200 { border-color: color-mix(in srgb, var(--primary) 28%, white) !important; }
+[data-theme] .bg-indigo-50 { background-color: var(--primary-bg) !important; }
+
+[data-theme] .admin-shell .card,
+[data-theme] .admin-shell section.card {
+  border-color: var(--card-border);
+  background-color: var(--card-bg);
+}
+
+[data-theme] .admin-shell input:focus,
+[data-theme] .admin-shell textarea:focus,
+[data-theme] .admin-shell select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  outline: none;
+}
+
+[data-theme="dark"] .admin-shell .bg-white,
+[data-theme="dark"] .admin-shell .bg-gray-50,
+[data-theme="dark"] .admin-shell .bg-gray-100 {
+  background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .admin-shell .border-gray-200,
+[data-theme="dark"] .admin-shell .border-gray-300,
+[data-theme="dark"] .admin-shell .border-slate-200,
+[data-theme="dark"] .admin-shell .border-slate-300 {
+  border-color: var(--card-border) !important;
+}
+
+[data-theme="dark"] .admin-shell .text-gray-900,
+[data-theme="dark"] .admin-shell .text-slate-900,
+[data-theme="dark"] .admin-shell .text-gray-800,
+[data-theme="dark"] .admin-shell .text-slate-800 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .admin-shell .text-gray-600,
+[data-theme="dark"] .admin-shell .text-slate-600,
+[data-theme="dark"] .admin-shell .text-gray-500,
+[data-theme="dark"] .admin-shell .text-slate-500 {
+  color: var(--text-secondary) !important;
 }
 
 .admin-preloader {
