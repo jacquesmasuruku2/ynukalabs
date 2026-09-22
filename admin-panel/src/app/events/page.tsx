@@ -178,7 +178,7 @@ export default function EventsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-secondary">{item.date ? new Date(item.date).toLocaleDateString('fr-FR') : '—'}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-1 text-xs ${item.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`rounded-full px-2 py-1 text-xs ${item.published ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-200' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-200'}`}>
                         {item.published ? 'Publié' : 'Brouillon'}
                       </span>
                     </td>
