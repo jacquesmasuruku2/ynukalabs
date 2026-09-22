@@ -48,16 +48,15 @@ const Resources = () => {
     const loadGallery = async () => {
       try {
         const dbImages = await fetchGalleryEvents(50);
-        if (dbImages.length > 0) {
-          setGalleryImages(
-            dbImages.map((img) => ({
+            if (dbImages.length > 0) {
+              const uploadedImages = dbImages.map((img) => ({
               key: img.id,
               imageUrl: img.imageUrl,
               alt: img.title || img.description || "Galerie Ynuka Labs",
               title: img.title,
               description: img.description,
-            }))
-          );
+                }));
+              setGalleryImages([...fallbackGalleryImages, ...uploadedImages]);
         }
       } catch (error) {
         console.error("Failed to fetch gallery events:", error);
