@@ -208,9 +208,9 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
   }
 
   return (
-    <div className="relative isolate bg-[#f3f3f1] rounded-xl overflow-visible border border-[#d9d9d7] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]">
-      <div ref={toolbarRef} className="sticky top-0 z-50 max-w-full bg-[#f7f6f4] border-b border-[#d5d2ce] shadow-[0_1px_0_rgba(15,23,42,0.06)]">
-        <div className="flex border-b border-[#e6e2dd] bg-[#f3f1ee]">
+    <div className="relative isolate overflow-visible rounded-xl border border-[#d9d9d7] bg-[#f3f3f1] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] dark:border-slate-700 dark:bg-slate-900">
+      <div ref={toolbarRef} className="sticky top-0 z-50 max-w-full border-b border-[#d5d2ce] bg-[#f7f6f4] shadow-[0_1px_0_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex border-b border-[#e6e2dd] bg-[#f3f1ee] dark:border-slate-700 dark:bg-slate-800">
           {['home', 'insert', 'layout'].map((tab) => (
             <button
               key={tab}
@@ -218,8 +218,8 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                 activeTab === tab
-                  ? 'bg-white text-[#0f172a] border-b-2 border-[#2563eb]'
-                  : 'text-[#475569] hover:bg-white/70'
+                  ? 'bg-white text-[#0f172a] border-b-2 border-[#2563eb] dark:bg-slate-700 dark:text-white'
+                  : 'text-[#475569] hover:bg-white/70 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -229,7 +229,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
         {/* Home Tab Content */}
         {activeTab === 'home' && (
-          <div className="p-2 flex flex-wrap gap-1 items-center bg-gradient-to-b from-gray-50 to-white">
+          <div className="flex flex-wrap items-center gap-1 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
             {/* Clipboard Group */}
             <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
               <button
@@ -261,7 +261,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
             {/* Font Group */}
             <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
               <select
-                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-blue-50"
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
                 title="Police"
               >
                 <option>Calibri</option>
@@ -270,7 +270,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <option>Times New Roman</option>
               </select>
               <select
-                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-blue-50 w-16"
+                className="w-16 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
                 title="Taille"
                 value={fontSize}
                 onChange={(e) => setFontSize(e.target.value)}
@@ -368,7 +368,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                   />
                 </button>
                 {isTextColorPickerOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg p-2 z-50">
+                  <div className="absolute top-full left-0 z-50 mt-1 rounded border border-gray-300 bg-white p-2 shadow-lg dark:border-slate-600 dark:bg-slate-800">
                     <div className="grid grid-cols-5 gap-1">
                       {['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#8800ff', '#008800'].map((color) => (
                         <button
@@ -404,7 +404,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                   />
                 </button>
                 {isHighlightColorPickerOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg p-2 z-50">
+                  <div className="absolute top-full left-0 z-50 mt-1 rounded border border-gray-300 bg-white p-2 shadow-lg dark:border-slate-600 dark:bg-slate-800">
                     <div className="grid grid-cols-5 gap-1">
                       {['#ffff00', '#00ffff', '#ff00ff', '#ff8800', '#88ff00', '#ffffff', '#cccccc', '#ffcccc', '#ccffcc', '#ccccff'].map((color) => (
                         <button
@@ -564,7 +564,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
         {/* Insert Tab */}
         {activeTab === 'insert' && (
-          <div className="p-2 flex gap-2 items-center bg-gradient-to-b from-gray-50 to-white">
+          <div className="flex items-center gap-2 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
             <button 
               type="button"
               onClick={() => setIsReadAlsoModalOpen(true)}
@@ -585,7 +585,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
         {/* Layout Tab */}
         {activeTab === 'layout' && (
-          <div className="p-2 flex gap-2 items-center bg-gradient-to-b from-gray-50 to-white">
+          <div className="flex items-center gap-2 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
             <button type="button" className="p-2 hover:bg-blue-100 rounded transition-colors" title="Orientation">
               <FileText className="w-4 h-4" />
             </button>
@@ -596,7 +596,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
         )}
       </div>
 
-      <div className="bg-[#dfe0df] h-6 border-b border-[#c9c7c4] flex items-center px-4">
+      <div className="flex h-6 items-center border-b border-[#c9c7c4] bg-[#dfe0df] px-4 dark:border-slate-700 dark:bg-slate-800">
         <div className="flex-1 flex items-center gap-1">
           {[...Array(20)].map((_, i) => (
             <div key={i} className="w-px h-3 bg-[#8a8a88]"></div>
@@ -604,9 +604,9 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-[#f4f4f3] p-3 sm:p-6 lg:p-8" style={{ minHeight: '600px' }}>
+      <div className="overflow-x-auto bg-[#f4f4f3] p-3 dark:bg-slate-950 sm:p-6 lg:p-8" style={{ minHeight: '600px' }}>
         <div 
-          className="mx-auto min-h-[900px] bg-white p-5 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_16px_40px_rgba(15,23,42,0.08)] sm:p-8 lg:p-12"
+          className="mx-auto min-h-[900px] bg-white p-5 text-slate-900 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_16px_40px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100 sm:p-8 lg:p-12"
           style={{ 
             width: '100%',
             maxWidth: '1500px',
@@ -614,7 +614,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
             transformOrigin: 'top center'
           }}
         >
-            <EditorContent editor={editor} className="prose prose-sm min-w-0 max-w-none break-words focus:outline-none min-h-[760px] leading-relaxed text-[15px] sm:prose-base" />
+            <EditorContent editor={editor} className="prose prose-sm min-w-0 max-w-none break-words focus:outline-none min-h-[760px] leading-relaxed text-[15px] dark:prose-invert sm:prose-base" />
         </div>
       </div>
 
@@ -661,9 +661,9 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
       {/* Link Modal */}
       {isLinkModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-slate-800">
+            <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-slate-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                 Insérer un lien
               </h2>
               <button
@@ -675,14 +675,14 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               </button>
             </div>
             <div className="p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-200">
                 URL du lien
               </label>
               <input
                 type="url"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 placeholder="https://..."
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -691,11 +691,11 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 }}
               />
             </div>
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
+            <div className="flex items-center justify-end gap-3 border-t border-gray-200 p-4 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => setIsLinkModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
               >
                 Annuler
               </button>
