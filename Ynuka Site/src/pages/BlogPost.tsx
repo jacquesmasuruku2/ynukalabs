@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { fetchBlogPost } from "@/lib/api";
-import { strapiFetch } from "@/lib/strapi";
+import { fetchBlogComments, fetchBlogPost, submitBlogComment } from "@/lib/api";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { authService } from "@/lib/auth";
 
@@ -61,10 +60,7 @@ const BlogPost = () => {
       }
 
       try {
-        const commentsRes = await strapiFetch<{ data?: unknown[]; rows?: unknown[] }>(
-          `/api/blog-comments?search=post_id=${encodeURIComponent(id)}&pagination[pageSize]=100`
-        );
-        const items = commentsRes.data ?? commentsRes.rows ?? [];
+        const items = await fetchBlogComments(id);
         setComments(items.map(mapComment));
       } catch {
         setComments([]);
@@ -188,25 +184,15 @@ const BlogPost = () => {
     if (!id) return;
     setSubmitting(true);
     try {
-      await strapiFetch("/api/blog-comments", {
-        method: "POST",
-        body: JSON.stringify({
-          data: {
-            post_id: id,
-            author_name: commentForm.author_name,
-            author_email: commentForm.author_email,
-            content: commentForm.content,
-          },
-        }),
+      const createdComment = await submitBlogComment({
+        articleId: id,
+        authorName: commentForm.author_name,
+        authorEmail: commentForm.author_email,
+        content: commentForm.content,
       });
 
       toast({ title: t("blog.commentAdded") });
-      setComments((current) => [...current, mapComment({
-        id: `local-${Date.now()}`,
-        author_name: commentForm.author_name,
-        content: commentForm.content,
-        created_at: new Date().toISOString(),
-      })]);
+      setComments((current) => [...current, mapComment(createdComment)]);
       setCommentForm({ author_name: "", author_email: "", content: "" });
       setIsCommentFormOpen(false);
     } catch {
@@ -370,8 +356,8 @@ const BlogPost = () => {
               </Button>
             )}
 
-            {isCommentFormOpen && <form onSubmit={handleComment} className="glass rounded-card p-6 mt-6 space-y-4">
-              <h3 className="font-display font-semibold">{t("blog.addComment")}</h3>
+            {isCommentFormOpen && <form onSubmit={handleComment} className="glass mt-6 space-y-4 rounded-card border border-border/70 bg-card/80 p-6 text-card-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+              <h3 className="font-display font-semibold text-foreground">{t("blog.addComment")}</h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input placeholder={t("blog.yourName")} value={commentForm.author_name} onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })} required />
                 <Input type="email" placeholder={t("blog.yourEmail")} value={commentForm.author_email} onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })} required />

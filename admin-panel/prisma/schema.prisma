@@ -138,6 +138,7 @@ model Article {
   author            Author?            @relation(fields: [authorId], references: [id])
   category          Category           @relation(fields: [categoryId], references: [id])
   comments          Comment[]
+  publicComments    BlogComment[]
   likes             Like[]
   translations      ArticleTranslation[]
   sponsoredArticles SponsoredArticle[]
@@ -328,6 +329,21 @@ model Comment {
   @@index([articleId])
   @@index([userId])
   @@index([status])
+}
+
+model BlogComment {
+  id          String   @id @default(cuid())
+  articleId   String
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorEmail String
+  content     String
+  approved    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([articleId])
+  @@index([approved])
 }
 
 model Like {

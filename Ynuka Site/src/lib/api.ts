@@ -231,6 +231,14 @@ export async function fetchBlogPost(id: string) {
   }
 }
 
+export async function fetchBlogComments(articleId: string) {
+  return adminGet<Array<{ id: string; author_name: string; content: string; created_at: string }>>('/blog-comments', { articleId });
+}
+
+export async function submitBlogComment(data: { articleId: string; authorName: string; authorEmail: string; content: string }) {
+  return adminPost<{ id: string; author_name: string; content: string; created_at: string }>('/blog-comments', data);
+}
+
 export async function fetchOpportunities(limit = 100) {
   const rows = await adminGet<any[]>("/opportunities", { limit });
   return (Array.isArray(rows) ? rows : []).map((item) => ({
