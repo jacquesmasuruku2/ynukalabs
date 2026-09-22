@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/admin-session';
+import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -17,13 +18,19 @@ export async function POST(request: NextRequest) {
     if (!ALLOWED_TYPES.includes(file.type)) return NextResponse.json({ error: 'Format invalide. Utilisez JPEG, PNG, WebP ou GIF.' }, { status: 400 });
     if (file.size > MAX_SIZE) return NextResponse.json({ error: 'L’image dépasse 5 Mo.' }, { status: 400 });
 
-    const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : file.type === 'image/gif' ? 'gif' : 'jpg';
-    const fileName = `${session!.adminUserId}-${Date.now()}.${extension}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, fileName), Buffer.from(await file.arrayBuffer()));
-
-    const avatarUrl = `/uploads/avatars/${fileName}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    let avatarUrl: string;
+    if (isCloudinaryConfigured()) {
+      const result = await uploadToCloudinary(buffer, { folder: 'ynuka/admin-avatars', publicId: session!.adminUserId, overwrite: true });
+      avatarUrl = result.secure_url;
+    } else {
+      const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : file.type === 'image/gif' ? 'gif' : 'jpg';
+      const fileName = `${session!.adminUserId}-${Date.now()}.${extension}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+      await mkdir(uploadDir, { recursive: true });
+      await writeFile(path.join(uploadDir, fileName), buffer);
+      avatarUrl = `/uploads/avatars/${fileName}`;
+    }
     const user = await prisma.adminUser.update({
       where: { id: session!.adminUserId },
       data: { avatarUrl },

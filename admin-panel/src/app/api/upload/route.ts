@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-session';
+import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 
 export async function POST(request: NextRequest) {
   try {
+    const { response: authResponse } = await requireAdmin();
+    if (authResponse) return authResponse;
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folder = formData.get('folder') as string || 'Images_blogs';
@@ -31,7 +35,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Forward to the main site's upload API
+    if (isCloudinaryConfigured()) {
+      const result = await uploadToCloudinary(Buffer.from(await file.arrayBuffer()), { folder });
+      return NextResponse.json({ url: result.secure_url, publicId: result.public_id, resourceType: result.resource_type });
+    }
+
+    // Keep the existing upload service as a fallback until Cloudinary is configured.
     const mainSiteUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'http://localhost:3001';
     const uploadFormData = new FormData();
     uploadFormData.append('file', file);
@@ -39,21 +48,21 @@ export async function POST(request: NextRequest) {
 
     console.log('Forwarding upload to:', `${mainSiteUrl}/api/upload`);
 
-    const response = await fetch(`${mainSiteUrl}/api/upload`, {
+    const upstreamResponse = await fetch(`${mainSiteUrl}/api/upload`, {
       method: 'POST',
       body: uploadFormData,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+    if (!upstreamResponse.ok) {
+      const errorData = await upstreamResponse.json().catch(() => ({}));
       console.error('Upload API error:', errorData);
       return NextResponse.json(
         { error: errorData.error || 'Upload failed' },
-        { status: response.status }
+        { status: upstreamResponse.status }
       );
     }
 
-    const data = await response.json();
+    const data = await upstreamResponse.json();
     console.log('Upload success:', data);
     return NextResponse.json(data);
   } catch (error) {
