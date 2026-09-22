@@ -271,9 +271,40 @@ textarea {
 
 [data-theme="dark"] .admin-shell .bg-white,
 [data-theme="dark"] .admin-shell .bg-gray-50,
-[data-theme="dark"] .admin-shell .bg-gray-100 {
+[data-theme="dark"] .admin-shell .bg-gray-100,
+[data-theme="dark"] .admin-shell .bg-slate-50,
+[data-theme="dark"] .admin-shell .bg-slate-100 {
   background-color: var(--card-bg) !important;
 }
+
+[data-theme="dark"] .admin-shell .bg-white { background-color: var(--card-bg) !important; }
+[data-theme="dark"] .admin-shell .bg-gray-200,
+[data-theme="dark"] .admin-shell .bg-slate-200 { background-color: #374151 !important; }
+[data-theme="dark"] .admin-shell .hover\:bg-slate-50:hover,
+[data-theme="dark"] .admin-shell .hover\:bg-slate-50\/80:hover,
+[data-theme="dark"] .admin-shell .hover\:bg-gray-100:hover { background-color: #273449 !important; }
+
+[data-theme="dark"] .admin-shell .text-slate-900,
+[data-theme="dark"] .admin-shell .text-slate-800,
+[data-theme="dark"] .admin-shell .text-gray-900,
+[data-theme="dark"] .admin-shell .text-gray-800 { color: var(--text-primary) !important; }
+[data-theme="dark"] .admin-shell .text-slate-700,
+[data-theme="dark"] .admin-shell .text-slate-600,
+[data-theme="dark"] .admin-shell .text-slate-500,
+[data-theme="dark"] .admin-shell .text-gray-700,
+[data-theme="dark"] .admin-shell .text-gray-600,
+[data-theme="dark"] .admin-shell .text-gray-500 { color: var(--text-secondary) !important; }
+
+[data-theme="dark"] .admin-shell .border-slate-200,
+[data-theme="dark"] .admin-shell .border-slate-300,
+[data-theme="dark"] .admin-shell .border-gray-200,
+[data-theme="dark"] .admin-shell .border-gray-300 { border-color: var(--card-border) !important; }
+
+[data-theme="dark"] .admin-shell table thead { background-color: #273449 !important; }
+[data-theme="dark"] .admin-shell table tbody tr { border-color: var(--card-border); }
+[data-theme="dark"] .admin-shell input,
+[data-theme="dark"] .admin-shell textarea,
+[data-theme="dark"] .admin-shell select { background-color: #273449; color: var(--text-primary); border-color: var(--card-border); }
 
 [data-theme="dark"] .admin-shell .border-gray-200,
 [data-theme="dark"] .admin-shell .border-gray-300,
