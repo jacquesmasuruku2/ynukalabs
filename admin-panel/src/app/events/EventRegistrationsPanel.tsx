@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Check, CheckCheck, MessageSquare, Users } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, CheckCheck, Download, FileSpreadsheet, MessageSquare, Upload, Users } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 type EventOption = { id: string; title: string };
 
@@ -49,6 +50,7 @@ export default function EventRegistrationsPanel({ events }: { events: EventOptio
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState('');
   const [notifyMessage, setNotifyMessage] = useState('');
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     if (!eventId) return;
@@ -141,6 +143,76 @@ export default function EventRegistrationsPanel({ events }: { events: EventOptio
     }
   };
 
+  const exportRegistrations = () => {
+    if (!rows.length) {
+      alert('Aucune inscription à exporter pour cet événement.');
+      return;
+    }
+    const eventTitle = events.find((event) => event.id === eventId)?.title || 'evenement';
+    const exportRows = rows.map((row) => ({
+      Nom: row.fullName,
+      Email: row.email,
+      Téléphone: row.phone || '',
+      Statut: regStatusLabel[row.status] || row.status,
+      Inscription: new Date(row.createdAt).toLocaleString('fr-FR'),
+    }));
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    worksheet['!cols'] = [{ wch: 28 }, { wch: 34 }, { wch: 18 }, { wch: 18 }, { wch: 22 }];
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Participants');
+    XLSX.writeFile(workbook, `inscrits-${eventTitle.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'evenement'}.xlsx`);
+  };
+
+  const normalizeHeader = (value: unknown) => String(value ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const importRegistrations = async (file: File) => {
+    if (!eventId) return;
+    setBusy(true);
+    try {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: '' });
+      let added = 0;
+      let duplicates = 0;
+      let invalid = 0;
+      for (const rawRow of rawRows) {
+        const row = Object.fromEntries(Object.entries(rawRow).map(([key, value]) => [normalizeHeader(key), value]));
+        const fullName = String(row.nom || row['nom complet'] || row.nomcomplet || row.name || '').trim();
+        const email = String(row.email || '').trim().toLowerCase();
+        if (!fullName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          invalid += 1;
+          continue;
+        }
+        const response = await fetch('/api/event-registrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId,
+            fullName,
+            email,
+            phone: String(row.telephone || row.phone || '').trim() || undefined,
+            organization: String(row.organisation || row.organization || '').trim() || undefined,
+            message: String(row.message || '').trim() || undefined,
+          }),
+        });
+        if (!response.ok) {
+          invalid += 1;
+          continue;
+        }
+        const result = await response.json();
+        if (result.alreadyRegistered) duplicates += 1;
+        else added += 1;
+      }
+      await load();
+      alert(`Import terminé : ${added} ajouté(s), ${duplicates} déjà inscrit(s), ${invalid} ligne(s) ignorée(s).`);
+    } catch (error) {
+      alert(error instanceof Error ? `Import impossible : ${error.message}` : 'Import impossible.');
+    } finally {
+      setBusy(false);
+      if (importInputRef.current) importInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
@@ -181,6 +253,37 @@ export default function EventRegistrationsPanel({ events }: { events: EventOptio
         >
           Refuser
         </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void importRegistrations(file);
+          }}
+        />
+        <button
+          type="button"
+          disabled={busy || !eventId}
+          onClick={() => importInputRef.current?.click()}
+          className="inline-flex items-center gap-2 rounded-md border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+        >
+          <Upload className="h-4 w-4" /> Importer XLSX
+        </button>
+        <button
+          type="button"
+          disabled={busy || !rows.length}
+          onClick={exportRegistrations}
+          className="inline-flex items-center gap-2 rounded-md border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" /> Exporter XLSX
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+        Importez un fichier avec les colonnes : <strong>Nom, Email, Téléphone, Organisation, Message</strong>.
       </div>
 
       <textarea
