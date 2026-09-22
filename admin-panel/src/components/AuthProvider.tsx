@@ -77,11 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, provider: 'email' | 'google' = 'email'): Promise<boolean> => {
     try {
+      const coordinates = provider === 'email' && typeof navigator !== 'undefined' && navigator.geolocation
+        ? await new Promise<{ latitude: number; longitude: number } | undefined>((resolve) => {
+            const timer = window.setTimeout(() => resolve(undefined), 1500);
+            navigator.geolocation.getCurrentPosition(
+              (position) => { window.clearTimeout(timer); resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }); },
+              () => { window.clearTimeout(timer); resolve(undefined); },
+              { enableHighAccuracy: true, timeout: 1200, maximumAge: 300000 },
+            );
+          })
+        : undefined;
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password, provider }),
+        body: JSON.stringify({ email, password, provider, coordinates }),
       });
 
       const data = await response.json();

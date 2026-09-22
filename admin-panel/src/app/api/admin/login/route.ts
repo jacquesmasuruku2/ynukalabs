@@ -3,10 +3,10 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdminEmail, resolveAdminRole } from '@/lib/adminRoles';
 import { sendAdminLoginAlertEmail } from '@/lib/email';
-import { getAdminLoginContext } from '@/lib/admin-login-context';
+import { getAdminLoginContext, type AdminLoginCoordinates } from '@/lib/admin-login-context';
 
-async function queueLoginAlert(request: NextRequest, user: { name: string; email: string }) {
-  const context = await getAdminLoginContext(request);
+async function queueLoginAlert(request: NextRequest, user: { name: string; email: string }, coordinates?: AdminLoginCoordinates) {
+  const context = await getAdminLoginContext(request, coordinates);
   const settings = await prisma.adminSettings.findUnique({ where: { id: 'global' }, select: { securityAlerts: true } }).catch(() => null);
   if (settings && !settings.securityAlerts) return context;
   const loginAt = new Date();
@@ -17,7 +17,7 @@ async function queueLoginAlert(request: NextRequest, user: { name: string; email
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, provider = 'email' } = body;
+    const { email, password, provider = 'email', coordinates } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email et mot de passe requis' }, { status: 400 });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
-      const loginContext = await queueLoginAlert(request, user);
+      const loginContext = await queueLoginAlert(request, user, coordinates);
       await prisma.$transaction([
         prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } }),
         prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
-    const loginContext = await queueLoginAlert(request, user);
+    const loginContext = await queueLoginAlert(request, user, coordinates);
     await prisma.$transaction([
       prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } }),
       prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
