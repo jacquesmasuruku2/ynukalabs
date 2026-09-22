@@ -2,25 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdminEmail, resolveAdminRole } from '@/lib/adminRoles';
-import { getSuperAdminEmails } from '@/lib/adminRoles';
 import { sendAdminLoginAlertEmail } from '@/lib/email';
-
-function getLoginContext(request: NextRequest) {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const ipAddress = forwardedFor?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'Inconnue';
-  const userAgent = request.headers.get('user-agent') || 'Navigateur inconnu';
-  const device = /mobile|android|iphone|ipad/i.test(userAgent) ? 'Téléphone ou tablette' : /tablet/i.test(userAgent) ? 'Tablette' : 'Ordinateur';
-  return { ipAddress: ipAddress.slice(0, 100), userAgent: userAgent.slice(0, 500), device };
-}
+import { getAdminLoginContext } from '@/lib/admin-login-context';
 
 async function queueLoginAlert(request: NextRequest, user: { name: string; email: string }) {
-  const context = getLoginContext(request);
+  const context = await getAdminLoginContext(request);
   const settings = await prisma.adminSettings.findUnique({ where: { id: 'global' }, select: { securityAlerts: true } }).catch(() => null);
   if (settings && !settings.securityAlerts) return context;
   const loginAt = new Date();
-  const alertRecipient = getSuperAdminEmails()[0];
-  if (!alertRecipient) return;
-  void sendAdminLoginAlertEmail({ to: alertRecipient, adminName: user.name, adminEmail: user.email, loginAt, ...context }).catch((error) => console.error('Admin login alert email failed:', error));
+  void sendAdminLoginAlertEmail({ to: user.email, adminName: user.name, adminEmail: user.email, loginAt, ...context }).catch((error) => console.error('Admin login alert email failed:', error));
   return { ...context, loginAt };
 }
 

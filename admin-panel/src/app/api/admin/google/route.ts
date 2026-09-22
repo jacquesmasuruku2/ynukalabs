@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAdminLoginContext } from '@/lib/admin-login-context';
+import { sendAdminLoginAlertEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,8 +48,11 @@ export async function POST(request: NextRequest) {
     const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
+    const loginContext = await getAdminLoginContext(request);
+    void sendAdminLoginAlertEmail({ to: user.email, adminName: user.name, adminEmail: user.email, loginAt: new Date(), ...loginContext }).catch((error) => console.error('Admin Google login alert email failed:', error));
+
     await prisma.$transaction([
-      prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt } }),
+      prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext.ipAddress, userAgent: loginContext.userAgent, device: loginContext.device } }),
       prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
     ]);
 
