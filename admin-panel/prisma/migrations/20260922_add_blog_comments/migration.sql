@@ -1,3 +1,5 @@
+ALTER TABLE IF EXISTS "BlogComment" SET (schema_locked = false);
+
 CREATE TABLE IF NOT EXISTS "BlogComment" (
   "id" STRING PRIMARY KEY,
   "articleId" STRING NOT NULL,
