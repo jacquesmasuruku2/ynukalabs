@@ -185,12 +185,12 @@ export default function NewArticlePage() {
       
       if (data.success && data.url) {
         if (isMainImage) {
-          setFormData({ ...formData, mainImageUrl: data.url });
+          setFormData((current) => ({ ...current, mainImageUrl: data.url }));
         } else {
-          setFormData({ 
-            ...formData, 
-            additionalImages: [...formData.additionalImages, data.url] 
-          });
+          setFormData((current) => ({
+            ...current,
+            additionalImages: [...current.additionalImages, data.url],
+          }));
         }
       }
     } catch (error) {

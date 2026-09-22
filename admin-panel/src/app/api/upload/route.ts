@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (isCloudinaryConfigured()) {
       const result = await uploadToCloudinary(Buffer.from(await file.arrayBuffer()), { folder });
-      return NextResponse.json({ url: result.secure_url, publicId: result.public_id, resourceType: result.resource_type });
+      return NextResponse.json({ success: true, url: result.secure_url, publicId: result.public_id, resourceType: result.resource_type });
     }
 
     // Keep the existing upload service as a fallback until Cloudinary is configured.

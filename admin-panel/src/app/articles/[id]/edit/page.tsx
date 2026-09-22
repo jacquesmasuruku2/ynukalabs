@@ -183,11 +183,13 @@ export default function EditArticlePage() {
       
       if (data.success && data.url) {
         if (isMainImage) {
-          setFormData({ ...formData, mainImageUrl: data.url });
+          setFormData((current) => ({ ...current, mainImageUrl: data.url }));
         } else if (typeof index === 'number') {
-          const newImages = [...formData.additionalImages];
-          newImages[index] = data.url;
-          setFormData({ ...formData, additionalImages: newImages });
+          setFormData((current) => {
+            const newImages = [...current.additionalImages];
+            newImages[index] = data.url;
+            return { ...current, additionalImages: newImages };
+          });
         }
       }
     } catch (error) {
