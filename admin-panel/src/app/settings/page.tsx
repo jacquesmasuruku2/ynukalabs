@@ -146,7 +146,7 @@ function SettingsContent() {
   useEffect(() => { if (user?.isSuperAdmin) void loadTeam(); }, [user?.isSuperAdmin]);
   useEffect(() => {
     if (!user?.isSuperAdmin) return undefined;
-    const interval = window.setInterval(() => void loadTeam(), 30000);
+    const interval = window.setInterval(() => void loadTeam(), 5000);
     return () => window.clearInterval(interval);
   }, [user?.isSuperAdmin]);
   const sendInvite = async () => {

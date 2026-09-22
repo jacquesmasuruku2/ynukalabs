@@ -25,7 +25,7 @@ export async function GET() {
     prisma.adminInvite.findMany({ orderBy: { createdAt: 'desc' }, include: { adminUser: { select: { id: true, name: true, isActive: true, lastLoginAt: true, passwordHash: true } }, invitedBy: { select: { name: true, email: true } } } }),
     prisma.adminUser.findMany({ where: { role: { in: [ADMIN_ROLE.ADMIN, ADMIN_ROLE.SUPER] } }, orderBy: { createdAt: 'asc' }, select: { id: true, email: true, name: true, role: true, isActive: true, lastLoginAt: true, createdAt: true, passwordHash: true } }),
   ]);
-  const activeSince = new Date(Date.now() - 2 * 60 * 1000);
+  const activeSince = new Date(Date.now() - 12 * 1000);
   const sessions = await prisma.adminSession.findMany({
     where: { adminUserId: { in: team.map((member) => member.id) }, expiresAt: { gte: new Date() } },
     select: { adminUserId: true, lastSeenAt: true },
