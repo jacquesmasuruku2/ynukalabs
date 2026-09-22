@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
+import { claimContentOwnership } from '@/lib/admin-content-access';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -41,6 +43,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const body = await request.json();
     const opportunity = await prisma.opportunity.create({
       data: {
@@ -57,6 +61,7 @@ export async function POST(request: NextRequest) {
         legacyId: body.legacyId || null,
       },
     });
+    await claimContentOwnership('opportunity', opportunity.id, session);
     return jsonCors(opportunity, { status: 201 });
   } catch (error) {
     return jsonCors(

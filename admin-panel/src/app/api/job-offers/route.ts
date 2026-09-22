@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { claimContentOwnership } from '@/lib/admin-content-access';
 
 function mainSiteApiUrl() {
   const baseUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL;
@@ -69,6 +71,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     if (!process.env.DATABASE_URL) {
       const proxiedResponse = await proxyToMainSite(request, 'POST');
       if (proxiedResponse) return proxiedResponse;
@@ -119,6 +123,7 @@ export async function POST(request: NextRequest) {
     const jobOffer = await prisma.jobOffer.create({
       data,
     });
+    await claimContentOwnership('job-offer', jobOffer.id, session);
 
     return NextResponse.json(jobOffer, { status: 201 });
   } catch (error) {

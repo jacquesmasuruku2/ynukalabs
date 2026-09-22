@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { requireContentOwner } from '@/lib/admin-content-access';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -21,7 +23,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('resource-section', id, session!);
+    if (accessResponse) return accessResponse;
     const body = await request.json();
     const section = await prisma.resourceSection.update({
       where: { id },
@@ -42,7 +48,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('resource-section', id, session!);
+    if (accessResponse) return accessResponse;
     await prisma.resourceSection.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

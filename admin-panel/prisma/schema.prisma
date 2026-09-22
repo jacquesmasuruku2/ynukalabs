@@ -205,6 +205,7 @@ model AdminUser {
   invitesSent   AdminInvite[] @relation("AdminInvitesSent")
   invite        AdminInvite? @relation("AdminInviteTarget")
   updatedSettings AdminSettings[] @relation("AdminSettingsUpdatedBy")
+  contentOwnerships AdminContentOwnership[]
 
   @@index([email])
   @@index([provider])
@@ -235,6 +236,7 @@ model AdminSession {
   userAgent   String?
   device      String?
   createdAt   DateTime   @default(now())
+  lastSeenAt  DateTime   @default(now())
 
   @@index([adminUserId])
 }
@@ -267,6 +269,19 @@ model AdminInvite {
   @@index([email])
   @@index([expiresAt])
   @@index([invitedById])
+}
+
+model AdminContentOwnership {
+  id           String    @id @default(cuid())
+  resourceType String
+  resourceId   String
+  adminUserId  String
+  adminUser    AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+
+  @@unique([resourceType, resourceId])
+  @@index([adminUserId])
+  @@index([resourceType, resourceId])
 }
 
 model User {

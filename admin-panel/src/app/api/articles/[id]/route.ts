@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { requireContentOwner } from '@/lib/admin-content-access';
 
 export async function GET(
   request: NextRequest,
@@ -31,7 +33,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('article', id, session!);
+    if (accessResponse) return accessResponse;
     const body = await request.json();
     const article = await prisma.article.update({
       where: { id },
@@ -73,7 +79,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('article', id, session!);
+    if (accessResponse) return accessResponse;
     await prisma.article.delete({
       where: { id },
     });

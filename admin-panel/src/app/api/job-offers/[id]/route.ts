@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { requireContentOwner } from '@/lib/admin-content-access';
 
 function mainSiteApiUrl(id: string) {
   const baseUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL;
@@ -64,7 +66,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('job-offer', id, session!);
+    if (accessResponse) return accessResponse;
     if (!process.env.DATABASE_URL) {
       const proxiedResponse = await proxyToMainSite(request, id, 'PUT');
       if (proxiedResponse) return proxiedResponse;
@@ -124,7 +130,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('job-offer', id, session!);
+    if (accessResponse) return accessResponse;
     if (!process.env.DATABASE_URL) {
       const proxiedResponse = await proxyToMainSite(request, id, 'DELETE');
       if (proxiedResponse) return proxiedResponse;

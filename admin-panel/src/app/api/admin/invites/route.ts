@@ -25,9 +25,25 @@ export async function GET() {
     prisma.adminInvite.findMany({ orderBy: { createdAt: 'desc' }, include: { adminUser: { select: { id: true, name: true, isActive: true, lastLoginAt: true, passwordHash: true } }, invitedBy: { select: { name: true, email: true } } } }),
     prisma.adminUser.findMany({ where: { role: { in: [ADMIN_ROLE.ADMIN, ADMIN_ROLE.SUPER] } }, orderBy: { createdAt: 'asc' }, select: { id: true, email: true, name: true, role: true, isActive: true, lastLoginAt: true, createdAt: true, passwordHash: true } }),
   ]);
+  const activeSince = new Date(Date.now() - 2 * 60 * 1000);
+  const sessions = await prisma.adminSession.findMany({
+    where: { adminUserId: { in: team.map((member) => member.id) }, expiresAt: { gte: new Date() } },
+    select: { adminUserId: true, lastSeenAt: true },
+    orderBy: { lastSeenAt: 'desc' },
+  });
+  const sessionsByUser = new Map<string, Date[]>();
+  for (const session of sessions) {
+    const values = sessionsByUser.get(session.adminUserId) || [];
+    values.push(session.lastSeenAt);
+    sessionsByUser.set(session.adminUserId, values);
+  }
   return NextResponse.json({
     invites: invites.map(serializeInvite),
-    team: team.map((member) => ({ ...member, lastLoginAt: member.lastLoginAt?.toISOString() || null, createdAt: member.createdAt.toISOString(), hasPassword: !!member.passwordHash, passwordHash: undefined, isSuperAdmin: member.role === ADMIN_ROLE.SUPER || isSuperAdminEmail(member.email) })),
+    team: team.map((member) => {
+      const lastActiveAt = sessionsByUser.get(member.id)?.[0] || member.lastLoginAt;
+      const isOnline = sessionsByUser.get(member.id)?.some((seenAt) => seenAt >= activeSince) || false;
+      return { ...member, lastLoginAt: member.lastLoginAt?.toISOString() || null, lastActiveAt: lastActiveAt?.toISOString() || null, isOnline, createdAt: member.createdAt.toISOString(), hasPassword: !!member.passwordHash, passwordHash: undefined, isSuperAdmin: member.role === ADMIN_ROLE.SUPER || isSuperAdminEmail(member.email) };
+    }),
   });
 }
 

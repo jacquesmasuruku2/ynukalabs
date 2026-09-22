@@ -46,9 +46,10 @@ export async function POST(request: NextRequest) {
     const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
-    await prisma.adminSession.create({
-      data: { adminUserId: user.id, token, expiresAt },
-    });
+    await prisma.$transaction([
+      prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt } }),
+      prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+    ]);
 
     response.cookies.set('admin_session_token', token, {
       httpOnly: true,

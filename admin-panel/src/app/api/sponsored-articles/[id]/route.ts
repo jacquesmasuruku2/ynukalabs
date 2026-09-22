@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { requireContentOwner } from '@/lib/admin-content-access';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('sponsored-article', id, session!);
+    if (accessResponse) return accessResponse;
     const sponsor = await prisma.sponsoredArticle.findUnique({
       where: { id },
     });
@@ -27,7 +33,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('sponsored-article', id, session!);
+    if (accessResponse) return accessResponse;
     const body = await request.json();
 
     const sponsor = await prisma.sponsoredArticle.update({

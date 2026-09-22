@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { claimContentOwnership } from '@/lib/admin-content-access';
 
 // Helper function to add CORS headers
 function cors(response: NextResponse) {
@@ -41,6 +43,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return cors(response);
     const body = await request.json();
     const author = await prisma.author.create({
       data: {
@@ -53,6 +57,7 @@ export async function POST(request: NextRequest) {
         imageAlt: body.imageAlt,
       },
     });
+    await claimContentOwnership('author', author.id, session);
     return cors(NextResponse.json(author, { status: 201 }));
   } catch (error) {
     console.error('Error creating author:', error);

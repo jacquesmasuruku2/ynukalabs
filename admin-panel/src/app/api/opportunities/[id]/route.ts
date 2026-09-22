@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
+import { requireContentOwner } from '@/lib/admin-content-access';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -14,7 +16,11 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('opportunity', id, session!);
+    if (accessResponse) return accessResponse;
     const body = await request.json();
     const opportunity = await prisma.opportunity.update({
       where: { id },
@@ -42,7 +48,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('opportunity', id, session!);
+    if (accessResponse) return accessResponse;
     await prisma.opportunity.delete({ where: { id } });
     return jsonCors({ success: true });
   } catch (error) {

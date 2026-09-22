@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { claimContentOwnership } from '@/lib/admin-content-access';
 
 export async function GET() {
   try {
@@ -19,6 +21,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const body = await request.json();
 
     const sponsor = await prisma.sponsoredArticle.create({
@@ -33,6 +37,7 @@ export async function POST(request: NextRequest) {
         sortOrder: Number(body.sortOrder ?? 0),
       },
     });
+    await claimContentOwnership('sponsored-article', sponsor.id, session);
 
     return NextResponse.json(sponsor, { status: 201 });
   } catch (error) {

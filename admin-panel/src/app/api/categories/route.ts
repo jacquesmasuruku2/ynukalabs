@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { claimContentOwnership } from '@/lib/admin-content-access';
 
 export async function GET() {
   try {
@@ -25,6 +27,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const body = await request.json();
     const category = await prisma.category.create({
       data: {
@@ -35,6 +39,7 @@ export async function POST(request: NextRequest) {
         icon: body.icon,
       },
     });
+    await claimContentOwnership('category', category.id, session);
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     console.error('Error creating category:', error);

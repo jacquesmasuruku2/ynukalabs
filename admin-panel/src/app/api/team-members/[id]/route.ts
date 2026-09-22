@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-session';
+import { requireContentOwner } from '@/lib/admin-content-access';
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -9,7 +11,11 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('team-member', id, session!);
+    if (accessResponse) return accessResponse;
     const body = await request.json();
     const member = await prisma.teamMember.update({
       where: { id },
@@ -36,7 +42,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const { id } = await params;
+    const accessResponse = await requireContentOwner('team-member', id, session!);
+    if (accessResponse) return accessResponse;
     await prisma.teamMember.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

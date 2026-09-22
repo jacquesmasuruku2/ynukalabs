@@ -50,7 +50,10 @@ export async function POST(request: NextRequest) {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
       const loginContext = await queueLoginAlert(request, user);
-      await prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } });
+      await prisma.$transaction([
+        prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } }),
+        prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+      ]);
 
       response.cookies.set('admin_session_token', token, {
         httpOnly: true,
@@ -83,7 +86,10 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
     const loginContext = await queueLoginAlert(request, user);
-    await prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } });
+    await prisma.$transaction([
+      prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } }),
+      prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+    ]);
 
     response.cookies.set('admin_session_token', token, {
       httpOnly: true,

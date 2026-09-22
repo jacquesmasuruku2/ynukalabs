@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
+    await prisma.adminSession.update({ where: { id: session.id }, data: { lastSeenAt: new Date() } });
+
     const role = resolveAdminRole(session.adminUser.email, session.adminUser.role);
     const user = session.adminUser.role === role ? session.adminUser : await prisma.adminUser.update({ where: { id: session.adminUser.id }, data: { role } });
 

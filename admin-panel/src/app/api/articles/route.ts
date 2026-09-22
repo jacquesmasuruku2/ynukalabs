@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
+import { claimContentOwnership } from '@/lib/admin-content-access';
 
 function serializeArticle<T extends { views: bigint }>(article: T) {
   return { ...article, views: Number(article.views) };
@@ -52,6 +54,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { session, response } = await requireAdmin();
+    if (response) return response;
     const body = await request.json();
     const article = await prisma.article.create({
       data: {
@@ -75,6 +79,7 @@ export async function POST(request: NextRequest) {
       },
       include: { category: true, author: true },
     });
+    await claimContentOwnership('article', article.id, session);
     return jsonCors(serializeArticle(article), { status: 201 });
   } catch (error) {
     console.error('Error creating article:', error);

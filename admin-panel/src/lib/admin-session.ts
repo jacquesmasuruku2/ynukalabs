@@ -18,6 +18,7 @@ export async function getAdminSession() {
   if (session.adminUser.role !== expectedRole) {
     session.adminUser = await prisma.adminUser.update({ where: { id: session.adminUser.id }, data: { role: expectedRole } });
   }
+  await prisma.adminSession.update({ where: { id: session.id }, data: { lastSeenAt: new Date() } });
   return session;
 }
 

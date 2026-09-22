@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Camera, Check, Copy, Database, Globe, Key, Loader2, Palette, RefreshCw, Save, Shield, Trash2, User, UserPlus } from 'lucide-react';
+import { Activity, Bell, Camera, Check, Clock, Copy, Database, Globe, Key, Loader2, Palette, RefreshCw, Save, Shield, Trash2, User, UserPlus } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useTheme } from '@/components/ThemeProvider';
@@ -17,7 +17,7 @@ const themes: { name: string; value: Theme; color: string }[] = [
   { name: 'Violet', value: 'purple', color: 'bg-purple-600' }, { name: 'Orange', value: 'orange', color: 'bg-orange-600' },
 ];
 const emptySettings: Settings = { siteName: '', contactEmail: '', emailNotifications: true, securityAlerts: true, weeklyReports: false, publicApiKey: '' };
-type TeamMember = { id: string; email: string; name: string; isActive: boolean; hasPassword: boolean; isSuperAdmin: boolean; lastLoginAt: string | null };
+type TeamMember = { id: string; email: string; name: string; isActive: boolean; hasPassword: boolean; isSuperAdmin: boolean; lastLoginAt: string | null; lastActiveAt: string | null; isOnline: boolean };
 type InviteRow = { id: string; email: string; status: string; expiresAt: string };
 
 function SettingsContent() {
@@ -144,6 +144,11 @@ function SettingsContent() {
     finally { setLoadingTeam(false); }
   };
   useEffect(() => { if (user?.isSuperAdmin) void loadTeam(); }, [user?.isSuperAdmin]);
+  useEffect(() => {
+    if (!user?.isSuperAdmin) return undefined;
+    const interval = window.setInterval(() => void loadTeam(), 30000);
+    return () => window.clearInterval(interval);
+  }, [user?.isSuperAdmin]);
   const sendInvite = async () => {
     if (!inviteForm.email.trim()) return showNotice({ type: 'error', text: 'Email requis pour l’invitation.' });
     setInviting(true);
@@ -159,6 +164,7 @@ function SettingsContent() {
   return <div className="space-y-6 pb-6">
     <div><h1 className="text-3xl font-bold text-primary">Paramètres</h1><p className="mt-1 text-secondary">Gérer les paramètres du panneau d&apos;administration</p></div>
     {notice && <div className={`rounded-md border p-3 text-sm ${notice.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>{notice.text}</div>}
+    {user?.isSuperAdmin && <AdminPresenceSection team={team} />}
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <section className="card rounded-lg border p-6 shadow-sm"><Heading icon={<Palette className="h-5 w-5 text-pink-600" />} title="Apparence" /><div className="grid grid-cols-3 gap-3">{themes.map((item) => <button key={item.value} type="button" onClick={() => setTheme(item.value)} aria-pressed={theme === item.value} className={`flex flex-col items-center rounded-lg border-2 p-3 transition-all ${theme === item.value ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}><span className={`mb-2 h-8 w-8 rounded-full ${item.color}`} /><span className="text-xs text-gray-700">{item.name}</span>{theme === item.value && <Check className="mt-1 h-3 w-3 text-blue-600" />}</button>)}</div></section>
       <section className="card rounded-lg border p-6 shadow-sm"><Heading icon={<Globe className="h-5 w-5 text-blue-600" />} title="Général" /><div className="space-y-4"><Field label="Nom du site" value={settings.siteName} onChange={(value) => setSettings({ ...settings, siteName: value })} /><Field label="Email de contact" type="email" value={settings.contactEmail} onChange={(value) => setSettings({ ...settings, contactEmail: value })} /><ActionButton onClick={saveSettings} loading={saving}>Enregistrer</ActionButton></div></section>
@@ -173,6 +179,10 @@ function SettingsContent() {
 }
 
 function Heading({ icon, title }: { icon: React.ReactNode; title: string }) { return <div className="mb-4 flex items-center gap-3"><div>{icon}</div><h2 className="text-lg font-semibold text-primary">{title}</h2></div>; }
+function AdminPresenceSection({ team }: { team: TeamMember[] }) {
+  const formatDate = (value: string | null) => value ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Jamais';
+  return <section className="card rounded-lg border p-6 shadow-sm"><Heading icon={<Activity className="h-5 w-5 text-emerald-600" />} title="Présence des administrateurs" /><p className="mb-4 text-sm text-secondary">Les membres sont considérés actifs s’ils ont utilisé le panel au cours des deux dernières minutes.</p><div className="overflow-x-auto"><table className="w-full min-w-[38rem] text-left text-sm"><thead><tr className="border-b text-xs uppercase text-secondary"><th className="px-3 py-2 font-medium">Administrateur</th><th className="px-3 py-2 font-medium">Statut</th><th className="px-3 py-2 font-medium">Dernière activité</th><th className="px-3 py-2 font-medium">Dernière connexion</th></tr></thead><tbody className="divide-y">{team.map((member) => <tr key={member.id}><td className="px-3 py-3"><p className="font-medium text-primary">{member.name}</p><p className="text-xs text-secondary">{member.email}</p></td><td className="px-3 py-3"><span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${member.isOnline ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}><span className={`h-2 w-2 rounded-full ${member.isOnline ? 'bg-emerald-500' : 'bg-gray-400'}`} />{member.isOnline ? 'Actif maintenant' : 'Hors ligne'}</span></td><td className="px-3 py-3 text-secondary"><Clock className="mr-1 inline h-3.5 w-3.5" />{formatDate(member.lastActiveAt)}</td><td className="px-3 py-3 text-secondary">{formatDate(member.lastLoginAt)}</td></tr>)}{team.length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-secondary">Aucun administrateur invité n’a encore intégré le panel.</td></tr>}</tbody></table></div></section>;
+}
 function Field({ label, value, onChange, type = 'text', disabled = false }: { label: string; value: string; onChange: (value: string) => void; type?: string; disabled?: boolean }) { return <div><label className="mb-1 block text-sm font-medium text-secondary">{label}</label><input type={type} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100" /></div>; }
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) { return <label className="flex cursor-pointer items-center justify-between text-sm text-secondary"><span>{label}</span><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="h-4 w-4 rounded text-blue-600" /></label>; }
 function ActionButton({ children, onClick, loading, dark = false, danger = false }: { children: React.ReactNode; onClick: () => void; loading: boolean; dark?: boolean; danger?: boolean }) { return <button type="button" onClick={onClick} disabled={loading} className={`w-full rounded-md py-2 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${danger ? 'bg-red-600 hover:bg-red-700' : dark ? 'bg-gray-800 hover:bg-gray-900' : 'bg-blue-600 hover:bg-blue-700'}`}>{loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <><Save className="mr-2 inline h-4 w-4" />{children}</>}</button>; }

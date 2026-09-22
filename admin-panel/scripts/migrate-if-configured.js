@@ -33,14 +33,15 @@ async function baselineExistingDatabase() {
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    const latestMigration = migrations.at(-1);
+    const baselineMigrations = migrations.filter((migration) => !migration.startsWith('20260922_'));
+    const pendingMigrations = migrations.filter((migration) => migration.startsWith('20260922_'));
     if (!tableNames.includes('_prisma_migrations') && tableNames.length > 0) {
-      console.log(`[admin-panel] Existing database detected; baselining ${migrations.length - 1} historical migrations.`);
-      for (const migration of migrations.slice(0, -1)) {
+      console.log(`[admin-panel] Existing database detected; baselining ${baselineMigrations.length} historical migrations.`);
+      for (const migration of baselineMigrations) {
         const result = runPrisma(['migrate', 'resolve', '--applied', migration]);
         if (result.status !== 0) process.exit(result.status ?? 1);
       }
-      console.log(`[admin-panel] Latest migration will be applied normally: ${latestMigration}`);
+      console.log(`[admin-panel] New migrations will be applied normally: ${pendingMigrations.join(', ')}`);
     }
 
     if (tableNames.includes('_prisma_migrations')) {
