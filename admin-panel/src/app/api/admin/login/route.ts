@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdminEmail, resolveAdminRole } from '@/lib/adminRoles';
+import { getSuperAdminEmails } from '@/lib/adminRoles';
+import { sendAdminLoginAlertEmail } from '@/lib/email';
+
+function getLoginContext(request: NextRequest) {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const ipAddress = forwardedFor?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'Inconnue';
+  const userAgent = request.headers.get('user-agent') || 'Navigateur inconnu';
+  const device = /mobile|android|iphone|ipad/i.test(userAgent) ? 'Téléphone ou tablette' : /tablet/i.test(userAgent) ? 'Tablette' : 'Ordinateur';
+  return { ipAddress: ipAddress.slice(0, 100), userAgent: userAgent.slice(0, 500), device };
+}
+
+async function queueLoginAlert(request: NextRequest, user: { name: string; email: string }) {
+  const context = getLoginContext(request);
+  const settings = await prisma.adminSettings.findUnique({ where: { id: 'global' }, select: { securityAlerts: true } }).catch(() => null);
+  if (settings && !settings.securityAlerts) return context;
+  const loginAt = new Date();
+  const alertRecipient = getSuperAdminEmails()[0];
+  if (!alertRecipient) return;
+  void sendAdminLoginAlertEmail({ to: alertRecipient, adminName: user.name, adminEmail: user.email, loginAt, ...context }).catch((error) => console.error('Admin login alert email failed:', error));
+  return { ...context, loginAt };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,9 +49,8 @@ export async function POST(request: NextRequest) {
       const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
-      await prisma.adminSession.create({
-        data: { adminUserId: user.id, token, expiresAt },
-      });
+      const loginContext = await queueLoginAlert(request, user);
+      await prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } });
 
       response.cookies.set('admin_session_token', token, {
         httpOnly: true,
@@ -62,9 +82,8 @@ export async function POST(request: NextRequest) {
     const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
-    await prisma.adminSession.create({
-      data: { adminUserId: user.id, token, expiresAt },
-    });
+    const loginContext = await queueLoginAlert(request, user);
+    await prisma.adminSession.create({ data: { adminUserId: user.id, token, expiresAt, ipAddress: loginContext?.ipAddress, userAgent: loginContext?.userAgent, device: loginContext?.device } });
 
     response.cookies.set('admin_session_token', token, {
       httpOnly: true,

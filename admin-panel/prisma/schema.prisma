@@ -231,6 +231,9 @@ model AdminSession {
   adminUser   AdminUser  @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
   token       String     @unique
   expiresAt   DateTime
+  ipAddress   String?
+  userAgent   String?
+  device      String?
   createdAt   DateTime   @default(now())
 
   @@index([adminUserId])
