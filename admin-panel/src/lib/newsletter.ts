@@ -1,5 +1,6 @@
 export type NewsletterArticle = {
   id: string;
+  kind?: 'article' | 'event';
   title: string;
   excerpt?: string | null;
   slug?: string | null;
@@ -9,6 +10,9 @@ export type NewsletterArticle = {
     title?: string | null;
     slug?: string | null;
   } | null;
+  date?: string | Date | null;
+  location?: string | null;
+  eventUrl?: string | null;
 };
 
 const escapeHtml = (value: string | null | undefined) =>
@@ -35,6 +39,10 @@ const buildArticleUrl = (article: NewsletterArticle) => {
 
   return `${baseUrl.replace(/\/$/, '')}/blog/${slug}`;
 };
+
+const buildContentUrl = (item: NewsletterArticle) => item.kind === 'event'
+  ? `${(process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com').replace(/\/$/, '')}/events/${item.id}`
+  : buildArticleUrl(item);
 
 const responsiveNewsletterCss = `
   <style>
@@ -147,7 +155,7 @@ const responsiveNewsletterCss = `
   </style>
 `;
 
-export function generateYnukaNewsletterHtml(articles: NewsletterArticle[]) {
+export function generateYnukaNewsletterHtml(articles: NewsletterArticle[], eventInviteText = 'Voulez-vous prendre part à cet événement ?') {
   if (!articles || articles.length === 0) {
     return '<p>Pas d’articles sélectionnés.</p>';
   }
@@ -162,10 +170,11 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[]) {
   const secondary = orderedArticles.slice(1);
   const siteUrl = (process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com').replace(/\/$/, '');
 
-  const heroUrl = buildArticleUrl(hero);
+  const heroUrl = buildContentUrl(hero);
   const heroImage = hero.mainImageUrl || 'https://placehold.co/1200x700/0b3b8b/ffb800?text=Ynuka+Labs';
-  const heroCategory = hero.category?.title || 'Blog';
+  const heroCategory = hero.kind === 'event' ? 'Événement' : hero.category?.title || 'Blog';
   const heroExcerpt = normalizeText(hero.excerpt, 220);
+  const heroEventCta = hero.kind === 'event' ? `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:22px;color:#8a5a00;font-weight:bold;margin-top:10px;">${escapeHtml(eventInviteText)}</div>` : '';
   const footerSocialLinks = [
     {
       label: 'Site web',
@@ -188,11 +197,12 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[]) {
   ];
 
   const secondaryCards = secondary.map((article) => {
-    const articleUrl = buildArticleUrl(article);
+    const articleUrl = buildContentUrl(article);
     const image = article.mainImageUrl || 'https://placehold.co/600x400/0b3b8b/ffb800?text=Ynuka+Labs';
-    const category = article.category?.title || 'Blog';
+    const category = article.kind === 'event' ? 'Événement' : article.category?.title || 'Blog';
     const title = escapeHtml(article.title);
-    const excerpt = escapeHtml(normalizeText(article.excerpt, 120));
+    const excerpt = escapeHtml(normalizeText(article.kind === 'event' ? `${article.date ? new Date(article.date).toLocaleDateString('fr-FR') : ''}${article.location ? ` · ${article.location}` : ''}` : article.excerpt, 120));
+    const eventCta = article.kind === 'event' ? `<p style="margin:12px 0 0;font-family:Arial,sans-serif;font-size:13px;line-height:20px;color:#8a5a00;font-weight:bold;">${escapeHtml(eventInviteText)}</p>` : '';
 
     return `
       <tr>
@@ -214,7 +224,7 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[]) {
                   ${title}
                 </a>
                 <div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 22px; color: #444; margin-top: 8px;">
-                  ${excerpt}
+                  ${excerpt}${eventCta}
                 </div>
               </td>
             </tr>
@@ -268,7 +278,7 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[]) {
             <tr>
               <td class="newsletter-mobile-padding" style="padding: 12px 24px 18px 24px;">
                 <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 24px; color:#222222;">
-                  ${escapeHtml(heroExcerpt)}
+                  ${escapeHtml(heroExcerpt)}${heroEventCta}
                 </div>
               </td>
             </tr>

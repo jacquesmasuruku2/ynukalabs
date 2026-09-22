@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, GripVertical, Search, X } from 'lucide-react';
 
 export type NewsletterArticleOption = {
   id: string;
+  kind?: 'article' | 'event';
   title: string;
   excerpt?: string | null;
   slug?: string | null;
@@ -13,6 +14,9 @@ export type NewsletterArticleOption = {
     title?: string | null;
     slug?: string | null;
   } | null;
+  date?: string | null;
+  location?: string | null;
+  eventUrl?: string | null;
 };
 
 type Props = {
@@ -72,7 +76,7 @@ export default function NewsletterArticleSelector({ articles, selectedIds, onCha
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-slate-900">Layout newsletter</p>
-          <p className="text-xs text-slate-500">Sélectionnez entre 1 et 6 articles</p>
+          <p className="text-xs text-slate-500">Sélectionnez entre 1 et 6 contenus : articles et événements publiés</p>
         </div>
         <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
           {selectedIds.length} / 6
@@ -93,6 +97,7 @@ export default function NewsletterArticleSelector({ articles, selectedIds, onCha
         <div className="grid gap-3 md:grid-cols-2">
           {filteredArticles.map((article) => {
             const isSelected = selectedIds.includes(article.id);
+            const isEvent = article.kind === 'event';
 
             return (
               <button
@@ -112,11 +117,11 @@ export default function NewsletterArticleSelector({ articles, selectedIds, onCha
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-red-600">
-                    {article.category?.title || 'Actualités'}
+                  <div className={`text-[10px] font-bold uppercase tracking-[0.08em] ${isEvent ? 'text-amber-600' : 'text-red-600'}`}>
+                    {isEvent ? 'Événement' : article.category?.title || 'Actualités'}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-900 line-clamp-2">{article.title}</div>
-                  <div className="mt-1 text-xs text-slate-500 line-clamp-2">{article.excerpt || 'Aucune description'}</div>
+                  <div className="mt-1 text-xs text-slate-500 line-clamp-2">{article.excerpt || article.location || 'Aucune description'}</div>
                 </div>
               </button>
             );
@@ -126,15 +131,15 @@ export default function NewsletterArticleSelector({ articles, selectedIds, onCha
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-900">Articles sélectionnés</p>
+            <p className="text-sm font-semibold text-slate-900">Contenus sélectionnés</p>
           <div className="text-xs text-slate-500">
-            {selectedIds.length >= 1 && selectedIds.length <= 6 ? 'OK' : 'Doit être entre 1 et 6 articles'}
+            {selectedIds.length >= 1 && selectedIds.length <= 6 ? 'OK' : 'Doit être entre 1 et 6 contenus'}
           </div>
         </div>
 
         {selectedArticles.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-            Aucun article sélectionné
+            Aucun contenu sélectionné
           </div>
         ) : (
           <div className="space-y-3">
@@ -156,7 +161,7 @@ export default function NewsletterArticleSelector({ articles, selectedIds, onCha
                   <div className="truncate text-sm font-semibold text-slate-900">
                     {index + 1}. {article.title}
                   </div>
-                  <div className="text-xs text-slate-500">{article.category?.title || 'Actualités'}</div>
+                  <div className="text-xs text-slate-500">{article.kind === 'event' ? 'Événement' : article.category?.title || 'Actualités'}</div>
                 </div>
 
                 <div className="flex items-center gap-1">

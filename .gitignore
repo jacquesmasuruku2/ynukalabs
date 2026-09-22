@@ -11,3 +11,5 @@ dist.zip
 mobile-app/.expo/
 Ynuka Site/dist/
 admin-panel/.next/
+.vercel
+.env*

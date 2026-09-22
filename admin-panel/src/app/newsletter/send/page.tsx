@@ -15,6 +15,7 @@ type NewsletterSubscriber = {
 
 export default function NewsletterSendPage() {
   const [articles, setArticles] = useState<NewsletterArticleOption[]>([]);
+  const [eventInviteText, setEventInviteText] = useState('Voulez-vous prendre part à cet événement ?');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [subject, setSubject] = useState('Ynuka Labs — Événements & blog');
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -38,22 +39,30 @@ export default function NewsletterSendPage() {
     const loadArticles = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/articles');
-        if (!response.ok) {
-          throw new Error('Impossible de charger les articles');
-        }
-
-        const data = await response.json();
-        setArticles(
-          data.map((article: any) => ({
+        const [articlesResponse, eventsResponse] = await Promise.all([fetch('/api/articles'), fetch('/api/events')]);
+        if (!articlesResponse.ok || !eventsResponse.ok) throw new Error('Impossible de charger les contenus');
+        const [articleData, eventData] = await Promise.all([articlesResponse.json(), eventsResponse.json()]);
+        const articleOptions = articleData.map((article: any) => ({
             id: article.id,
+            kind: 'article' as const,
             title: article.title,
             excerpt: article.excerpt,
             slug: article.slug,
             mainImageUrl: article.mainImageUrl,
             category: article.category,
-          })),
-        );
+          }));
+        const eventOptions = eventData.map((event: any) => ({
+          id: event.id,
+          kind: 'event' as const,
+          title: event.title,
+          excerpt: event.description,
+          mainImageUrl: event.imageUrl || event.featuredImage,
+          category: { title: 'Événement' },
+          date: event.date || event.startDate,
+          location: event.location,
+          eventUrl: `/events/${event.id}`,
+        }));
+        setArticles([...articleOptions, ...eventOptions]);
       } catch (error) {
         console.error(error);
         setStatus({
@@ -109,12 +118,12 @@ export default function NewsletterSendPage() {
             buttonLabel,
             buttonUrl,
           })
-        : generateYnukaNewsletterHtml(selectedArticles);
+        : generateYnukaNewsletterHtml(selectedArticles, eventInviteText);
     } catch (error) {
       console.error(error);
       return '';
     }
-  }, [buttonLabel, buttonUrl, customContent, customTitle, heroImageUrl, imageLinkUrl, imageUrls, mode, selectedArticles]);
+  }, [buttonLabel, buttonUrl, customContent, customTitle, eventInviteText, heroImageUrl, imageLinkUrl, imageUrls, mode, selectedArticles]);
 
   const previewContainerKey = `${previewMode}-${selectedIds.join('-') || 'empty'}`;
 
@@ -255,7 +264,14 @@ export default function NewsletterSendPage() {
               Chargement des articles...
             </div>
           ) : mode === 'articles' ? (
-            <NewsletterArticleSelector articles={articles} selectedIds={selectedIds} onChange={setSelectedIds} />
+            <div className="space-y-4">
+              <NewsletterArticleSelector articles={articles} selectedIds={selectedIds} onChange={setSelectedIds} />
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <label htmlFor="event-invite-text" className="mb-2 block text-sm font-medium text-amber-900">Message d’invitation aux événements</label>
+                <input id="event-invite-text" value={eventInviteText} onChange={(event) => setEventInviteText(event.target.value)} className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900" placeholder="Voulez-vous prendre part à cet événement ?" />
+                <p className="mt-1 text-xs text-amber-800">Ce message sera affiché uniquement pour les événements sélectionnés.</p>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div>
