@@ -394,7 +394,7 @@ export default function AdminLayout({
                 title="Se déconnecter"
                 className={`group flex w-full items-center rounded-xl py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
                   isSidebarCollapsed ? 'justify-center px-2' : 'space-x-3 px-4'
-                } text-[var(--text-secondary)] hover:bg-red-50 hover:text-red-600 active:bg-red-100 active:text-red-700`}
+                } text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100 active:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300`}
               >
                 <Power className="h-5 w-5 shrink-0 transition-colors group-hover:text-red-600 group-active:text-red-700" strokeWidth={2.25} />
                 <span className={isSidebarCollapsed ? 'hidden' : ''}>Se déconnecter</span>
