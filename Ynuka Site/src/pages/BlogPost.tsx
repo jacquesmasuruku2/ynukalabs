@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import ReactionBar from "@/components/ReactionBar";
 import { useToast } from "@/hooks/use-toast";
-import { fetchBlogComments, fetchBlogPost, submitBlogComment } from "@/lib/api";
+import { fetchBlogComments, fetchBlogPost, submitBlogComment, submitBlogCommentReply } from "@/lib/api";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { authService } from "@/lib/auth";
 
