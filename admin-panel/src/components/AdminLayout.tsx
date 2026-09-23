@@ -271,7 +271,7 @@ export default function AdminLayout({
     { name: 'Médias', href: '/media', icon: Music },
     { name: 'Sponsors', href: '/sponsored', icon: Handshake },
     { name: 'Abonnement', href: '/newsletter', icon: Mail },
-    { name: 'Envoyer une newsletter', href: '/newsletter/send', icon: Send, premium: true },
+    { name: 'Newsletter', href: '/newsletter/send', icon: Send, premium: true },
     { name: 'Soumissions', href: '/form-submissions', icon: Inbox },
     { name: 'Offres d\'emploi', href: '/job-offers', icon: Briefcase },
     { name: 'Candidatures', href: '/job-applications', icon: ClipboardList },
