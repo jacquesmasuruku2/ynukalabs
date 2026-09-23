@@ -180,7 +180,7 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[], event
   const heroImage = hero.mainImageUrl || 'https://placehold.co/1200x700/0b3b8b/ffb800?text=Ynuka+Labs';
   const heroCategory = hero.kind === 'event' ? 'Événement' : hero.category?.title || 'Blog';
   const heroExcerpt = normalizeText(hero.excerpt, 220);
-  const heroEventCta = hero.kind === 'event' ? `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:22px;color:#8a5a00;font-weight:bold;margin-top:10px;">${escapeHtml(eventInviteText)}</div>` : '';
+  const heroEventCta = hero.kind === 'event' ? `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:22px;color:#8a5a00;font-weight:bold;margin:0 0 10px 0;">${escapeHtml(eventInviteText)}</div>` : '';
   const footerSocialLinks = [
     {
       label: 'Site web',
@@ -208,7 +208,7 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[], event
     const category = article.kind === 'event' ? 'Événement' : article.category?.title || 'Blog';
     const title = escapeHtml(article.title);
     const excerpt = escapeHtml(normalizeText(article.kind === 'event' ? `${article.date ? new Date(article.date).toLocaleDateString('fr-FR') : ''}${article.location ? ` · ${article.location}` : ''}` : article.excerpt, 120));
-    const eventCta = article.kind === 'event' ? `<p style="margin:12px 0 0;font-family:Arial,sans-serif;font-size:13px;line-height:20px;color:#8a5a00;font-weight:bold;">${escapeHtml(eventInviteText)}</p>` : '';
+    const eventCta = article.kind === 'event' ? `<p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:13px;line-height:20px;color:#8a5a00;font-weight:bold;">${escapeHtml(eventInviteText)}</p>` : '';
 
     return `
       <tr>
@@ -230,7 +230,7 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[], event
                   ${title}
                 </a>
                 <div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 22px; color: #444; margin-top: 8px;">
-                  ${excerpt}${eventCta}
+                  ${eventCta}${excerpt}
                 </div>
               </td>
             </tr>
@@ -284,7 +284,7 @@ export function generateYnukaNewsletterHtml(articles: NewsletterArticle[], event
             <tr>
               <td class="newsletter-mobile-padding" style="padding: 12px 24px 18px 24px;">
                 <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 24px; color:#222222;">
-                  ${escapeHtml(heroExcerpt)}${heroEventCta}
+                  ${heroEventCta}${escapeHtml(heroExcerpt)}
                 </div>
               </td>
             </tr>
