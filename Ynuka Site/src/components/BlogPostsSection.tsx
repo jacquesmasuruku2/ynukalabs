@@ -10,6 +10,7 @@ const PAGE_SHELL = "mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10"
 
 export interface BlogPost {
   id: string;
+  slug: string;
   title: string;
   title_fr: string | null;
   excerpt: string | null;
@@ -49,6 +50,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
 
   const getTitle = (p: BlogPost) => (isFr && p.title_fr ? p.title_fr : p.title);
   const getExcerpt = (p: BlogPost) => (isFr && p.excerpt_fr ? p.excerpt_fr : p.excerpt);
+  const getHref = (p: BlogPost) => `/blog/${p.slug || p.id}`;
 
   return (
     <section id="blog" className="scroll-mt-24 py-16">
@@ -102,7 +104,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
                   transition={{ duration: 0.5, delay: Math.min(i * 0.06, 0.3) }}
                   className="group flex h-full flex-col overflow-hidden rounded-card border border-[#0f2847]/12 bg-white transition-colors duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:bg-[#12253f]"
                 >
-                  <Link to={`/blog/${post.id}`} className="relative block aspect-[16/9] overflow-hidden bg-[#152a48]">
+                  <Link to={getHref(post)} className="relative block aspect-[16/9] overflow-hidden bg-[#152a48]">
                     {post.cover_url ? (
                       <img
                         src={post.cover_url}
@@ -125,7 +127,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
 
                   <div className="flex flex-1 flex-col px-3.5 py-3.5">
                     <h3 className="font-display text-[0.98rem] font-bold leading-snug tracking-tight text-[#0f2847] dark:text-white md:text-base">
-                      <Link to={`/blog/${post.id}`} className="transition-colors hover:text-[#ffb800]">
+                      <Link to={getHref(post)} className="transition-colors hover:text-[#ffb800]">
                         {title}
                       </Link>
                     </h3>
@@ -144,7 +146,7 @@ const BlogPostsSection = ({ showHeading = true }: BlogPostsSectionProps) => {
                         {new Date(post.created_at).toLocaleDateString(i18n.language)}
                       </span>
                       <Link
-                        to={`/blog/${post.id}`}
+                        to={getHref(post)}
                         className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-[#0f2847] transition-colors hover:text-[#ffb800] dark:text-[#ffb800]"
                       >
                         {t("blog.readMore")}

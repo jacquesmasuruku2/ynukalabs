@@ -150,6 +150,7 @@ export async function fetchEvents(limit = 100) {
   const rows = await adminGet<any[]>("/events", { limit });
   return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
+    slug: item.slug || String(item.id),
     title: item.title || "",
     title_fr: item.titleFr || item.title_fr || null,
     description: item.description || null,
@@ -209,12 +210,18 @@ export async function fetchBlogPosts(limit = 100) {
   }));
 }
 
-export async function fetchBlogPost(id: string) {
+export async function fetchBlogPost(slugOrId: string) {
   try {
-    const item = await adminGet<any>("/articles", { id });
+    let item: any;
+    try {
+      item = await adminGet<any>("/articles", { slug: slugOrId });
+    } catch {
+      item = await adminGet<any>("/articles", { id: slugOrId });
+    }
     if (!item || item.error) return null;
     return {
       id: String(item.id),
+      slug: item.slug || slugOrId,
       title: item.title || "",
       title_fr: item.title || null,
       excerpt: item.excerpt || null,

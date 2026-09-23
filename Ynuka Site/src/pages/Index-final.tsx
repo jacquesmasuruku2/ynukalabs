@@ -42,6 +42,7 @@ interface Event {
 
 interface HomeBlogPost {
   id: string;
+  slug: string;
   title: string;
   title_fr: string | null;
   excerpt: string | null;
@@ -838,6 +839,7 @@ const Index = () => {
                   .slice(0, 3);
               const cover = (post: HomeBlogPost) =>
                 post.cover_url?.trim() ? post.cover_url : BLOG_FALLBACK_IMG;
+              const getBlogHref = (post: HomeBlogPost) => `/blog/${post.slug || post.id}`;
 
               return (
                 <div className="grid items-start gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8">
@@ -848,7 +850,7 @@ const Index = () => {
                     viewport={{ once: true }}
                     className="min-w-0"
                   >
-                    <Link to={`/blog/${featuredBlogPost.id}`} className="group block">
+                    <Link to={getBlogHref(featuredBlogPost)} className="group block">
                       <div className="relative overflow-hidden rounded-card">
                         <img
                           src={cover(featuredBlogPost)}
@@ -897,7 +899,7 @@ const Index = () => {
                         viewport={{ once: true }}
                       >
                         <Link
-                          to={`/blog/${post.id}`}
+                          to={getBlogHref(post)}
                           className="group flex gap-3.5 rounded-card border border-slate-100 bg-slate-50/80 p-3 transition-colors hover:border-[#ffb800]/40 hover:bg-white dark:border-[#3b82f6]/20 dark:bg-[#152a48]/70 dark:hover:bg-[#152a48]"
                         >
                           <div className="h-[92px] w-[108px] shrink-0 overflow-hidden rounded-card sm:h-[100px] sm:w-[118px]">

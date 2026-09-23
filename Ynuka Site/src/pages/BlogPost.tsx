@@ -14,6 +14,7 @@ import { authService } from "@/lib/auth";
 
 interface BlogPostData {
   id: string;
+  slug: string;
   title: string;
   title_fr: string | null;
   content: string | null;
@@ -32,7 +33,7 @@ interface Comment {
 }
 
 const BlogPost = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: slugOrId } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const isFr = i18n.language === "fr";
@@ -47,27 +48,28 @@ const BlogPost = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slugOrId) return;
     const fetchData = async () => {
       setLoading(true);
       try {
-        const postData = await fetchBlogPost(id);
+        const postData = await fetchBlogPost(slugOrId);
         setPost(postData);
+        const articleId = postData?.id || slugOrId;
+        try {
+          const items = await fetchBlogComments(articleId);
+          setComments(items.map(mapComment));
+        } catch {
+          setComments([]);
+        }
       } catch {
         setPost(null);
+        setComments([]);
       } finally {
         setLoading(false);
       }
-
-      try {
-        const items = await fetchBlogComments(id);
-        setComments(items.map(mapComment));
-      } catch {
-        setComments([]);
-      }
     };
     fetchData();
-  }, [id]);
+  }, [slugOrId]);
 
   useEffect(() => {
     setUser(authService.getUser());
@@ -181,11 +183,11 @@ const BlogPost = () => {
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (!post?.id) return;
     setSubmitting(true);
     try {
       const createdComment = await submitBlogComment({
-        articleId: id,
+        articleId: post.id,
         authorName: commentForm.author_name,
         authorEmail: commentForm.author_email,
         content: commentForm.content,
