@@ -1,3 +1,5 @@
+ALTER TABLE IF EXISTS "ContentReaction" SET (schema_locked = false);
+
 CREATE TABLE IF NOT EXISTS "ContentReaction" (
   "id" STRING PRIMARY KEY,
   "resourceType" STRING NOT NULL,
@@ -14,3 +16,5 @@ CREATE INDEX IF NOT EXISTS "ContentReaction_resourceType_resourceId_idx"
 
 CREATE INDEX IF NOT EXISTS "ContentReaction_resourceType_resourceId_reactionType_idx"
   ON "ContentReaction" ("resourceType", "resourceId", "reactionType");
+
+ALTER TABLE "ContentReaction" SET (schema_locked = true);
