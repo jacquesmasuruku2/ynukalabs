@@ -197,6 +197,7 @@ export async function fetchBlogPosts(limit = 100) {
   const rows = await adminGet<any[]>("/articles", { limit });
   return (Array.isArray(rows) ? rows : []).map((item) => ({
     id: String(item.id),
+    slug: item.slug || String(item.id),
     title: item.title || "",
     title_fr: item.title || null,
     excerpt: item.excerpt || null,
