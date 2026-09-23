@@ -2,18 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-session';
 import { PREMIUM_PLAN_CONFIG, getPremiumPlan } from '@/lib/admin-premium';
 
-type NowPaymentsPaymentResponse = {
-  payment_url?: string;
-  pay_url?: string;
-  url?: string;
-  payment_id?: string | number;
-  pay_address?: string;
-  order_id?: string;
-  status?: string;
+type AtlosInvoiceResponse = {
+  Id?: string;
+  PaymentLink?: string;
 };
 
 function getPremiumBaseUrl() {
   return (
+    process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXT_PUBLIC_BASE_URL ||
     process.env.ADMIN_PANEL_URL ||
     process.env.PUBLIC_SITE_URL ||
@@ -21,48 +17,41 @@ function getPremiumBaseUrl() {
   ).replace(/\/$/, '');
 }
 
-async function getNowPaymentsCheckoutUrl(adminUserId: string, adminUserEmail: string, plan: string) {
-  const apiKey = process.env.NOWPAYMENTS_API_KEY;
-  const apiUrl = process.env.NOWPAYMENTS_API_URL;
+async function getAtlosCheckoutUrl(adminUserId: string, adminUserEmail: string, plan: string) {
+  const merchantId = process.env.ATLOS_MERCHANT_ID;
+  const apiSecret = process.env.ATLOS_API_SECRET;
+  if (!merchantId || !apiSecret) return null;
 
-  if (!apiKey || !apiUrl) return null;
-
+  const apiUrl = (process.env.ATLOS_API_URL || 'https://api.atlos.io/gateway/rest').replace(/\/$/, '');
   const baseUrl = getPremiumBaseUrl();
   const premiumPlan = getPremiumPlan(plan);
   const config = PREMIUM_PLAN_CONFIG[premiumPlan];
   const orderId = `premium-${premiumPlan}-${adminUserId}-${Date.now()}`;
 
-  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/payment`, {
+  const response = await fetch(`${apiUrl}/Invoice/Create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
+      ApiSecret: apiSecret,
     },
     body: JSON.stringify({
-      price_amount: config.price,
-      price_currency: 'usd',
-      pay_currency: 'usdt',
-      order_id: orderId,
-      order_description: `Premium access - ${premiumPlan} - ${adminUserEmail}`,
-      ipn_callback_url: `${baseUrl}/api/admin/premium/notify`,
-      success_url: `${baseUrl}/settings?premium=success&plan=${premiumPlan}`,
-      cancel_url: `${baseUrl}/settings?premium=cancelled&plan=${premiumPlan}`,
+      MerchantId: merchantId,
+      OrderId: orderId,
+      OrderAmount: config.price,
+      OrderCurrency: 'USD',
+      UserEmail: adminUserEmail,
+      Memo: `Premium access - ${premiumPlan}`,
+      PostbackUrl: `${baseUrl}/api/admin/premium/notify`,
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`NOWPayments checkout failed: ${response.status} ${errorText}`);
+    throw new Error(`ATLOS checkout failed: ${response.status} ${errorText}`);
   }
 
-  const data = (await response.json()) as NowPaymentsPaymentResponse;
-
-  return (
-    data.payment_url ||
-    data.pay_url ||
-    data.url ||
-    (data.payment_id ? `https://nowpayments.io/payment/?iid=${data.payment_id}` : null)
-  );
+  const data = (await response.json()) as AtlosInvoiceResponse;
+  return data.PaymentLink || null;
 }
 
 export async function GET(request: NextRequest) {
@@ -77,18 +66,18 @@ export async function GET(request: NextRequest) {
   const plan = request.nextUrl.searchParams.get('plan') || 'monthly';
 
   try {
-    const nowPaymentsCheckoutUrl = await getNowPaymentsCheckoutUrl(session!.adminUser.id, session!.adminUser.email, plan);
-    if (!nowPaymentsCheckoutUrl) {
+    const atlosCheckoutUrl = await getAtlosCheckoutUrl(session!.adminUser.id, session!.adminUser.email, plan);
+    if (!atlosCheckoutUrl) {
       return NextResponse.json(
         { error: 'Le lien de paiement Premium n’est pas encore configuré.' },
         { status: 503 },
       );
     }
 
-    return NextResponse.redirect(nowPaymentsCheckoutUrl);
+    return NextResponse.redirect(atlosCheckoutUrl);
   } catch (error) {
     console.error('Premium checkout init failed:', error);
-    if (error instanceof Error && /INVALID_API_KEY|403|forbidden/i.test(error.message)) {
+    if (error instanceof Error && /401|403|invalid|forbidden|unauthorized/i.test(error.message)) {
       return NextResponse.redirect(new URL('/settings?premium=unavailable', request.url), 303);
     }
 
