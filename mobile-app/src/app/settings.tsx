@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { hasStripeConfig, stripeConfig } from '@/lib/stripe-config';
+import { hasPremiumAccessForEmail, hasStripeConfig, stripeConfig } from '@/lib/stripe-config';
 
 const membersSeed = [
   { id: 1, name: 'Amina', isOnline: true },
@@ -26,6 +26,8 @@ function formatRelativeTime(ms: number) {
 export default function SettingsScreen() {
   const theme = useTheme();
   const [now, setNow] = useState(Date.now());
+  const currentUserEmail = process.env.EXPO_PUBLIC_SUPER_ADMIN_EMAIL || 'jacquesmasuruku2@gmail.com';
+  const isSuperAdmin = hasPremiumAccessForEmail(currentUserEmail);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 15000);
@@ -109,27 +111,38 @@ export default function SettingsScreen() {
           {[
             'Accès complet à toutes les fonctionnalités',
             'Support premium et prioritaire',
-            'Paiement Stripe prêt à brancher',
+            isSuperAdmin ? 'Accès premium activé par défaut pour le super admin' : 'Paiement Stripe prêt à brancher',
           ].map((item) => (
             <ThemedText key={item} type="small" style={styles.featureItem}>
               • {item}
             </ThemedText>
           ))}
 
-          <Pressable
-            onPress={openUpgrade}
-            style={({ pressed }) => [
-              styles.cta,
-              { backgroundColor: pressed ? '#1d4ed8' : '#2563eb' },
-            ]}>
-            <ThemedText type="smallBold" style={styles.ctaText}>
-              {hasStripeConfig() ? 'Activer le plan premium' : 'Configurer Stripe'}
-            </ThemedText>
-          </Pressable>
+          {!isSuperAdmin && (
+            <Pressable
+              onPress={openUpgrade}
+              style={({ pressed }) => [
+                styles.cta,
+                { backgroundColor: pressed ? '#1d4ed8' : '#2563eb' },
+              ]}>
+              <ThemedText type="smallBold" style={styles.ctaText}>
+                {hasStripeConfig() ? 'Activer le plan premium' : 'Configurer Stripe'}
+              </ThemedText>
+            </Pressable>
+          )}
+
+          {isSuperAdmin && (
+            <ThemedView type="backgroundElement" style={styles.superAdminBadge}>
+              <ThemedText type="smallBold" style={styles.superAdminText}>
+                Premium activé pour le Super Admin
+              </ThemedText>
+            </ThemedView>
+          )}
 
           <ThemedText type="small" themeColor="textSecondary" style={styles.envHint}>
             Variables attendues : EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY, EXPO_PUBLIC_STRIPE_PRICE_ID,
-            EXPO_PUBLIC_STRIPE_CHECKOUT_URL, EXPO_PUBLIC_STRIPE_PORTAL_URL
+            EXPO_PUBLIC_STRIPE_CHECKOUT_URL, EXPO_PUBLIC_STRIPE_PORTAL_URL,
+            EXPO_PUBLIC_SUPER_ADMIN_EMAILS
           </ThemedText>
         </ThemedView>
       </ScrollView>
@@ -201,5 +214,15 @@ const styles = StyleSheet.create({
   envHint: {
     marginTop: Spacing.one,
     lineHeight: 18,
+  },
+  superAdminBadge: {
+    marginTop: Spacing.one,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.two,
+    alignItems: 'center',
+  },
+  superAdminText: {
+    color: '#16a34a',
   },
 });
