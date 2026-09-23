@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Activity, Bell, Camera, Check, Clock, Copy, Database, Globe, Key, Loader2, Palette, RefreshCw, Save, Shield, Trash2, User, UserPlus } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -23,6 +24,7 @@ type InviteRow = { id: string; email: string; status: string; expiresAt: string 
 function SettingsContent() {
   const { theme, setTheme } = useTheme();
   const { user, refreshUser } = useAuth();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [settings, setSettings] = useState<Settings>(emptySettings);
   const [profile, setProfile] = useState({ name: '', email: '', avatarUrl: '' as string | null });
@@ -56,6 +58,12 @@ function SettingsContent() {
       .catch((error: Error) => showNotice({ type: 'error', text: error.message }))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('premium') === 'unavailable') {
+      showNotice({ type: 'error', text: 'Le paiement Premium est temporairement indisponible. Vérifiez la configuration NOWPayments du serveur.' });
+    }
+  }, [searchParams]);
 
   const request = async (url: string, options: RequestInit = {}) => {
     const response = await fetch(url, { ...options, credentials: 'include' });

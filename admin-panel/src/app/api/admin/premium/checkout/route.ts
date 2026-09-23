@@ -88,10 +88,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(nowPaymentsCheckoutUrl);
   } catch (error) {
     console.error('Premium checkout init failed:', error);
-    const message = error instanceof Error && /INVALID_API_KEY|403|forbidden/i.test(error.message)
-      ? 'Le paiement Premium est temporairement indisponible. Vérifiez la clé NOWPayments du serveur.'
-      : 'Le paiement Premium est indisponible pour le moment.';
+    if (error instanceof Error && /INVALID_API_KEY|403|forbidden/i.test(error.message)) {
+      return NextResponse.redirect(new URL('/settings?premium=unavailable', request.url), 303);
+    }
 
-    return NextResponse.json({ error: message }, { status: 503 });
+    return NextResponse.json(
+      { error: 'Le paiement Premium est indisponible pour le moment.' },
+      { status: 503 },
+    );
   }
 }
