@@ -234,6 +234,72 @@ textarea {
   color: var(--text-secondary);
 }
 
+.word-editor {
+  border-color: #d9d9d7;
+  background: #f3f3f1;
+  color: #0f172a;
+}
+
+.word-editor__toolbar {
+  border-color: #d5d2ce;
+  background: #f7f6f4;
+}
+
+.word-editor__tabs,
+.word-editor__toolbar-group {
+  border-color: #e6e2dd;
+  background: linear-gradient(to bottom, #f9fafb, #ffffff);
+}
+
+.word-editor__tab {
+  color: #475569;
+}
+
+.word-editor__tab--active {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.word-editor__canvas {
+  background: #f4f4f3;
+}
+
+.word-editor__page {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="dark"] .word-editor {
+  border-color: #334155;
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .word-editor__toolbar,
+[data-theme="dark"] .word-editor__tabs,
+[data-theme="dark"] .word-editor__toolbar-group {
+  border-color: #334155;
+  background: linear-gradient(to bottom, #1e293b, #0f172a);
+}
+
+[data-theme="dark"] .word-editor__tab {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .word-editor__tab--active {
+  background: #334155;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .word-editor__canvas {
+  background: #020617;
+}
+
+[data-theme="dark"] .word-editor__page {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
 /* Apply the selected accent to shared Tailwind surfaces without changing semantic danger/success states. */
 [data-theme] .bg-blue-600 { background-color: var(--primary) !important; }
 [data-theme] .hover\:bg-blue-700:hover { background-color: var(--primary-dark) !important; }

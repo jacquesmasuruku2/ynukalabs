@@ -208,9 +208,9 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
   }
 
   return (
-    <div className="relative isolate overflow-visible rounded-xl border border-[#d9d9d7] bg-[#f3f3f1] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] dark:border-slate-700 dark:bg-slate-900">
-      <div ref={toolbarRef} className="sticky top-0 z-50 max-w-full border-b border-[#d5d2ce] bg-[#f7f6f4] shadow-[0_1px_0_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex border-b border-[#e6e2dd] bg-[#f3f1ee] dark:border-slate-700 dark:bg-slate-800">
+    <div className="word-editor relative isolate overflow-visible rounded-xl border shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]">
+      <div ref={toolbarRef} className="word-editor__toolbar sticky top-0 z-50 max-w-full border-b shadow-[0_1px_0_rgba(15,23,42,0.06)]">
+        <div className="word-editor__tabs flex border-b">
           {['home', 'insert', 'layout'].map((tab) => (
             <button
               key={tab}
@@ -218,8 +218,8 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                 activeTab === tab
-                  ? 'bg-white text-[#0f172a] border-b-2 border-[#2563eb] dark:bg-slate-700 dark:text-white'
-                  : 'text-[#475569] hover:bg-white/70 dark:text-slate-300 dark:hover:bg-slate-700'
+                  ? 'word-editor__tab--active border-b-2 border-[#2563eb]'
+                  : 'word-editor__tab hover:bg-white/70'
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -229,7 +229,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
         {/* Home Tab Content */}
         {activeTab === 'home' && (
-          <div className="flex flex-wrap items-center gap-1 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
+          <div className="word-editor__toolbar-group flex flex-wrap items-center gap-1 p-2">
             {/* Clipboard Group */}
             <div className="flex items-center gap-1 border-r border-gray-300 pr-2 dark:border-slate-600">
               <button
@@ -564,7 +564,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
         {/* Insert Tab */}
         {activeTab === 'insert' && (
-          <div className="flex items-center gap-2 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
+          <div className="word-editor__toolbar-group flex items-center gap-2 p-2">
             <button 
               type="button"
               onClick={() => setIsReadAlsoModalOpen(true)}
@@ -585,7 +585,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
         {/* Layout Tab */}
         {activeTab === 'layout' && (
-          <div className="flex items-center gap-2 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
+          <div className="word-editor__toolbar-group flex items-center gap-2 p-2">
             <button type="button" className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700" title="Orientation">
               <FileText className="w-4 h-4" />
             </button>
@@ -604,9 +604,9 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-[#f4f4f3] p-3 dark:bg-slate-950 sm:p-6 lg:p-8" style={{ minHeight: '600px' }}>
+      <div className="word-editor__canvas overflow-x-auto p-3 sm:p-6 lg:p-8" style={{ minHeight: '600px' }}>
         <div 
-          className="mx-auto min-h-[900px] bg-white p-5 text-slate-900 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_16px_40px_rgba(15,23,42,0.08)] dark:bg-slate-950 dark:text-slate-100 sm:p-8 lg:p-12"
+          className="word-editor__page mx-auto min-h-[900px] p-5 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_16px_40px_rgba(15,23,42,0.08)] sm:p-8 lg:p-12"
           style={{ 
             width: '100%',
             maxWidth: '1500px',
