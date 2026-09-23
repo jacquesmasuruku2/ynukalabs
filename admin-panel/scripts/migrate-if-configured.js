@@ -15,6 +15,7 @@ function runPrisma(args) {
   return spawnSync(command, ['prisma', ...args], {
     stdio: 'inherit',
     env: process.env,
+    shell: process.platform === 'win32',
   });
 }
 
@@ -33,8 +34,9 @@ async function baselineExistingDatabase() {
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    const baselineMigrations = migrations.filter((migration) => !migration.startsWith('20260922_'));
-    const pendingMigrations = migrations.filter((migration) => migration.startsWith('20260922_'));
+    const isNewMigration = (migration) => migration.startsWith('20260922_') || migration.startsWith('20260923_');
+    const baselineMigrations = migrations.filter((migration) => !isNewMigration(migration));
+    const pendingMigrations = migrations.filter(isNewMigration);
     if (!tableNames.includes('_prisma_migrations') && tableNames.length > 0) {
       console.log(`[admin-panel] Existing database detected; baselining ${baselineMigrations.length} historical migrations.`);
       for (const migration of baselineMigrations) {
