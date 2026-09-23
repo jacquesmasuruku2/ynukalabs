@@ -21,6 +21,7 @@ export type EventFormat = "in_person" | "online" | "hybrid";
 /** Événement normalisé côté frontend (aucune donnée inventée). */
 export type YnukaEvent = {
   id: string;
+  slug: string;
   title: string;
   titleFr: string | null;
   description: string | null;

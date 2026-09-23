@@ -37,6 +37,7 @@ export default function NewProjectPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [slugCustomized, setSlugCustomized] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [form, setForm] = useState({
     title: '',
@@ -144,7 +145,7 @@ export default function NewProjectPage() {
                     value={form.title}
                     onChange={(e) => {
                       update('title', e.target.value);
-                      if (!form.slug) update('slug', slugify(e.target.value));
+                      if (!slugCustomized) update('slug', slugify(e.target.value));
                     }}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Titre du projet"
@@ -156,7 +157,10 @@ export default function NewProjectPage() {
                   <input
                     required
                     value={form.slug}
-                    onChange={(e) => update('slug', slugify(e.target.value))}
+                    onChange={(e) => {
+                      setSlugCustomized(true);
+                      update('slug', slugify(e.target.value));
+                    }}
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="url-du-projet"
                   />

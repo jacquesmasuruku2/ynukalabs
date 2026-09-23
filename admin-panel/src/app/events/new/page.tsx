@@ -31,6 +31,7 @@ function NewEventPageInner() {
   const fromProposal = searchParams.get('fromProposal');
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [slugCustomized, setSlugCustomized] = useState(false);
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
   const [form, setForm] = useState({
     title: '',
@@ -180,10 +181,10 @@ function NewEventPageInner() {
                       if (lang === 'fr') {
                         update('titleFr', e.target.value);
                         if (!form.title) update('title', e.target.value);
-                        if (!form.slug) update('slug', slugify(e.target.value));
+                        if (!slugCustomized) update('slug', slugify(e.target.value));
                       } else {
                         update('title', e.target.value);
-                        if (!form.slug) update('slug', slugify(e.target.value));
+                        if (!slugCustomized) update('slug', slugify(e.target.value));
                       }
                     }}
                     className={`${fieldClass} text-lg`}
@@ -195,7 +196,10 @@ function NewEventPageInner() {
                   <label className="mb-2 block text-sm font-semibold text-gray-700">Slug</label>
                   <input
                     value={form.slug}
-                    onChange={(e) => update('slug', slugify(e.target.value))}
+                    onChange={(e) => {
+                      setSlugCustomized(true);
+                      update('slug', slugify(e.target.value));
+                    }}
                     className={fieldClass}
                     placeholder="url-de-l-evenement"
                   />

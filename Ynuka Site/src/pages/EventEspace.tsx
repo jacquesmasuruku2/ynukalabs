@@ -11,7 +11,7 @@ import EventExchangeSpace from "@/components/events/EventExchangeSpace";
 import GoogleSignInDialog from "@/components/auth/GoogleSignInDialog";
 
 const EventEspace = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: slugOrId } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -20,17 +20,20 @@ const EventEspace = () => {
   const [loading, setLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
+  const [eventId, setEventId] = useState<string | null>(null);
   const [registrationId, setRegistrationId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slugOrId) return;
     let cancelled = false;
 
     const run = async () => {
       setLoading(true);
       try {
-        const event = await getEvent(id);
+        const event = await getEvent(slugOrId);
         if (cancelled) return;
+        if (!event) return;
+        setEventId(event.id);
         setEventTitle(isFr && event.titleFr ? event.titleFr : event.title);
 
         const user = authService.getUser();
@@ -40,7 +43,7 @@ const EventEspace = () => {
           return;
         }
 
-        const reg = await fetchEventRegistrationByEmail(id, user.email);
+        const reg = await fetchEventRegistrationByEmail(event.id, user.email);
         if (cancelled) return;
         if (!reg?.id) {
           toast({
@@ -49,7 +52,7 @@ const EventEspace = () => {
               ? "Inscrivez-vous d'abord à l'événement pour accéder à l'espace d'échange."
               : "Please register for the event first.",
           });
-          navigate(`/events/${id}`, { replace: true });
+          navigate(`/events/${event.slug}`, { replace: true });
           return;
         }
         setRegistrationId(reg.id);
@@ -66,7 +69,7 @@ const EventEspace = () => {
     return () => {
       cancelled = true;
     };
-  }, [id, isFr, navigate, t, toast]);
+  }, [slugOrId, isFr, navigate, t, toast]);
 
   if (loading) {
     return (
@@ -76,7 +79,7 @@ const EventEspace = () => {
     );
   }
 
-  if (!id || !registrationId) {
+  if (!slugOrId || !registrationId) {
     return (
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
         <MessageCircle className="mx-auto mb-4 h-10 w-10 text-[#ffb800]" />
@@ -90,7 +93,7 @@ const EventEspace = () => {
         </Button>
         <div className="mt-4">
           <Button variant="outline" asChild>
-            <Link to={id ? `/events/${id}` : "/events"}>{t("events.backToEvents")}</Link>
+            <Link to={slugOrId ? `/events/${slugOrId}` : "/events"}>{t("events.backToEvents")}</Link>
           </Button>
         </div>
         <GoogleSignInDialog
@@ -108,7 +111,7 @@ const EventEspace = () => {
     );
   }
 
-  return <EventExchangeSpace eventId={id} eventTitle={eventTitle} registrationId={registrationId} />;
+  return <EventExchangeSpace eventId={eventId || slugOrId} eventTitle={eventTitle} registrationId={registrationId} />;
 };
 
 export default EventEspace;

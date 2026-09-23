@@ -93,6 +93,7 @@ function siteToCarousel(
 
   return {
     id: event.id,
+    slug: event.slug,
     title: isFr && event.titleFr ? event.titleFr : event.title,
     date: formatDisplayDate(event.date, lang),
     type: event.type || "Meetup",
@@ -108,7 +109,7 @@ function siteToCarousel(
     formatLabel: formatKey ? t(formatKey) : null,
     timezone: event.timezone,
     registrationUrl: past ? null : event.registrationUrl,
-    viewUrl: past && !realRecap && event.id ? `/events/${event.id}` : null,
+    viewUrl: past && !realRecap && event.slug ? `/events/${event.slug}` : null,
     sortDate,
     source: "site",
   };

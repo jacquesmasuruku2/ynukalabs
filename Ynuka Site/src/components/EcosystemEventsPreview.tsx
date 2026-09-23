@@ -121,7 +121,7 @@ export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: b
               events={preview}
               onRegister={(event) => {
                 if (event.id && !event.id.startsWith("luma-") && !event.isPast) {
-                  navigate(`/events/${event.id}`);
+                  navigate(`/events/${event.slug || event.id}`);
                 }
               }}
             />

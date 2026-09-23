@@ -58,6 +58,7 @@ function mapEventRow(item: Record<string, unknown>): YnukaEvent {
 
   return {
     id: String(item.id ?? ""),
+    slug: String(item.slug || item.id || ""),
     title: String(item.title || ""),
     titleFr: (item.title_fr as string) || (item.titleFr as string) || null,
     description,
@@ -95,9 +96,9 @@ export async function listEvents(limit = 100): Promise<YnukaEvent[]> {
 }
 
 /** Détail d’un événement. */
-export async function getEvent(id: string): Promise<YnukaEvent | null> {
+export async function getEvent(slugOrId: string): Promise<YnukaEvent | null> {
   try {
-    const item = await fetchEvent(id);
+    const item = await fetchEvent(slugOrId);
     if (!item?.id) return null;
     const mapped = mapEventRow(item as unknown as Record<string, unknown>);
     return mapped.id ? mapped : null;

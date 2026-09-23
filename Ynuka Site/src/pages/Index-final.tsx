@@ -271,7 +271,7 @@ const Index = () => {
       return;
     }
     if (event.id && !event.id.startsWith("preview-")) {
-      navigate(`/events/${event.id}`);
+                    navigate(`/events/${event.slug}`);
       return;
     }
     navigate("/events");

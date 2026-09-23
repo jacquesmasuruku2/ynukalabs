@@ -85,7 +85,7 @@ const EventsHomeStyleGrid = ({
                       }
                       return;
                     }
-                    navigate(`/events/${event.id}`);
+                    navigate(`/events/${event.slug}`);
                   }
                 : undefined
             }

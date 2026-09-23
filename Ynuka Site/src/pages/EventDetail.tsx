@@ -33,7 +33,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 const EventDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: slugOrId } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -49,13 +49,13 @@ const EventDetail = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slugOrId) return;
     let cancelled = false;
     const run = async () => {
       setLoading(true);
       setLoadError(false);
       try {
-        const data = await getEvent(id);
+        const data = await getEvent(slugOrId);
         if (!cancelled) setEvent(data);
       } catch {
         if (!cancelled) {
@@ -70,7 +70,7 @@ const EventDetail = () => {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [slugOrId]);
 
   const startRegister = () => {
     const current = authService.getUser();
@@ -83,11 +83,11 @@ const EventDetail = () => {
   };
 
   const completeRegistration = async (authUser: AuthUser) => {
-    if (!id) return;
+    if (!event?.id) return;
     setSubmitting(true);
     try {
       const result = await registerForEvent({
-        event_id: id,
+        event_id: event.id,
         full_name: authUser.name,
         email: authUser.email,
         phone: regForm.phone || null,
@@ -103,7 +103,7 @@ const EventDetail = () => {
       });
       setShowRegister(false);
       setRegForm({ phone: "" });
-      navigate(`/events/${id}/espace`);
+      navigate(`/events/${event.slug}/espace`);
     } catch {
       toast({ title: t("events.registerError"), variant: "destructive" });
     } finally {
@@ -185,7 +185,7 @@ const EventDetail = () => {
         </Button>
         {user ? (
           <Button variant="outline-glow" size="lg" asChild>
-            <Link to={`/events/${event.id}/espace`}>
+            <Link to={`/events/${event.slug}/espace`}>
               <MessageCircle className="mr-2 h-4 w-4" />
               {isFr ? "Espace d'échange" : "Exchange space"}
             </Link>

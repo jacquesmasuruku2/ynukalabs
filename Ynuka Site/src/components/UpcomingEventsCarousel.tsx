@@ -8,6 +8,7 @@ import { cn, stripHtml } from "@/lib/utils";
 
 export type CarouselEvent = {
   id?: string;
+  slug?: string;
   title: string;
   date: string;
   type: string;
@@ -65,7 +66,7 @@ function getPastCta(event: CarouselEvent, t: (key: string) => string): PastCta |
   }
   if (event.id && !event.id.startsWith("preview-")) {
     return {
-      href: `/events/${event.id}`,
+      href: `/events/${event.slug || event.id}`,
       label: t("events.viewPastEvent"),
       tone: "past",
     };

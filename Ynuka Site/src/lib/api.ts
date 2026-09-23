@@ -171,10 +171,16 @@ export async function fetchEvents(limit = 100) {
   }));
 }
 
-export async function fetchEvent(id: string) {
-  const item = await adminGet<any>("/events", { id });
+export async function fetchEvent(slugOrId: string) {
+  let item: any;
+  try {
+    item = await adminGet<any>("/events", { slug: slugOrId });
+  } catch {
+    item = await adminGet<any>("/events", { id: slugOrId });
+  }
   return {
     id: String(item.id),
+    slug: item.slug || slugOrId,
     title: item.title || "",
     title_fr: item.titleFr || null,
     description: item.description || null,
