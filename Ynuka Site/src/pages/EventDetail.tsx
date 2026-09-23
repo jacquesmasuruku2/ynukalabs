@@ -19,6 +19,7 @@ import {
 import type { YnukaEvent } from "@/services/events/types";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import GoogleSignInDialog from "@/components/auth/GoogleSignInDialog";
+import ReactionBar from "@/components/ReactionBar";
 import { authService, type AuthUser } from "@/lib/auth";
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -225,6 +226,9 @@ const EventDetail = () => {
             ) : null}
           </div>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
+          <div className="mt-4">
+            <ReactionBar storageKey={`event-${event.id}`} initialThumbs={Math.floor(Math.random() * 42)} initialHearts={Math.floor(Math.random() * 28)} />
+          </div>
         </div>
       </header>
 

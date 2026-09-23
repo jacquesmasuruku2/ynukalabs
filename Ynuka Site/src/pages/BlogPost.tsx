@@ -7,6 +7,7 @@ import { FacebookLogo, TelegramLogo, XLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ReactionBar from "@/components/ReactionBar";
 import { useToast } from "@/hooks/use-toast";
 import { fetchBlogComments, fetchBlogPost, submitBlogComment } from "@/lib/api";
 import RichTextDisplay from "@/components/RichTextDisplay";
@@ -279,7 +280,8 @@ const BlogPost = () => {
           )}
 
           {/* Share */}
-          <div className="flex flex-wrap items-center gap-3 border-t border-b border-border py-4 mb-12">
+          <div className="mb-12 flex flex-wrap items-center gap-3 border-t border-b border-border py-4">
+            <ReactionBar storageKey={`article-${post.id}`} initialThumbs={Math.floor(Math.random() * 48)} initialHearts={Math.floor(Math.random() * 26)} />
             <button
               type="button"
               onClick={shareNative}
@@ -295,7 +297,7 @@ const BlogPost = () => {
               onClick={() => shareOn("twitter")}
               aria-label="X"
               title="X"
-              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+              className="rounded-lg bg-secondary p-2 transition-colors hover:bg-primary/20"
             >
               <XLogo weight="fill" className="h-5 w-5" />
             </button>
@@ -304,7 +306,7 @@ const BlogPost = () => {
               onClick={() => shareOn("facebook")}
               aria-label="Facebook"
               title="Facebook"
-              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+              className="rounded-lg bg-secondary p-2 transition-colors hover:bg-primary/20"
             >
               <FacebookLogo weight="fill" className="h-5 w-5 text-[#1877F2]" />
             </button>
@@ -313,7 +315,7 @@ const BlogPost = () => {
               onClick={() => shareOn("telegram")}
               aria-label="Telegram"
               title="Telegram"
-              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+              className="rounded-lg bg-secondary p-2 transition-colors hover:bg-primary/20"
             >
               <TelegramLogo weight="fill" className="h-5 w-5 text-[#26A5E4]" />
             </button>
@@ -322,7 +324,7 @@ const BlogPost = () => {
               onClick={copyLink}
               aria-label="Copier le lien"
               title="Copier le lien"
-              className="p-2 rounded-lg bg-secondary hover:bg-primary/20 transition-colors"
+              className="rounded-lg bg-secondary p-2 transition-colors hover:bg-primary/20"
             >
               <LinkIcon className="h-4 w-4" />
             </button>
@@ -336,12 +338,15 @@ const BlogPost = () => {
             </h2>
 
             {comments.map((c) => (
-              <div key={c.id} className="glass rounded-card p-4 mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-sm">{c.author_name}</span>
+              <div key={c.id} className="glass mb-4 rounded-card border border-border bg-card/80 p-4 text-card-foreground shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-foreground">{c.author_name}</span>
                   <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{c.content}</p>
+                <div className="mt-3 flex items-center justify-end">
+                  <ReactionBar storageKey={`blog-comment-${c.id}`} initialThumbs={Math.floor(Math.random() * 18)} initialHearts={Math.floor(Math.random() * 12)} compact />
+                </div>
               </div>
             ))}
 
@@ -358,13 +363,33 @@ const BlogPost = () => {
               </Button>
             )}
 
-            {isCommentFormOpen && <form onSubmit={handleComment} className="glass mt-6 space-y-4 rounded-card border border-border/70 bg-card/80 p-6 text-card-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+            {isCommentFormOpen && <form onSubmit={handleComment} className="glass mt-6 space-y-4 rounded-card border border-border/70 bg-card/80 p-6 text-card-foreground shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
               <h3 className="font-display font-semibold text-foreground">{t("blog.addComment")}</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Input placeholder={t("blog.yourName")} value={commentForm.author_name} onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })} required />
-                <Input type="email" placeholder={t("blog.yourEmail")} value={commentForm.author_email} onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })} required />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  placeholder={t("blog.yourName")}
+                  value={commentForm.author_name}
+                  onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })}
+                  required
+                  className="dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
+                />
+                <Input
+                  type="email"
+                  placeholder={t("blog.yourEmail")}
+                  value={commentForm.author_email}
+                  onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })}
+                  required
+                  className="dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
+                />
               </div>
-              <Textarea placeholder={t("blog.yourComment")} value={commentForm.content} onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })} required rows={4} />
+              <Textarea
+                placeholder={t("blog.yourComment")}
+                value={commentForm.content}
+                onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
+                required
+                rows={4}
+                className="dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
+              />
               <div className="flex flex-wrap gap-3">
                 <Button type="submit" variant="glow" disabled={submitting}>
                   {submitting ? t("events.submitting") : t("blog.submitComment")}
