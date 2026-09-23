@@ -70,9 +70,9 @@ export default function ReactionBar({
 
   useEffect(() => {
     const stored = readStorage(storageKey, initialThumbs, initialHearts);
-    setCounts(stored);
+    setCounts(resourceType && resourceId ? defaultCounts(0, 0) : stored);
     setIsHydrated(true);
-  }, [storageKey, initialThumbs, initialHearts]);
+  }, [storageKey, initialThumbs, initialHearts, resourceType, resourceId]);
 
   useEffect(() => {
     if (!resourceType || !resourceId || !isHydrated) return;
@@ -81,12 +81,12 @@ export default function ReactionBar({
       try {
         const payload = await fetchContentReactions(resourceType, resourceId, userEmail || undefined);
         setCounts((current) => ({
-          thumb: payload.thumb ?? current.thumb,
-          heart: payload.heart ?? current.heart,
+          thumb: payload.thumb ?? 0,
+          heart: payload.heart ?? 0,
           user: payload.user ?? current.user,
         }));
       } catch {
-        // keep the local fallback if the server is temporarily unavailable
+        setCounts((current) => ({ ...current, thumb: 0, heart: 0 }));
       }
     })();
     return () => controller.abort();

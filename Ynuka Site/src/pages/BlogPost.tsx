@@ -328,8 +328,6 @@ const BlogPost = () => {
               resourceType="article"
               resourceId={post.id}
               userEmail={user?.email || null}
-              initialThumbs={Math.floor(Math.random() * 48)}
-              initialHearts={Math.floor(Math.random() * 26)}
               onRequireAuth={() => setShowAuthDialog(true)}
             />
             <button
@@ -423,8 +421,6 @@ const BlogPost = () => {
                         resourceType="blog_comment"
                         resourceId={c.id}
                         userEmail={user?.email || null}
-                        initialThumbs={Math.floor(Math.random() * 18)}
-                        initialHearts={Math.floor(Math.random() * 12)}
                         compact
                         onRequireAuth={() => setShowAuthDialog(true)}
                       />

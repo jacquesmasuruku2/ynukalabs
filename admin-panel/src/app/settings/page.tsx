@@ -144,11 +144,7 @@ function SettingsContent() {
     finally { setLoadingTeam(false); }
   };
   useEffect(() => { if (user?.isSuperAdmin) void loadTeam(); }, [user?.isSuperAdmin]);
-  useEffect(() => {
-    if (!user?.isSuperAdmin) return undefined;
-    const interval = window.setInterval(() => void loadTeam(), 5000);
-    return () => window.clearInterval(interval);
-  }, [user?.isSuperAdmin]);
+
   const sendInvite = async () => {
     if (!inviteForm.email.trim()) return showNotice({ type: 'error', text: 'Email requis pour l’invitation.' });
     setInviting(true);

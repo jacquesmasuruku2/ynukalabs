@@ -232,8 +232,6 @@ const EventDetail = () => {
               resourceType="event"
               resourceId={event.id}
               userEmail={user?.email || null}
-              initialThumbs={Math.floor(Math.random() * 42)}
-              initialHearts={Math.floor(Math.random() * 28)}
               onRequireAuth={() => setShowAuth(true)}
             />
           </div>

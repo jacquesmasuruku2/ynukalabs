@@ -69,12 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, [refreshUser]);
 
-  useEffect(() => {
-    if (!isAuthenticated) return undefined;
-    const interval = window.setInterval(() => void refreshUser(), 5000);
-    return () => window.clearInterval(interval);
-  }, [isAuthenticated, refreshUser]);
-
   const login = async (email: string, password: string, provider: 'email' | 'google' = 'email'): Promise<boolean> => {
     try {
       const coordinates = provider === 'email' && typeof navigator !== 'undefined' && navigator.geolocation
