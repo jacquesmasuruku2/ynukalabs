@@ -3,6 +3,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdminEmail, isSuperAdminRole, resolveAdminRole } from '@/lib/adminRoles';
 
+export function hasPremiumAccess(user: { isPremium?: boolean | null; premiumExpiresAt?: Date | string | null; role?: string | null; email?: string | null } | null | undefined) {
+  if (!user) return false;
+  if (isSuperAdminRole(user.role) || isSuperAdminEmail(String(user.email || ''))) return true;
+  if (!user.isPremium || !user.premiumExpiresAt) return false;
+  return new Date(user.premiumExpiresAt) > new Date();
+}
+
 export async function getAdminSession() {
   const token = (await cookies()).get('admin_session_token')?.value;
   if (!token) return null;
@@ -35,6 +42,15 @@ export async function requireSuperAdmin() {
   if (response) return { session: null, response };
   if (!isSuperAdminRole(session!.adminUser.role) && !isSuperAdminEmail(session!.adminUser.email)) {
     return { session: null, response: NextResponse.json({ error: 'Réservé au super-administrateur.' }, { status: 403 }) };
+  }
+  return { session, response: null };
+}
+
+export async function requirePremiumAccess() {
+  const { session, response } = await requireAdmin();
+  if (response) return { session: null, response };
+  if (!hasPremiumAccess(session!.adminUser)) {
+    return { session: null, response: NextResponse.json({ error: 'Réservé aux comptes Premium.' }, { status: 403 }) };
   }
   return { session, response: null };
 }

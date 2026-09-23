@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ADMIN_ROLE, isSuperAdminEmail } from '@/lib/adminRoles';
-import { requireSuperAdmin } from '@/lib/admin-session';
+import { requirePremiumAccess } from '@/lib/admin-session';
 import { sendAdminInviteEmail } from '@/lib/email';
 
 function serializeInvite(invite: any) {
@@ -19,7 +19,7 @@ function serializeInvite(invite: any) {
 }
 
 export async function GET() {
-  const { response } = await requireSuperAdmin();
+  const { response } = await requirePremiumAccess();
   if (response) return response;
   const [invites, team] = await Promise.all([
     prisma.adminInvite.findMany({ orderBy: { createdAt: 'desc' }, include: { adminUser: { select: { id: true, name: true, isActive: true, lastLoginAt: true, passwordHash: true } }, invitedBy: { select: { name: true, email: true } } } }),
@@ -48,7 +48,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { session, response } = await requireSuperAdmin();
+  const { session, response } = await requirePremiumAccess();
   if (response) return response;
   try {
     const body = await request.json();
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { session, response } = await requireSuperAdmin();
+  const { session, response } = await requirePremiumAccess();
   if (response) return response;
   const body = await request.json().catch(() => ({}));
   try {
