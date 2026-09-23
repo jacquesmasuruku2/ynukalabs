@@ -9,6 +9,14 @@
       "destination": "https://api.luma.com/:path*"
     },
     {
+      "source": "/resources",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/resources/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/((?!luma-api/).*)",
       "destination": "/index.html"
     }
