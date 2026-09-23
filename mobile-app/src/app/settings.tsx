@@ -26,7 +26,7 @@ function formatRelativeTime(ms: number) {
 export default function SettingsScreen() {
   const theme = useTheme();
   const [now, setNow] = useState(Date.now());
-  const currentUserEmail = process.env.EXPO_PUBLIC_SUPER_ADMIN_EMAIL || 'jacquesmasuruku2@gmail.com';
+  const currentUserEmail = process.env.EXPO_PUBLIC_CURRENT_USER_EMAIL || '';
   const isSuperAdmin = hasPremiumAccessForEmail(currentUserEmail);
 
   useEffect(() => {

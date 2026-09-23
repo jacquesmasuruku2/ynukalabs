@@ -14,6 +14,6 @@ export function hasStripeConfig() {
 }
 
 export function hasPremiumAccessForEmail(email?: string | null) {
-  const normalized = (email || 'jacquesmasuruku2@gmail.com').trim().toLowerCase();
+  const normalized = (email || '').trim().toLowerCase();
   return stripeConfig.superAdminEmails.includes(normalized);
 }
