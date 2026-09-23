@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSuperAdmin } from '@/lib/admin-session';
+import { requirePremiumAccess } from '@/lib/admin-session';
 import { sendNewsletterEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
-    const { response: authResponse } = await requireSuperAdmin();
+    const { response: authResponse } = await requirePremiumAccess();
     if (authResponse) return authResponse;
     const body = await request.json();
     const subject = typeof body?.subject === 'string' ? body.subject.trim() : '';

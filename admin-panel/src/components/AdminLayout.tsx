@@ -29,6 +29,7 @@ import {
   ChevronDown,
   Shield,
   Clock,
+  Star,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -270,7 +271,7 @@ export default function AdminLayout({
     { name: 'Médias', href: '/media', icon: Music },
     { name: 'Sponsors', href: '/sponsored', icon: Handshake },
     { name: 'Abonnement', href: '/newsletter', icon: Mail },
-    { name: 'Envoyer une newsletter', href: '/newsletter/send', icon: Send },
+    { name: 'Envoyer une newsletter', href: '/newsletter/send', icon: Send, premium: true },
     { name: 'Soumissions', href: '/form-submissions', icon: Inbox },
     { name: 'Offres d\'emploi', href: '/job-offers', icon: Briefcase },
     { name: 'Candidatures', href: '/job-applications', icon: ClipboardList },
@@ -374,10 +375,19 @@ export default function AdminLayout({
                           boxShadow: isActive ? 'inset 0 0 0 1px rgba(37, 99, 235, 0.08)' : 'none',
                           transform: 'translateY(0)',
                         }}
-                        onClick={() => setIsSidebarOpen(false)}
+                        onClick={(event) => {
+                          if (item.premium && !user?.isPremium && !user?.isSuperAdmin) {
+                            event.preventDefault();
+                            router.push('/settings?premium=required');
+                          }
+                          setIsSidebarOpen(false);
+                        }}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
-                        <span className={isSidebarCollapsed ? 'hidden' : 'truncate'}>{item.name}</span>
+                        <span className={isSidebarCollapsed ? 'hidden' : 'flex min-w-0 flex-1 items-center gap-1.5 truncate'}>
+                          {item.name}
+                          {item.premium && <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-500" aria-label="Premium" />}
+                        </span>
                       </Link>
                     </li>
                   );

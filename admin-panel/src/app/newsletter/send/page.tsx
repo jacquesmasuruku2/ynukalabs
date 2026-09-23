@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { useAuth } from '@/components/AuthProvider';
 import NewsletterArticleSelector, { type NewsletterArticleOption } from '@/components/NewsletterArticleSelector';
 import { generateCustomNewsletterHtml, generateYnukaNewsletterHtml } from '@/lib/newsletter';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Send, Star } from 'lucide-react';
 
 type NewsletterSubscriber = {
   id: string;
@@ -14,6 +15,8 @@ type NewsletterSubscriber = {
 };
 
 export default function NewsletterSendPage() {
+  const { user } = useAuth();
+  const hasPremiumAccess = !!user && (user.isPremium || user.isSuperAdmin);
   const [articles, setArticles] = useState<NewsletterArticleOption[]>([]);
   const [eventInviteText, setEventInviteText] = useState('Voulez-vous prendre part à cet événement ?');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -37,6 +40,10 @@ export default function NewsletterSendPage() {
 
   useEffect(() => {
     const loadArticles = async () => {
+      if (!hasPremiumAccess) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         const [articlesResponse, eventsResponse, lumaResponse] = await Promise.all([
@@ -99,10 +106,11 @@ export default function NewsletterSendPage() {
     };
 
     loadArticles();
-  }, []);
+  }, [hasPremiumAccess]);
 
   useEffect(() => {
     const loadSubscribers = async () => {
+      if (!hasPremiumAccess) return;
       try {
         const response = await fetch('/api/newsletter');
         if (!response.ok) throw new Error('Impossible de charger les abonnés');
@@ -119,7 +127,7 @@ export default function NewsletterSendPage() {
     };
 
     loadSubscribers();
-  }, []);
+  }, [hasPremiumAccess]);
 
   const selectedArticles = useMemo(
     () => selectedIds.map((id) => articles.find((article) => article.id === id)).filter(Boolean) as NewsletterArticleOption[],
@@ -209,6 +217,16 @@ export default function NewsletterSendPage() {
 
   return (
     <AdminLayout>
+      {!hasPremiumAccess ? (
+        <div className="mx-auto max-w-xl rounded-xl border border-amber-200 bg-amber-50 p-8 text-center shadow-sm dark:border-amber-900 dark:bg-amber-950/30">
+          <Star className="mx-auto h-10 w-10 fill-amber-400 text-amber-500" aria-hidden="true" />
+          <h1 className="mt-4 text-2xl font-bold text-primary">Envoi newsletter Premium</h1>
+          <p className="mt-2 text-sm text-secondary">Cette fonctionnalité est réservée aux comptes Premium.</p>
+          <button type="button" onClick={() => { window.location.href = '/settings?premium=required'; }} className="mt-6 rounded-md bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700">
+            Voir les abonnements
+          </button>
+        </div>
+      ) : (
       <div className="space-y-4 md:space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-primary md:text-3xl">Envoyer une newsletter</h1>
@@ -373,6 +391,7 @@ export default function NewsletterSendPage() {
           </button>
         </div>
       </div>
+      )}
     </AdminLayout>
   );
 }
