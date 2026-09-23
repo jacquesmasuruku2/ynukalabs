@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-session';
+import { PREMIUM_PLAN_CONFIG, getPremiumPlan } from '@/lib/admin-premium';
 
 type NowPaymentsPaymentResponse = {
   payment_url?: string;
@@ -20,15 +21,16 @@ function getPremiumBaseUrl() {
   ).replace(/\/$/, '');
 }
 
-async function getNowPaymentsCheckoutUrl() {
+async function getNowPaymentsCheckoutUrl(adminUserId: string, adminUserEmail: string, plan: string) {
   const apiKey = process.env.NOWPAYMENTS_API_KEY;
   const apiUrl = process.env.NOWPAYMENTS_API_URL;
 
   if (!apiKey || !apiUrl) return null;
 
   const baseUrl = getPremiumBaseUrl();
-  const premiumPrice = Number(process.env.PREMIUM_PRICE_USD ?? 29);
-  const orderId = `premium-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const premiumPlan = getPremiumPlan(plan);
+  const config = PREMIUM_PLAN_CONFIG[premiumPlan];
+  const orderId = `premium-${premiumPlan}-${adminUserId}-${Date.now()}`;
 
   const response = await fetch(`${apiUrl.replace(/\/$/, '')}/payment`, {
     method: 'POST',
@@ -37,14 +39,14 @@ async function getNowPaymentsCheckoutUrl() {
       'x-api-key': apiKey,
     },
     body: JSON.stringify({
-      price_amount: Number.isFinite(premiumPrice) && premiumPrice > 0 ? premiumPrice : 29,
+      price_amount: config.price,
       price_currency: 'usd',
       pay_currency: 'usdt',
       order_id: orderId,
-      order_description: 'Premium access for Ynuka Labs admin panel',
+      order_description: `Premium access - ${premiumPlan} - ${adminUserEmail}`,
       ipn_callback_url: `${baseUrl}/api/admin/premium/notify`,
-      success_url: `${baseUrl}/settings?premium=success`,
-      cancel_url: `${baseUrl}/settings?premium=cancelled`,
+      success_url: `${baseUrl}/settings?premium=success&plan=${premiumPlan}`,
+      cancel_url: `${baseUrl}/settings?premium=cancelled&plan=${premiumPlan}`,
     }),
   });
 
@@ -63,8 +65,8 @@ async function getNowPaymentsCheckoutUrl() {
   );
 }
 
-export async function GET() {
-  const { response } = await requireAdmin();
+export async function GET(request: NextRequest) {
+  const { response, session } = await requireAdmin();
   if (response) return response;
 
   const checkoutUrl = process.env.STRIPE_CHECKOUT_URL || process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_URL;
@@ -72,8 +74,10 @@ export async function GET() {
     return NextResponse.redirect(checkoutUrl);
   }
 
+  const plan = request.nextUrl.searchParams.get('plan') || 'monthly';
+
   try {
-    const nowPaymentsCheckoutUrl = await getNowPaymentsCheckoutUrl();
+    const nowPaymentsCheckoutUrl = await getNowPaymentsCheckoutUrl(session!.adminUser.id, session!.adminUser.email, plan);
     if (!nowPaymentsCheckoutUrl) {
       return NextResponse.json(
         { error: 'Le lien de paiement Premium n’est pas encore configuré.' },

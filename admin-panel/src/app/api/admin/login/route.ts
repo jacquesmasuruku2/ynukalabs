@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
       }
 
       const role = resolveAdminRole(user.email, user.role);
-      const response = NextResponse.json({ success: true, user: { id: user.id, email: user.email, name: user.name, provider: 'google', role, isSuperAdmin: isSuperAdminEmail(user.email) || role === 'super_admin' } });
+      const isPremiumNow = user.isPremium && user.premiumExpiresAt && new Date(user.premiumExpiresAt) > new Date();
+      const response = NextResponse.json({ success: true, user: { id: user.id, email: user.email, name: user.name, provider: 'google', role, isSuperAdmin: isSuperAdminEmail(user.email) || role === 'super_admin', isPremium: isPremiumNow, premiumPlan: user.premiumPlan || null, premiumExpiresAt: user.premiumExpiresAt?.toISOString() || null } });
       const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
     }
 
     const role = resolveAdminRole(user.email, user.role);
-    const response = NextResponse.json({ success: true, user: { id: user.id, email: user.email, name: user.name, provider: user.provider, role, isSuperAdmin: isSuperAdminEmail(user.email) || role === 'super_admin' } });
+    const isPremiumNow = user.isPremium && user.premiumExpiresAt && new Date(user.premiumExpiresAt) > new Date();
+    const response = NextResponse.json({ success: true, user: { id: user.id, email: user.email, name: user.name, provider: user.provider, role, isSuperAdmin: isSuperAdminEmail(user.email) || role === 'super_admin', isPremium: isPremiumNow, premiumPlan: user.premiumPlan || null, premiumExpiresAt: user.premiumExpiresAt?.toISOString() || null } });
     const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12);
 

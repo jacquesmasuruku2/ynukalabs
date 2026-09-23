@@ -10,6 +10,9 @@ export interface AdminUser {
   provider?: string;
   role?: string;
   isSuperAdmin?: boolean;
+  isPremium?: boolean;
+  premiumPlan?: string | null;
+  premiumExpiresAt?: string | null;
   lastLoginAt?: string | null;
 }
 

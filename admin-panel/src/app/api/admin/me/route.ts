@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
     const role = resolveAdminRole(session.adminUser.email, session.adminUser.role);
     const user = session.adminUser.role === role ? session.adminUser : await prisma.adminUser.update({ where: { id: session.adminUser.id }, data: { role } });
 
+    const isPremiumNow = isSuperAdminRole(user.role) || isSuperAdminEmail(user.email) || (user.isPremium && user.premiumExpiresAt && new Date(user.premiumExpiresAt) > new Date());
+
     return NextResponse.json({
       authenticated: true,
       user: {
@@ -35,6 +37,9 @@ export async function GET(request: NextRequest) {
         role: user.role,
         lastLoginAt: user.lastLoginAt?.toISOString() || null,
         isSuperAdmin: isSuperAdminRole(user.role) || isSuperAdminEmail(user.email),
+        isPremium: isPremiumNow,
+        premiumPlan: user.premiumPlan || null,
+        premiumExpiresAt: user.premiumExpiresAt?.toISOString() || null,
       },
       session: {
         createdAt: session.createdAt.toISOString(),

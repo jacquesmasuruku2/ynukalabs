@@ -196,6 +196,10 @@ model AdminUser {
   provider      String        @default("email")
   googleId      String?       @unique
   role          String        @default("admin")
+  isPremium     Boolean       @default(false)
+  premiumPlan   String?       @db.String(32)
+  premiumStartedAt DateTime?
+  premiumExpiresAt DateTime?
   isActive      Boolean       @default(true)
   emailVerified Boolean       @default(false)
   createdAt     DateTime      @default(now())
