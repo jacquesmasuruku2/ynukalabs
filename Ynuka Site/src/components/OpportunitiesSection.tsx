@@ -77,7 +77,7 @@ function OpportunityCard({
   return (
     <article
       className={cn(
-        "flex h-full min-h-[300px] w-full flex-col overflow-hidden rounded-card border transition-colors md:min-h-[320px]",
+        "flex h-full min-h-[300px] w-full flex-col overflow-hidden rounded-md border transition-colors md:min-h-[320px]",
         featured
           ? "border-[#ffb800]/45 bg-[#0f2847] text-white"
           : "border-black/[0.08] bg-white text-[#0f2847] dark:border-[#3b82f6]/30 dark:bg-[#152a48] dark:text-[#dbeafe]"
@@ -276,15 +276,15 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
   ) : null;
 
   const body = loading ? (
-    <div className="flex min-h-[220px] items-center justify-center rounded-card border border-dashed border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+    <div className="flex min-h-[220px] items-center justify-center rounded-md border border-dashed border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
       {t("common.loading")}
     </div>
   ) : loadError && displayList.length === 0 ? (
-    <div className="rounded-card border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+    <div className="rounded-md border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
       <p className="text-lg font-medium">{t("common.loadError")}</p>
     </div>
   ) : displayList.length === 0 ? (
-    <div className="rounded-card border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+    <div className="rounded-md border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
       <p className="text-lg font-medium">{t("opportunities.empty")}</p>
     </div>
   ) : (
@@ -344,8 +344,8 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
 
   if (!showHeading) {
     return (
-      <section id="opportunities" className="scroll-mt-28 py-16 sm:py-20">
-        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
+      <section id="opportunities" className="scroll-mt-28 rounded-md py-16 sm:py-20">
+        <div className="mx-auto w-full max-w-[1200px] rounded-md px-4 sm:px-6 md:px-8 lg:px-10">
           {body}
         </div>
       </section>
@@ -353,8 +353,8 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
   }
 
   return (
-    <ModernSectionWrapper className="py-16 md:py-20">
-      <div id="opportunities" className="scroll-mt-28">
+    <ModernSectionWrapper className="rounded-md py-16 md:py-20">
+      <div id="opportunities" className="scroll-mt-28 rounded-md">
         {heading}
         {body}
         {cta}
