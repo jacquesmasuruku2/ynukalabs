@@ -39,18 +39,27 @@ export default function NewsletterSendPage() {
     const loadArticles = async () => {
       try {
         setIsLoading(true);
-        const [articlesResponse, eventsResponse] = await Promise.all([fetch('/api/articles'), fetch('/api/events')]);
-        if (!articlesResponse.ok || !eventsResponse.ok) throw new Error('Impossible de charger les contenus');
+        const [articlesResponse, eventsResponse, lumaResponse] = await Promise.all([
+          fetch('/api/articles'),
+          fetch('/api/events'),
+          fetch('/api/luma-events').catch(() => null),
+        ]);
+
+        if (!articlesResponse.ok || !eventsResponse.ok) {
+          throw new Error('Impossible de charger les contenus');
+        }
+
         const [articleData, eventData] = await Promise.all([articlesResponse.json(), eventsResponse.json()]);
         const articleOptions = articleData.map((article: any) => ({
-            id: article.id,
-            kind: 'article' as const,
-            title: article.title,
-            excerpt: article.excerpt,
-            slug: article.slug,
-            mainImageUrl: article.mainImageUrl,
-            category: article.category,
-          }));
+          id: article.id,
+          kind: 'article' as const,
+          title: article.title,
+          excerpt: article.excerpt,
+          slug: article.slug,
+          mainImageUrl: article.mainImageUrl,
+          category: article.category,
+        }));
+
         const eventOptions = eventData.map((event: any) => ({
           id: event.id,
           kind: 'event' as const,
@@ -60,9 +69,24 @@ export default function NewsletterSendPage() {
           category: { title: 'Événement' },
           date: event.date || event.startDate,
           location: event.location,
-          eventUrl: `/events/${event.id}`,
+          eventUrl: `/events/${event.slug || event.id}`,
         }));
-        setArticles([...articleOptions, ...eventOptions]);
+
+        const lumaOptions = lumaResponse && lumaResponse.ok
+          ? (await lumaResponse.json()).map((event: any) => ({
+              id: `luma-${event.id}`,
+              kind: 'event' as const,
+              title: event.title,
+              excerpt: event.description || event.locationLabel || 'Événement Luma',
+              mainImageUrl: event.coverUrl,
+              category: { title: 'Événement' },
+              date: event.startAt,
+              location: event.locationLabel,
+              eventUrl: event.url,
+            }))
+          : [];
+
+        setArticles([...articleOptions, ...eventOptions, ...lumaOptions]);
       } catch (error) {
         console.error(error);
         setStatus({

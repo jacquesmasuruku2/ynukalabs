@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Heart, ThumbsUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { fetchContentReactions, toggleContentReaction } from "@/lib/api";
 
 type ReactionType = "thumb" | "heart";
 
@@ -40,30 +41,59 @@ function readStorage(storageKey: string, fallbackThumb: number, fallbackHeart: n
 
 interface ReactionBarProps {
   storageKey: string;
+  resourceType?: string;
+  resourceId?: string;
+  userEmail?: string | null;
   initialThumbs?: number;
   initialHearts?: number;
   compact?: boolean;
   className?: string;
+  onRequireAuth?: () => void;
 }
 
 export default function ReactionBar({
   storageKey,
+  resourceType,
+  resourceId,
+  userEmail,
   initialThumbs = 0,
   initialHearts = 0,
   compact = false,
   className = "",
+  onRequireAuth,
 }: ReactionBarProps) {
   const [counts, setCounts] = useState<ReactionCounts>(() =>
     defaultCounts(initialThumbs, initialHearts)
   );
   const [bursts, setBursts] = useState<Array<{ id: number; reaction: ReactionType; x: number; y: number }>>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     const stored = readStorage(storageKey, initialThumbs, initialHearts);
     setCounts(stored);
+    setIsHydrated(true);
   }, [storageKey, initialThumbs, initialHearts]);
 
   useEffect(() => {
+    if (!resourceType || !resourceId || !isHydrated) return;
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const payload = await fetchContentReactions(resourceType, resourceId, userEmail || undefined);
+        setCounts((current) => ({
+          thumb: payload.thumb ?? current.thumb,
+          heart: payload.heart ?? current.heart,
+          user: payload.user ?? current.user,
+        }));
+      } catch {
+        // keep the local fallback if the server is temporarily unavailable
+      }
+    })();
+    return () => controller.abort();
+  }, [resourceType, resourceId, userEmail, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     localStorage.setItem(
       `${STORAGE_PREFIX}${storageKey}`,
       JSON.stringify({
@@ -72,7 +102,7 @@ export default function ReactionBar({
         user: counts.user,
       })
     );
-  }, [counts, storageKey]);
+  }, [counts, storageKey, isHydrated]);
 
   const triggerBurst = (reaction: ReactionType) => {
     const items = Array.from({ length: 9 }, (_, index) => ({
@@ -87,33 +117,53 @@ export default function ReactionBar({
     }, 900);
   };
 
-  const handleReact = (reaction: ReactionType) => {
-    setCounts((current) => {
-      let nextThumb = current.thumb;
-      let nextHeart = current.heart;
-      let nextUser = current.user;
+  const handleReact = async (reaction: ReactionType) => {
+    if (!resourceType || !resourceId) {
+      setCounts((current) => {
+        let nextThumb = current.thumb;
+        let nextHeart = current.heart;
+        let nextUser = current.user;
 
-      if (nextUser === reaction) {
-        if (reaction === "thumb") nextThumb = Math.max(0, nextThumb - 1);
-        if (reaction === "heart") nextHeart = Math.max(0, nextHeart - 1);
-        nextUser = null;
-      } else {
-        if (nextUser === "thumb") nextThumb = Math.max(0, nextThumb - 1);
-        if (nextUser === "heart") nextHeart = Math.max(0, nextHeart - 1);
+        if (nextUser === reaction) {
+          if (reaction === "thumb") nextThumb = Math.max(0, nextThumb - 1);
+          if (reaction === "heart") nextHeart = Math.max(0, nextHeart - 1);
+          nextUser = null;
+        } else {
+          if (nextUser === "thumb") nextThumb = Math.max(0, nextThumb - 1);
+          if (nextUser === "heart") nextHeart = Math.max(0, nextHeart - 1);
 
-        if (reaction === "thumb") nextThumb += 1;
-        if (reaction === "heart") nextHeart += 1;
-        nextUser = reaction;
-      }
+          if (reaction === "thumb") nextThumb += 1;
+          if (reaction === "heart") nextHeart += 1;
+          nextUser = reaction;
+        }
 
-      return {
-        thumb: nextThumb,
-        heart: nextHeart,
-        user: nextUser,
-      };
-    });
+        return { thumb: nextThumb, heart: nextHeart, user: nextUser };
+      });
+      triggerBurst(reaction);
+      return;
+    }
 
-    triggerBurst(reaction);
+    if (!userEmail) {
+      onRequireAuth?.();
+      return;
+    }
+
+    try {
+      const payload = await toggleContentReaction({
+        resourceType,
+        resourceId,
+        userEmail,
+        reactionType: reaction,
+      });
+      setCounts({
+        thumb: payload.thumb,
+        heart: payload.heart,
+        user: payload.user,
+      });
+      triggerBurst(reaction);
+    } catch {
+      // keep UI stable if the request fails
+    }
   };
 
   const buttonBase =

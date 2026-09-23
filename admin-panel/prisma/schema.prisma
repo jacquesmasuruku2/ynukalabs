@@ -332,18 +332,32 @@ model Comment {
 }
 
 model BlogComment {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   articleId   String
-  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article     Article            @relation(fields: [articleId], references: [id], onDelete: Cascade)
   authorName  String
   authorEmail String
   content     String
-  approved    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  approved    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  replies     BlogCommentReply[]
 
   @@index([articleId])
   @@index([approved])
+}
+
+model BlogCommentReply {
+  id          String      @id @default(cuid())
+  commentId   String
+  comment     BlogComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorEmail String
+  content     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([commentId])
 }
 
 model Like {
@@ -358,7 +372,19 @@ model Like {
   @@index([articleId])
   @@index([userId])
 }
+model ContentReaction {
+  id           String   @id @default(cuid())
+  resourceType String
+  resourceId   String
+  userEmail    String
+  reactionType String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
+  @@unique([resourceType, resourceId, userEmail])
+  @@index([resourceType, resourceId])
+  @@index([resourceType, resourceId, reactionType])
+}
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String

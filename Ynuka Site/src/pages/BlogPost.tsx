@@ -26,11 +26,19 @@ interface BlogPostData {
   cover_url: string | null;
 }
 
+interface CommentReply {
+  id: string;
+  author_name: string;
+  content: string;
+  created_at: string;
+}
+
 interface Comment {
   id: string;
   author_name: string;
   content: string;
   created_at: string;
+  replies: CommentReply[];
 }
 
 const BlogPost = () => {
@@ -47,6 +55,8 @@ const BlogPost = () => {
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [commentForm, setCommentForm] = useState({ author_name: "", author_email: "", content: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   useEffect(() => {
     if (!slugOrId) return;
@@ -172,13 +182,20 @@ const BlogPost = () => {
       author_name?: string;
       content?: string;
       created_at?: string;
-      attributes?: { author_name?: string; content?: string; createdAt?: string; created_at?: string };
+      replies?: Array<{ id?: string | number; author_name?: string; content?: string; created_at?: string }>;
+      attributes?: { author_name?: string; content?: string; createdAt?: string; created_at?: string; replies?: Array<{ id?: string | number; author_name?: string; content?: string; created_at?: string }> };
     };
     return {
       id: String(item.id ?? crypto.randomUUID()),
       author_name: item.attributes?.author_name ?? item.author_name ?? "",
       content: item.attributes?.content ?? item.content ?? "",
       created_at: item.attributes?.createdAt ?? item.attributes?.created_at ?? item.created_at ?? new Date().toISOString(),
+      replies: (item.attributes?.replies ?? item.replies ?? []).map((reply) => ({
+        id: String(reply.id ?? crypto.randomUUID()),
+        author_name: reply.author_name ?? "",
+        content: reply.content ?? "",
+        created_at: reply.created_at ?? new Date().toISOString(),
+      })),
     };
   };
 
@@ -202,6 +219,31 @@ const BlogPost = () => {
       toast({ title: t("admin.error"), variant: "destructive" });
     }
     setSubmitting(false);
+  };
+
+  const handleReply = async (commentId: string) => {
+    if (!replyText.trim() || !user) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    try {
+      const createdReply = await submitBlogCommentReply({
+        commentId,
+        authorName: user.name,
+        authorEmail: user.email,
+        content: replyText,
+      });
+
+      setComments((current) => current.map((comment) =>
+        comment.id === commentId ? { ...comment, replies: [...comment.replies, { id: createdReply.id, author_name: user.name, content: createdReply.content, created_at: createdReply.created_at }] } : comment
+      ));
+      setReplyingTo(null);
+      setReplyText("");
+      toast({ title: t("blog.commentAdded") });
+    } catch {
+      toast({ title: t("admin.error"), variant: "destructive" });
+    }
   };
 
   const shareUrl = window.location.href;
@@ -281,7 +323,15 @@ const BlogPost = () => {
 
           {/* Share */}
           <div className="mb-12 flex flex-wrap items-center gap-3 border-t border-b border-border py-4">
-            <ReactionBar storageKey={`article-${post.id}`} initialThumbs={Math.floor(Math.random() * 48)} initialHearts={Math.floor(Math.random() * 26)} />
+            <ReactionBar
+              storageKey={`article-${post.id}`}
+              resourceType="article"
+              resourceId={post.id}
+              userEmail={user?.email || null}
+              initialThumbs={Math.floor(Math.random() * 48)}
+              initialHearts={Math.floor(Math.random() * 26)}
+              onRequireAuth={() => setShowAuthDialog(true)}
+            />
             <button
               type="button"
               onClick={shareNative}
@@ -357,14 +407,62 @@ const BlogPost = () => {
 
                     <p className="text-sm leading-6 text-muted-foreground">{c.content}</p>
 
-                    <div className="mt-3 flex justify-end">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-primary hover:underline"
+                        onClick={() => {
+                          if (!user) setShowAuthDialog(true);
+                          else setReplyingTo((current) => current === c.id ? null : c.id);
+                        }}
+                      >
+                        {isFr ? "Répondre" : "Reply"}
+                      </button>
                       <ReactionBar
                         storageKey={`blog-comment-${c.id}`}
+                        resourceType="blog_comment"
+                        resourceId={c.id}
+                        userEmail={user?.email || null}
                         initialThumbs={Math.floor(Math.random() * 18)}
                         initialHearts={Math.floor(Math.random() * 12)}
                         compact
+                        onRequireAuth={() => setShowAuthDialog(true)}
                       />
                     </div>
+
+                    {c.replies.length > 0 && (
+                      <div className="mt-4 space-y-3 border-l border-border pl-4 dark:border-slate-600">
+                        {c.replies.map((reply) => (
+                          <div key={reply.id} className="rounded-xl bg-muted/50 p-3 dark:bg-slate-800/80">
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <span className="text-sm font-semibold text-foreground">{reply.author_name}</span>
+                              <span className="text-[11px] text-muted-foreground">{new Date(reply.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm leading-6 text-muted-foreground">{reply.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {replyingTo === c.id && (
+                      <div className="mt-3 rounded-xl border border-border bg-background p-3 dark:border-slate-600 dark:bg-slate-950">
+                        <Textarea
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          rows={3}
+                          placeholder={isFr ? "Écrire une réponse..." : "Write a reply..."}
+                          className="min-h-[90px] rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground dark:border-slate-600 dark:bg-slate-950"
+                        />
+                        <div className="mt-3 flex justify-end gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => setReplyingTo(null)}>
+                            {isFr ? "Fermer" : "Close"}
+                          </Button>
+                          <Button type="button" variant="glow" size="sm" onClick={() => handleReply(c.id)}>
+                            {isFr ? "Publier" : "Post"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </article>

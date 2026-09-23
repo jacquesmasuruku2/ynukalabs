@@ -271,11 +271,40 @@ export async function fetchBlogPost(slugOrId: string) {
 }
 
 export async function fetchBlogComments(articleId: string) {
-  return adminGet<Array<{ id: string; author_name: string; content: string; created_at: string }>>('/blog-comments', { articleId });
+  return adminGet<
+    Array<{
+      id: string;
+      author_name: string;
+      content: string;
+      created_at: string;
+      replies?: Array<{ id: string; author_name: string; content: string; created_at: string }>;
+    }>
+  >('/blog-comments', { articleId });
 }
 
 export async function submitBlogComment(data: { articleId: string; authorName: string; authorEmail: string; content: string }) {
   return adminPost<{ id: string; author_name: string; content: string; created_at: string }>('/blog-comments', data);
+}
+
+export async function submitBlogCommentReply(data: { commentId: string; authorName: string; authorEmail: string; content: string }) {
+  return adminPost<{ id: string; author_name: string; content: string; created_at: string }>('/blog-comments/replies', data);
+}
+
+export async function fetchContentReactions(resourceType: string, resourceId: string, userEmail?: string) {
+  return adminGet<{ thumb: number; heart: number; user: 'thumb' | 'heart' | null }>('/content-reactions', {
+    resourceType,
+    resourceId,
+    userEmail: userEmail || '',
+  });
+}
+
+export async function toggleContentReaction(data: {
+  resourceType: string;
+  resourceId: string;
+  userEmail: string;
+  reactionType: 'thumb' | 'heart';
+}) {
+  return adminPost<{ thumb: number; heart: number; user: 'thumb' | 'heart' | null }>('/content-reactions', data);
 }
 
 export async function fetchOpportunities(limit = 100) {

@@ -227,7 +227,15 @@ const EventDetail = () => {
           </div>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
           <div className="mt-4">
-            <ReactionBar storageKey={`event-${event.id}`} initialThumbs={Math.floor(Math.random() * 42)} initialHearts={Math.floor(Math.random() * 28)} />
+            <ReactionBar
+              storageKey={`event-${event.id}`}
+              resourceType="event"
+              resourceId={event.id}
+              userEmail={user?.email || null}
+              initialThumbs={Math.floor(Math.random() * 42)}
+              initialHearts={Math.floor(Math.random() * 28)}
+              onRequireAuth={() => setShowAuth(true)}
+            />
           </div>
         </div>
       </header>

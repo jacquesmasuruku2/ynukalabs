@@ -13,9 +13,28 @@ export async function GET(request: NextRequest) {
   const comments = await prisma.blogComment.findMany({
     where: { articleId, approved: true },
     orderBy: { createdAt: 'asc' },
-    select: { id: true, authorName: true, content: true, createdAt: true },
+    include: {
+      replies: {
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, authorName: true, content: true, createdAt: true },
+      },
+    },
   });
-  return jsonCors(comments.map((comment) => ({ id: comment.id, author_name: comment.authorName, content: comment.content, created_at: comment.createdAt.toISOString() })));
+
+  return jsonCors(
+    comments.map((comment) => ({
+      id: comment.id,
+      author_name: comment.authorName,
+      content: comment.content,
+      created_at: comment.createdAt.toISOString(),
+      replies: comment.replies.map((reply) => ({
+        id: reply.id,
+        author_name: reply.authorName,
+        content: reply.content,
+        created_at: reply.createdAt.toISOString(),
+      })),
+    }))
+  );
 }
 
 export async function POST(request: NextRequest) {

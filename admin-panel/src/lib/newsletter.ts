@@ -40,9 +40,15 @@ const buildArticleUrl = (article: NewsletterArticle) => {
   return `${baseUrl.replace(/\/$/, '')}/blog/${slug}`;
 };
 
-const buildContentUrl = (item: NewsletterArticle) => item.kind === 'event'
-  ? `${(process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com').replace(/\/$/, '')}/events/${item.id}`
-  : buildArticleUrl(item);
+const buildContentUrl = (item: NewsletterArticle) => {
+  if (item.kind === 'event') {
+    if (item.eventUrl && /^https?:\/\//i.test(item.eventUrl)) return item.eventUrl;
+    if (item.eventUrl) return item.eventUrl;
+    return `${(process.env.NEXT_PUBLIC_MAIN_SITE_URL || 'https://ynukalabs.com').replace(/\/$/, '')}/events/${item.id}`;
+  }
+
+  return buildArticleUrl(item);
+};
 
 const responsiveNewsletterCss = `
   <style>
