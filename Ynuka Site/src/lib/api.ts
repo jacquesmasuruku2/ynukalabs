@@ -172,31 +172,46 @@ export async function fetchEvents(limit = 100) {
 }
 
 export async function fetchEvent(slugOrId: string) {
-  let item: any;
-  try {
-    item = await adminGet<any>("/events", { slug: slugOrId });
-  } catch {
-    item = await adminGet<any>("/events", { id: slugOrId });
+  const candidateRequests = [
+    async () => {
+      const item = await adminGet<any>("/events", { slug: slugOrId });
+      return Array.isArray(item) ? item[0] ?? null : item ?? null;
+    },
+    async () => {
+      const item = await adminGet<any>("/events", { id: slugOrId });
+      return item ?? null;
+    },
+  ];
+
+  for (const request of candidateRequests) {
+    try {
+      const item = await request();
+      if (!item || item.error) continue;
+      return {
+        id: String(item.id),
+        slug: item.slug || slugOrId,
+        title: item.title || "",
+        title_fr: item.titleFr || null,
+        description: item.description || null,
+        description_fr: item.descriptionFr || null,
+        date: item.date || "",
+        location: item.location || "",
+        type: item.type || "",
+        upcoming: !!item.upcoming,
+        time: item.time || null,
+        imageUrl: item.imageUrl || null,
+        capacity: item.capacity || null,
+        recapUrl: pickOptionalUrl(item.recapUrl),
+        youtubeUrl: pickOptionalUrl(
+          item.youtubeUrl || extractYoutubeUrl(`${item.description || ""} ${item.descriptionFr || ""}`)
+        ),
+      };
+    } catch {
+      // continue to fallback candidate
+    }
   }
-  return {
-    id: String(item.id),
-    slug: item.slug || slugOrId,
-    title: item.title || "",
-    title_fr: item.titleFr || null,
-    description: item.description || null,
-    description_fr: item.descriptionFr || null,
-    date: item.date || "",
-    location: item.location || "",
-    type: item.type || "",
-    upcoming: !!item.upcoming,
-    time: item.time || null,
-    imageUrl: item.imageUrl || null,
-    capacity: item.capacity || null,
-    recapUrl: pickOptionalUrl(item.recapUrl),
-    youtubeUrl: pickOptionalUrl(
-      item.youtubeUrl || extractYoutubeUrl(`${item.description || ""} ${item.descriptionFr || ""}`)
-    ),
-  };
+
+  return null;
 }
 
 export async function fetchBlogPosts(limit = 100) {
@@ -218,31 +233,41 @@ export async function fetchBlogPosts(limit = 100) {
 }
 
 export async function fetchBlogPost(slugOrId: string) {
-  try {
-    let item: any;
+  const candidateRequests = [
+    async () => {
+      const item = await adminGet<any>("/articles", { slug: slugOrId });
+      return Array.isArray(item) ? item[0] ?? null : item ?? null;
+    },
+    async () => {
+      const item = await adminGet<any>("/articles", { id: slugOrId });
+      return item ?? null;
+    },
+  ];
+
+  for (const request of candidateRequests) {
     try {
-      item = await adminGet<any>("/articles", { slug: slugOrId });
+      const item = await request();
+      if (!item || item.error) continue;
+      return {
+        id: String(item.id),
+        slug: item.slug || slugOrId,
+        title: item.title || "",
+        title_fr: item.title || null,
+        excerpt: item.excerpt || null,
+        excerpt_fr: item.excerpt || null,
+        category: item.category?.title || "Blog",
+        content: contentToString(item.content),
+        cover_url: item.mainImageUrl || null,
+        created_at: item.publishedAt || item.createdAt || "",
+        views: Number(item.views || 0),
+        likes: 0,
+      };
     } catch {
-      item = await adminGet<any>("/articles", { id: slugOrId });
+      // continue to fallback candidate
     }
-    if (!item || item.error) return null;
-    return {
-      id: String(item.id),
-      slug: item.slug || slugOrId,
-      title: item.title || "",
-      title_fr: item.title || null,
-      excerpt: item.excerpt || null,
-      excerpt_fr: item.excerpt || null,
-      category: item.category?.title || "Blog",
-      content: contentToString(item.content),
-      cover_url: item.mainImageUrl || null,
-      created_at: item.publishedAt || item.createdAt || "",
-      views: Number(item.views || 0),
-      likes: 0,
-    };
-  } catch {
-    return null;
   }
+
+  return null;
 }
 
 export async function fetchBlogComments(articleId: string) {
