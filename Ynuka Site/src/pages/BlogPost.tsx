@@ -338,16 +338,36 @@ const BlogPost = () => {
             </h2>
 
             {comments.map((c) => (
-              <div key={c.id} className="glass mb-4 rounded-card border border-border bg-card/80 p-4 text-card-foreground shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-foreground">{c.author_name}</span>
-                  <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
+              <article
+                key={c.id}
+                className="mb-4 rounded-2xl border border-border bg-card/90 p-4 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900/80"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary dark:bg-primary/20">
+                    {c.author_name?.trim()?.charAt(0)?.toUpperCase() || "A"}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-foreground">{c.author_name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <p className="text-sm leading-6 text-muted-foreground">{c.content}</p>
+
+                    <div className="mt-3 flex justify-end">
+                      <ReactionBar
+                        storageKey={`blog-comment-${c.id}`}
+                        initialThumbs={Math.floor(Math.random() * 18)}
+                        initialHearts={Math.floor(Math.random() * 12)}
+                        compact
+                      />
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{c.content}</p>
-                <div className="mt-3 flex items-center justify-end">
-                  <ReactionBar storageKey={`blog-comment-${c.id}`} initialThumbs={Math.floor(Math.random() * 18)} initialHearts={Math.floor(Math.random() * 12)} compact />
-                </div>
-              </div>
+              </article>
             ))}
 
             {!isCommentFormOpen && (
@@ -363,42 +383,53 @@ const BlogPost = () => {
               </Button>
             )}
 
-            {isCommentFormOpen && <form onSubmit={handleComment} className="glass mt-6 space-y-4 rounded-card border border-border/70 bg-card/80 p-6 text-card-foreground shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-              <h3 className="font-display font-semibold text-foreground">{t("blog.addComment")}</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  placeholder={t("blog.yourName")}
-                  value={commentForm.author_name}
-                  onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })}
+            {isCommentFormOpen && (
+              <form
+                onSubmit={handleComment}
+                className="mt-6 rounded-2xl border border-border bg-card/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/80"
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="font-display text-lg font-semibold text-foreground">{t("blog.addComment")}</h3>
+                  <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Public</span>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    placeholder={t("blog.yourName")}
+                    value={commentForm.author_name}
+                    onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })}
+                    required
+                    className="h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                  <Input
+                    type="email"
+                    placeholder={t("blog.yourEmail")}
+                    value={commentForm.author_email}
+                    onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })}
+                    required
+                    className="h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                  />
+                </div>
+
+                <Textarea
+                  placeholder={t("blog.yourComment")}
+                  value={commentForm.content}
+                  onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
                   required
-                  className="dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
+                  rows={4}
+                  className="mt-4 min-h-[120px] rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
                 />
-                <Input
-                  type="email"
-                  placeholder={t("blog.yourEmail")}
-                  value={commentForm.author_email}
-                  onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })}
-                  required
-                  className="dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
-                />
-              </div>
-              <Textarea
-                placeholder={t("blog.yourComment")}
-                value={commentForm.content}
-                onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
-                required
-                rows={4}
-                className="dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
-              />
-              <div className="flex flex-wrap gap-3">
-                <Button type="submit" variant="glow" disabled={submitting}>
-                  {submitting ? t("events.submitting") : t("blog.submitComment")}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setIsCommentFormOpen(false)}>
-                  Annuler
-                </Button>
-              </div>
-            </form>}
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Button type="submit" variant="glow" disabled={submitting}>
+                    {submitting ? t("events.submitting") : t("blog.submitComment")}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsCommentFormOpen(false)}>
+                    Annuler
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </section>
