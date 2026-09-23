@@ -231,11 +231,11 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
         {activeTab === 'home' && (
           <div className="flex flex-wrap items-center gap-1 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
             {/* Clipboard Group */}
-            <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
+            <div className="flex items-center gap-1 border-r border-gray-300 pr-2 dark:border-slate-600">
               <button
                 type="button"
                 onClick={() => navigator.clipboard.readText().then(text => editor.chain().focus().insertContent(text).run())}
-                className="p-2 hover:bg-blue-100 rounded transition-colors"
+                className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                 title="Coller"
               >
                 <Clipboard className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => document.execCommand('cut')}
-                className="p-2 hover:bg-blue-100 rounded transition-colors"
+                className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                 title="Couper"
               >
                 <Scissors className="w-4 h-4" />
@@ -251,7 +251,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => document.execCommand('copy')}
-                className="p-2 hover:bg-blue-100 rounded transition-colors"
+                className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                 title="Copier"
               >
                 <Copy className="w-4 h-4" />
@@ -259,7 +259,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
             </div>
 
             {/* Font Group */}
-            <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
+            <div className="flex items-center gap-1 border-r border-gray-300 pr-2 dark:border-slate-600">
               <select
                 className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
                 title="Police"
@@ -290,7 +290,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleBold().run()}
-                  className={`p-2 rounded ${editor.isActive('bold') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                  className={`rounded p-2 transition-colors ${editor.isActive('bold') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                   title="Gras (Ctrl+B)"
                 >
                   <Bold className="w-4 h-4" />
@@ -298,7 +298,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleItalic().run()}
-                  className={`p-2 rounded ${editor.isActive('italic') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                  className={`rounded p-2 transition-colors ${editor.isActive('italic') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                   title="Italique (Ctrl+I)"
                 >
                   <Italic className="w-4 h-4" />
@@ -306,7 +306,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleStrike().run()}
-                  className={`p-2 rounded ${editor.isActive('strike') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                  className={`rounded p-2 transition-colors ${editor.isActive('strike') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                   title="Barré"
                 >
                   <Strikethrough className="w-4 h-4" />
@@ -314,7 +314,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleUnderline().run()}
-                  className={`p-2 rounded ${editor.isActive('underline') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                  className={`rounded p-2 transition-colors ${editor.isActive('underline') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                   title="Souligné (Ctrl+U)"
                 >
                   <UnderlineIcon className="w-4 h-4" />
@@ -323,14 +323,14 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <div className="flex gap-1">
                 <button
                   type="button"
-                  className="p-1 hover:bg-blue-100 rounded transition-colors text-xs font-bold"
+                  className="rounded p-1 text-xs font-bold transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                   title="Indice"
                 >
                   x₂
                 </button>
                 <button
                   type="button"
-                  className="p-1 hover:bg-blue-100 rounded transition-colors text-xs font-bold"
+                  className="rounded p-1 text-xs font-bold transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                   title="Exposant"
                 >
                   x²
@@ -340,7 +340,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => setIsLinkModalOpen(true)}
-                  className={`p-1 rounded ${editor.isActive('link') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                  className={`rounded p-1 transition-colors ${editor.isActive('link') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                   title="Insérer un lien"
                 >
                   <LinkIcon className="w-4 h-4" />
@@ -348,7 +348,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={handleUnsetLink}
-                  className="p-1 hover:bg-blue-100 rounded transition-colors"
+                  className="rounded p-1 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                   title="Supprimer le lien"
                 >
                   <Unlink className="w-4 h-4" />
@@ -358,7 +358,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => setIsTextColorPickerOpen(!isTextColorPickerOpen)}
-                  className="p-1 hover:bg-blue-100 rounded transition-colors relative"
+                  className="relative rounded p-1 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                   title="Couleur du texte"
                 >
                   <Type className="w-4 h-4" />
@@ -394,7 +394,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
                 <button
                   type="button"
                   onClick={() => setIsHighlightColorPickerOpen(!isHighlightColorPickerOpen)}
-                  className="p-1 hover:bg-blue-100 rounded transition-colors relative"
+                  className="relative rounded p-1 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                   title="Couleur de surbrillance"
                 >
                   <Palette className="w-4 h-4" />
@@ -429,11 +429,11 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
             </div>
 
             {/* Paragraph Group */}
-            <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
+            <div className="flex items-center gap-1 border-r border-gray-300 pr-2 dark:border-slate-600">
               <button
                 type="button"
                 onClick={() => editor.chain().focus().setTextAlign('left').run()}
-                className={`p-2 rounded ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded p-2 transition-colors ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Aligner à gauche"
               >
                 <AlignLeft className="w-4 h-4" />
@@ -441,7 +441,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().setTextAlign('center').run()}
-                className={`p-2 rounded ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded p-2 transition-colors ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Centrer"
               >
                 <AlignCenter className="w-4 h-4" />
@@ -449,7 +449,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().setTextAlign('right').run()}
-                className={`p-2 rounded ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded p-2 transition-colors ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Aligner à droite"
               >
                 <AlignRight className="w-4 h-4" />
@@ -457,18 +457,18 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-                className={`p-2 rounded ${editor.isActive({ textAlign: 'justify' }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded p-2 transition-colors ${editor.isActive({ textAlign: 'justify' }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Justifier"
               >
                 <AlignJustify className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
+            <div className="flex items-center gap-1 border-r border-gray-300 pr-2 dark:border-slate-600">
               <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
-                className={`p-2 rounded ${editor.isActive('bulletList') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded p-2 transition-colors ${editor.isActive('bulletList') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Liste à puces"
               >
                 <List className="w-4 h-4" />
@@ -476,18 +476,18 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className={`p-2 rounded ${editor.isActive('orderedList') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded p-2 transition-colors ${editor.isActive('orderedList') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Liste numérotée"
               >
                 <ListOrdered className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
+            <div className="flex items-center gap-1 border-r border-gray-300 pr-2 dark:border-slate-600">
               <button
                 type="button"
                 onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
-                className="p-2 hover:bg-blue-100 rounded transition-colors"
+                className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                 title="Augmenter le retrait"
               >
                 <Indent className="w-4 h-4" />
@@ -495,7 +495,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().liftListItem('listItem').run()}
-                className="p-2 hover:bg-blue-100 rounded transition-colors"
+                className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
                 title="Diminuer le retrait"
               >
                 <IndentDecrease className="w-4 h-4" />
@@ -504,7 +504,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
 
             <div className="flex items-center gap-1">
               <select
-                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-blue-50"
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
                 title="Interligne"
                 value={lineHeight}
                 onChange={(e) => setLineHeight(e.target.value)}
@@ -521,7 +521,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().setParagraph().run()}
-                className={`px-3 py-1 text-sm rounded ${editor.isActive('paragraph') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded px-3 py-1 text-sm transition-colors ${editor.isActive('paragraph') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Normal"
               >
                 Normal
@@ -529,7 +529,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                className={`px-3 py-1 text-sm font-bold rounded ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded px-3 py-1 text-sm font-bold transition-colors ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Titre 1"
               >
                 <Heading1 className="w-4 h-4 inline" />
@@ -537,7 +537,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                className={`px-3 py-1 text-sm font-bold rounded ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded px-3 py-1 text-sm font-bold transition-colors ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Titre 2"
               >
                 <Heading2 className="w-4 h-4 inline" />
@@ -545,7 +545,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                className={`px-3 py-1 text-sm font-bold rounded ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded px-3 py-1 text-sm font-bold transition-colors ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Titre 3"
               >
                 <Heading3 className="w-4 h-4 inline" />
@@ -553,7 +553,7 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className={`px-3 py-1 text-sm rounded ${editor.isActive('blockquote') ? 'bg-blue-100 text-blue-600' : 'hover:bg-blue-100'} transition-colors`}
+                className={`rounded px-3 py-1 text-sm transition-colors ${editor.isActive('blockquote') ? 'bg-blue-100 text-blue-600 dark:bg-slate-700' : 'hover:bg-blue-100 dark:hover:bg-slate-700'}`}
                 title="Citation"
               >
                 <Quote className="w-4 h-4 inline" />
@@ -568,16 +568,16 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
             <button 
               type="button"
               onClick={() => setIsReadAlsoModalOpen(true)}
-              className="p-2 hover:bg-blue-100 rounded transition-colors flex items-center gap-2" 
+              className="flex items-center gap-2 rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
               title="Insérer un article recommandé"
             >
               <ExternalLink className="w-4 h-4" />
               <span className="text-sm">À lire aussi</span>
             </button>
-            <button type="button" className="p-2 hover:bg-blue-100 rounded transition-colors" title="Insérer une image">
+            <button type="button" className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700" title="Insérer une image">
               <FileText className="w-4 h-4" />
             </button>
-            <button type="button" className="p-2 hover:bg-blue-100 rounded transition-colors" title="Insérer un lien">
+            <button type="button" className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700" title="Insérer un lien">
               <Search className="w-4 h-4" />
             </button>
           </div>
@@ -586,10 +586,10 @@ export default function WordEditor({ content, onChange }: WordEditorProps) {
         {/* Layout Tab */}
         {activeTab === 'layout' && (
           <div className="flex items-center gap-2 bg-gradient-to-b from-gray-50 to-white p-2 dark:from-slate-800 dark:to-slate-900">
-            <button type="button" className="p-2 hover:bg-blue-100 rounded transition-colors" title="Orientation">
+            <button type="button" className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700" title="Orientation">
               <FileText className="w-4 h-4" />
             </button>
-            <button type="button" className="p-2 hover:bg-blue-100 rounded transition-colors" title="Marges">
+            <button type="button" className="rounded p-2 transition-colors hover:bg-blue-100 dark:hover:bg-slate-700" title="Marges">
               <FileText className="w-4 h-4" />
             </button>
           </div>

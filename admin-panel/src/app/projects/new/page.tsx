@@ -5,7 +5,7 @@ import WordEditor from '@/components/WordEditor';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Save, X } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Save, Upload, X } from 'lucide-react';
 
 const slugify = (v: string) =>
   v
@@ -36,6 +36,7 @@ function mergeCategoryOptions(fromApi: CategoryOption[]): CategoryOption[] {
 export default function NewProjectPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [form, setForm] = useState({
     title: '',
@@ -49,6 +50,28 @@ export default function NewProjectPage() {
     showOnHome: false,
   });
   const update = (k: string, v: string | boolean) => setForm((c) => ({ ...c, [k]: v }));
+
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('folder', 'Images_projects');
+
+      const response = await fetch('/api/upload', { method: 'POST', body: uploadFormData });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      update('featuredImage', data.url);
+    } catch (error) {
+      console.error('Error uploading project image:', error);
+      alert(error instanceof Error ? error.message : 'Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/categories')
@@ -192,12 +215,37 @@ export default function NewProjectPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700">Image</label>
-                  <input
-                    value={form.featuredImage}
-                    onChange={(e) => update('featuredImage', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://..."
-                  />
+                  <div className="space-y-3">
+                    <input
+                      value={form.featuredImage}
+                      onChange={(e) => update('featuredImage', e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://..."
+                    />
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-blue-500 hover:bg-blue-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+                      {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {uploadingImage ? 'Upload en cours...' : 'Importer une image'}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="sr-only"
+                        disabled={uploadingImage}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void handleImageUpload(file);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                    {form.featuredImage && (
+                      <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
+                        <img src={form.featuredImage} alt="Aperçu du projet" className="h-32 w-full object-cover" />
+                        <p className="flex items-center gap-1.5 px-3 py-2 text-xs text-secondary">
+                          <ImageIcon className="h-3.5 w-3.5" /> Image sélectionnée
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
