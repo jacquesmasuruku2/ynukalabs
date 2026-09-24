@@ -17,6 +17,10 @@ function getPremiumBaseUrl() {
   ).replace(/\/$/, '');
 }
 
+function getPremiumSettingsUrl(query: string) {
+  return new URL(`/settings?${query}`, getPremiumBaseUrl());
+}
+
 async function getAtlosCheckoutUrl(adminUserId: string, adminUserEmail: string, plan: string) {
   const merchantId = process.env.ATLOS_MERCHANT_ID;
   const apiSecret = process.env.ATLOS_API_SECRET;
@@ -68,17 +72,14 @@ export async function GET(request: NextRequest) {
   try {
     const atlosCheckoutUrl = await getAtlosCheckoutUrl(session!.adminUser.id, session!.adminUser.email, plan);
     if (!atlosCheckoutUrl) {
-      return NextResponse.json(
-        { error: 'Le lien de paiement Premium n’est pas encore configuré.' },
-        { status: 503 },
-      );
+      return NextResponse.redirect(getPremiumSettingsUrl('premium=unavailable'), 303);
     }
 
     return NextResponse.redirect(atlosCheckoutUrl);
   } catch (error) {
     console.error('Premium checkout init failed:', error);
     if (error instanceof Error && /401|403|invalid|forbidden|unauthorized/i.test(error.message)) {
-      return NextResponse.redirect(new URL('/settings?premium=unavailable', request.url), 303);
+      return NextResponse.redirect(getPremiumSettingsUrl('premium=unavailable'), 303);
     }
 
     return NextResponse.json(
