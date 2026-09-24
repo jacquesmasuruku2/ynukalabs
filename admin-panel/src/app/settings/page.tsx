@@ -61,7 +61,7 @@ function SettingsContent() {
 
   useEffect(() => {
     if (searchParams.get('premium') === 'unavailable') {
-      showNotice({ type: 'error', text: 'Le paiement Premium est temporairement indisponible. Vérifiez la configuration ATLOS du serveur.' });
+      showNotice({ type: 'error', text: 'Cette fonctionnalité est actuellement en cours de développement.' });
     }
   }, [searchParams]);
 
