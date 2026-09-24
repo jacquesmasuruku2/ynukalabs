@@ -37,10 +37,10 @@ async function getAtlosCheckoutUrl(adminUserId: string, adminUserEmail: string, 
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      MerchantId: merchantId,
       ApiSecret: apiSecret,
     },
     body: JSON.stringify({
-      MerchantId: merchantId,
       OrderId: orderId,
       OrderAmount: config.price,
       OrderCurrency: 'USD',
