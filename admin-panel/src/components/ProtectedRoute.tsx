@@ -22,16 +22,22 @@ function AdminPreloader({ message }: { message: string }) {
   );
 }
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({
+  children,
+  requirePremium = false,
+}: {
+  children: React.ReactNode;
+  requirePremium?: boolean;
+}) {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
+  const hasPremiumAccess = !!user && (user.isSuperAdmin || (user.isPremium && (!user.premiumExpiresAt || new Date(user.premiumExpiresAt) > new Date())));
+
   useEffect(() => {
-    console.log('[ProtectedRoute] Check auth:', { isAuthenticated, isLoading, pathname });
+    console.log('[ProtectedRoute] Check auth:', { isAuthenticated, isLoading, pathname, requirePremium, hasPremiumAccess });
     if (!isLoading && !isAuthenticated) {
-      // Sauvegarder l'URL actuelle pour rediriger après connexion
-      // Ne pas écraser si une URL de redirection existe déjà
       const existingRedirect = localStorage.getItem('redirect-after-login');
       if (!existingRedirect || existingRedirect === '/login' || existingRedirect === '/') {
         localStorage.setItem('redirect-after-login', pathname);
@@ -39,8 +45,18 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       }
       console.log('[ProtectedRoute] Redirecting to login');
       router.push('/login');
+      return;
     }
-  }, [isAuthenticated, isLoading, router, pathname]);
+
+    if (!isLoading && requirePremium && !user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!isLoading && requirePremium && !hasPremiumAccess) {
+      router.push('/settings?premium=required');
+    }
+  }, [isAuthenticated, isLoading, router, pathname, requirePremium, user, hasPremiumAccess]);
 
   if (isLoading) {
     return <AdminPreloader message="Chargement de votre espace..." />;
@@ -49,6 +65,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     console.log('[ProtectedRoute] Not authenticated, showing redirect screen');
     return <AdminPreloader message="Redirection vers la page de connexion..." />;
+  }
+
+  if (requirePremium && !hasPremiumAccess) {
+    return <AdminPreloader message="Accès Premium requis..." />;
   }
 
   console.log('[ProtectedRoute] Authenticated, rendering children');

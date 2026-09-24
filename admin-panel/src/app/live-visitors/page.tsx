@@ -6,7 +6,7 @@ import { LiveVisitorsWidget } from '@/components/LiveVisitorsWidget';
 
 export default function LiveVisitorsPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requirePremium>
       <AdminLayout>
         <div className="space-y-6">
           <div>
