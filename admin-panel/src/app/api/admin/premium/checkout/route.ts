@@ -79,13 +79,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(atlosCheckoutUrl);
   } catch (error) {
     console.error('Premium checkout init failed:', error);
-    if (error instanceof Error && /401|403|invalid|forbidden|unauthorized/i.test(error.message)) {
-      return NextResponse.redirect(getPremiumSettingsUrl('premium=unavailable'), 303);
-    }
-
-    return NextResponse.json(
-      { error: 'Le paiement Premium est indisponible pour le moment.' },
-      { status: 503 },
-    );
+    return NextResponse.redirect(getPremiumSettingsUrl('premium=unavailable'), 303);
   }
 }
