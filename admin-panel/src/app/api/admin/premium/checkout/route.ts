@@ -8,13 +8,14 @@ type AtlosInvoiceResponse = {
 };
 
 function getPremiumBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.ADMIN_PANEL_URL ||
-    process.env.PUBLIC_SITE_URL ||
-    'https://admin.ynukalabs.com'
-  ).replace(/\/$/, '');
+  const configuredBaseUrl = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_BASE_URL,
+    process.env.ADMIN_PANEL_URL,
+    process.env.PUBLIC_SITE_URL,
+  ].find((value) => value && !/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value));
+
+  return (configuredBaseUrl || 'https://admin.ynukalabs.com').replace(/\/$/, '');
 }
 
 function getPremiumSettingsUrl(query: string) {
