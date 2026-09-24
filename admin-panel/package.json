@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "node scripts/migrate-if-configured.js && next build",
+    "clean-build": "node scripts/clean-build.mjs && npm run build",
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
     "deploy": "bash deploy.sh",
