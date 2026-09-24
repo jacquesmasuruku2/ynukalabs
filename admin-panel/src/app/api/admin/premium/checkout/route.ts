@@ -5,7 +5,35 @@ import { PREMIUM_PLAN_CONFIG, getPremiumPlan } from '@/lib/admin-premium';
 type AtlosInvoiceResponse = {
   Id?: string;
   PaymentLink?: string;
+  paymentLink?: string;
+  error?: string;
+  title?: string;
+  type?: string;
+  status?: number;
+  errors?: Record<string, string[] | string>;
 };
+
+async function getAtlosErrorMessage(response: Response) {
+  const rawText = await response.text();
+  if (!rawText) {
+    return `ATLOS request failed with status ${response.status}`;
+  }
+
+  try {
+    const payload = JSON.parse(rawText) as AtlosInvoiceResponse & { errors?: Record<string, unknown> };
+    const formattedErrors = payload.errors ? Object.entries(payload.errors)
+      .map(([field, value]) => `${field}: ${Array.isArray(value) ? value.join(', ') : String(value)}`)
+      .join(' | ') : '';
+
+    return [
+      payload.title || payload.error || 'ATLOS validation failed',
+      formattedErrors || (payload.type ? `type=${payload.type}` : ''),
+      `status=${payload.status ?? response.status}`,
+    ].filter(Boolean).join(' — ');
+  } catch {
+    return `${response.status} ${rawText.slice(0, 500)}`;
+  }
+}
 
 function getPremiumBaseUrl() {
   const configuredBaseUrl = [
@@ -54,12 +82,15 @@ async function getAtlosCheckoutUrl(adminUserId: string, adminUserEmail: string, 
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`ATLOS checkout failed: ${response.status} ${errorText}`);
+    const errorText = await getAtlosErrorMessage(response);
+    throw new Error(`ATLOS checkout failed: ${errorText}`);
   }
 
-  const data = (await response.json()) as AtlosInvoiceResponse;
-  return data.PaymentLink || null;
+  const responseText = await response.text();
+  if (!responseText) return null;
+
+  const data = JSON.parse(responseText) as AtlosInvoiceResponse;
+  return data.PaymentLink || data.paymentLink || null;
 }
 
 export async function GET(request: NextRequest) {
