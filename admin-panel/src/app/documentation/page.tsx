@@ -3,7 +3,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, FileText, FolderOpen, Plus, Trash2, Pencil, ArrowUpRight } from 'lucide-react';
+import { FileText, FolderOpen, Plus, ArrowUpRight } from 'lucide-react';
 
 type ResourceItem = {
   id: string;
@@ -85,12 +85,9 @@ export default function DocumentationPage() {
             <h1 className="text-3xl font-bold text-primary">Documentation</h1>
             <p className="mt-1 text-secondary">Gérer les contenus visibles sur /documentation et /resources</p>
           </div>
-          <div className="flex gap-3">
+          <div>
             <Link href="/documentation/sections/new" className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-              <Plus className="h-4 w-4" /> Nouvelle section
-            </Link>
-            <Link href="/documentation/items/new" className="flex items-center gap-2 rounded-md border px-4 py-2 hover:bg-gray-50">
-              <BookOpen className="h-4 w-4" /> Nouvel item
+              <Plus className="h-4 w-4" /> Nouvelle section / ressources
             </Link>
           </div>
         </div>
@@ -109,10 +106,6 @@ export default function DocumentationPage() {
                       </div>
                       <span className="text-xs font-medium uppercase tracking-wide text-secondary">{item.sectionTitle}</span>
                     </div>
-                    <div className="flex gap-2 text-gray-500">
-                      <Link href={`/documentation/items/${item.id}/edit`} className="hover:text-blue-600" title="Modifier"><Pencil className="h-4 w-4" /></Link>
-                      <button type="button" className="hover:text-red-600" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
-                    </div>
                   </div>
 
                   <h2 className="text-lg font-semibold text-primary">{item.title}</h2>
@@ -123,8 +116,8 @@ export default function DocumentationPage() {
                   </div>
 
                   {(item.url || item.filePath) && (
-                    <a href={item.url || item.filePath || undefined} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-blue-600">
-                      Ouvrir le lien <ArrowUpRight className="h-4 w-4" />
+                    <a href={item.fileType ? `/api/resource-items/${encodeURIComponent(item.id)}/download` : item.url || item.filePath || undefined} className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-blue-600">
+                      {item.fileType ? 'Télécharger le fichier' : 'Ouvrir le lien'} <ArrowUpRight className="h-4 w-4" />
                     </a>
                   )}
                 </article>

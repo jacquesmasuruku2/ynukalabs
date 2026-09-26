@@ -560,6 +560,8 @@
     "cat2": "Vidéos d'ateliers",
     "cat3": "Documents de formation",
     "access": "Accéder à la ressource",
+    "download": "Télécharger",
+    "downloadFile": "Télécharger {{type}}",
     "r1Title": "Introduction à la Blockchain",
     "r1Desc": "Comprendre les fondamentaux de la technologie des registres distribués.",
     "r2Title": "Smart Contracts 101",

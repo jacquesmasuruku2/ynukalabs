@@ -4,6 +4,18 @@ export function isCloudinaryConfigured() {
   return Boolean(process.env.CLOUDINARY_URL);
 }
 
+export function createCloudinaryDownloadUrl(publicId: string, format: string) {
+  if (!isCloudinaryConfigured()) throw new Error('CLOUDINARY_URL is not configured');
+
+  cloudinary.config({ secure: true });
+  return cloudinary.utils.private_download_url(publicId, format, {
+    resource_type: 'raw',
+    type: 'upload',
+    expires_at: Math.floor(Date.now() / 1000) + 10 * 60,
+    attachment: true,
+  });
+}
+
 export async function uploadToCloudinary(buffer: Buffer, options: { folder: string; resourceType?: 'image' | 'raw' | 'auto'; publicId?: string; overwrite?: boolean; accessMode?: 'public' | 'authenticated' }) {
   if (!isCloudinaryConfigured()) throw new Error('CLOUDINARY_URL is not configured');
 

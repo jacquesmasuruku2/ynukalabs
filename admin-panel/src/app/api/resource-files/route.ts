@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       url: uploaded.secure_url,
+      publicId: uploaded.public_id,
       fileName: file.name,
       fileType: extension.slice(1).toUpperCase(),
     });

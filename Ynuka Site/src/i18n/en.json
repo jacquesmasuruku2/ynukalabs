@@ -560,6 +560,8 @@
     "cat2": "Workshop Videos",
     "cat3": "Training Documents",
     "access": "Access Resource",
+    "download": "Download",
+    "downloadFile": "Download {{type}}",
     "r1Title": "Introduction to Blockchain",
     "r1Desc": "Understanding the fundamentals of distributed ledger technology.",
     "r2Title": "Smart Contracts 101",

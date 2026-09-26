@@ -17,8 +17,11 @@ type DocumentationGridSectionProps = {
 };
 
 type DocItem = {
+  id: string;
   title: string;
   desc: string;
+  fileType: string;
+  downloadUrl: string;
 };
 
 const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSectionProps) => {
@@ -32,8 +35,11 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
       try {
         const docs = await withTimeout(fetchDocumentation(50));
         const mapped: DocItem[] = docs.map((doc) => ({
+          id: doc.id,
           title: doc.title,
           desc: doc.description,
+          fileType: doc.fileType,
+          downloadUrl: doc.downloadUrl,
         }));
         setDocs(mapped);
         setLoadError(false);
@@ -74,19 +80,26 @@ const DocumentationGridSection = ({ showHeading = true }: DocumentationGridSecti
             <p>{t("docs.empty")}</p>
           </div>
         ) : (
-          <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             {docs.map((doc, i) => (
             <motion.div
-              key={i}
+              key={doc.id || i}
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-              className="glass rounded-card p-6 hover:border-primary/30 transition-colors"
+              className="glass flex min-w-0 flex-col rounded-card border border-border p-5 transition-colors hover:border-primary/40 sm:p-6"
             >
-              <h3 className="font-display text-lg font-semibold mb-2">{doc.title}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{doc.desc}</p>
-              <Button variant="outline-glow" size="sm">
-                {t("resources.access")}
-              </Button>
+              <div className="mb-3 flex min-h-7 items-start justify-between gap-3">
+                <h3 className="min-w-0 break-words font-display text-lg font-semibold">{doc.title}</h3>
+                {doc.fileType && <span className="shrink-0 rounded-md border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-bold text-sky-900 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-200">{doc.fileType}</span>}
+              </div>
+              <p className="mb-5 flex-1 break-words text-sm text-muted-foreground">{doc.desc}</p>
+              {doc.downloadUrl && (
+                <Button asChild className="w-full justify-center sm:w-auto sm:self-start">
+                  <a href={doc.downloadUrl} download>
+                    <span>{doc.fileType ? t("resources.downloadFile", { type: doc.fileType }) : t("resources.download")}</span>
+                  </a>
+                </Button>
+              )}
             </motion.div>
           ))}
         </div>

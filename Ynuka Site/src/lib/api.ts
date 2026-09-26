@@ -482,12 +482,23 @@ export async function submitMotivationForm(data: {
 export async function fetchDocumentation(limit = 50) {
   const sections = await adminGet<any[]>("/resource-sections", { limit });
   const items = (Array.isArray(sections) ? sections : []).flatMap((s) => s.items || []);
-  return items.slice(0, limit).map((item: any) => ({
-    id: String(item.id),
-    title: item.titleFr || item.title || "",
-    description: item.descriptionFr || item.description || "",
-    iconKey: item.iconKey || "bookOpen",
-  }));
+  return items.slice(0, limit).map((item: any) => {
+    const id = String(item.id || '');
+    const url = String(item.url || item.filePath || '');
+    const fileType = String(item.fileType || url.match(/\.([a-z0-9]+)(?:[?#]|$)/i)?.[1] || '').toUpperCase();
+    const isCloudinaryRaw = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/raw\/upload\//i.test(url);
+    const hasDocument = isCloudinaryRaw || Boolean(item.fileType);
+    return {
+      id,
+      title: item.titleFr || item.title || "",
+      description: item.descriptionFr || item.description || "",
+      fileType,
+      downloadUrl: id && hasDocument
+        ? `${API_ROOT}/resource-items/${encodeURIComponent(id)}/download`
+        : url,
+      iconKey: item.iconKey || "bookOpen",
+    };
+  });
 }
 
 export type GalleryImageItem = {
@@ -657,6 +668,9 @@ export async function fetchResourceSections(limit = 50) {
       title: sub.titleFr || sub.title || "",
       description: sub.descriptionFr || sub.description || "",
       url: sub.url || sub.filePath || "",
+      downloadUrl: String(sub.id || '') && (sub.fileType || /^https?:\/\/res\.cloudinary\.com\/[^/]+\/raw\/upload\//i.test(String(sub.url || sub.filePath || '')))
+        ? `${API_ROOT}/resource-items/${encodeURIComponent(String(sub.id))}/download`
+        : sub.url || sub.filePath || "",
       fileType: sub.fileType || "",
       iconKey: sub.iconKey || "bookOpen",
     })),

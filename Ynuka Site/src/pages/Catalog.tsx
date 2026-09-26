@@ -24,7 +24,7 @@ const iconMap: Record<string, ElementType> = {
 const Catalog = () => {
   const { t } = useTranslation();
 
-  type ResourceItem = { title: string; desc: string; url?: string; fileType?: string };
+  type ResourceItem = { title: string; desc: string; url?: string; downloadUrl?: string; fileType?: string };
   type ResourceSection = { icon: ElementType; category: string; items: ResourceItem[] };
 
   const hardcodedSections: ResourceSection[] = [
@@ -77,7 +77,13 @@ const Catalog = () => {
                 if (!title && !desc) return null;
                 const url = String(item.url || "");
                 const extension = url.match(/\.([a-z0-9]+)(?:[?#]|$)/i)?.[1] || "";
-                return { title, desc, url, fileType: String(item.fileType || extension).toUpperCase() };
+                return {
+                  title,
+                  desc,
+                  url,
+                  downloadUrl: String(item.downloadUrl || url),
+                  fileType: String(item.fileType || extension).toUpperCase(),
+                };
               })
               .filter((x): x is ResourceItem => x !== null && x.title.length > 0);
 
@@ -121,28 +127,31 @@ const Catalog = () => {
                 <section.icon className="h-6 w-6 text-primary" />
                 <h2 className="font-display text-2xl font-bold">{section.category}</h2>
               </div>
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
                 {section.items.map((item, i) => (
                   <motion.div
                     key={i}
                     {...fadeUp}
                     transition={{ ...fadeUp.transition, delay: i * 0.1 }}
-                    className="glass rounded-card p-6 hover:border-primary/30 transition-colors"
+                    className="glass flex min-w-0 flex-col rounded-card border border-border p-5 transition-colors hover:border-primary/40 sm:p-6"
                   >
-                    <h3 className="font-display font-semibold mb-2">
-                      {item.url ? (
-                        <a href={getCloudinaryDownloadUrl(item.url)} className="hover:text-primary">
-                          {item.title}
-                        </a>
-                      ) : item.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
-                    {item.url ? (
-                      <div className="flex items-center justify-between gap-3">
-                        {item.fileType && <span className="rounded border border-border px-2 py-1 text-xs font-semibold text-muted-foreground">{item.fileType}</span>}
-                        <Button variant="link" asChild className="ml-auto p-0 h-auto text-primary">
-                          <a href={getCloudinaryDownloadUrl(item.url)} download>
-                            <Download className="mr-1 h-3 w-3" /> {t("resources.access")}
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <h3 className="min-w-0 break-words font-display font-semibold">
+                        {item.downloadUrl ? (
+                          <a href={item.downloadUrl} className="hover:text-primary">
+                            {item.title}
+                          </a>
+                        ) : item.title}
+                      </h3>
+                      {item.fileType && <span className="shrink-0 rounded-md border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-bold text-sky-900 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-200">{item.fileType}</span>}
+                    </div>
+                    <p className="mb-5 flex-1 break-words text-sm text-muted-foreground">{item.desc}</p>
+                    {item.downloadUrl ? (
+                      <div className="border-t border-border pt-4">
+                        <Button asChild className="w-full justify-center sm:w-auto">
+                          <a href={item.downloadUrl} download>
+                            <Download className="mr-2 h-4 w-4" />
+                            {item.fileType ? t("resources.downloadFile", { type: item.fileType }) : t("resources.download")}
                           </a>
                         </Button>
                       </div>
@@ -157,17 +166,5 @@ const Catalog = () => {
     </div>
   );
 };
-
-function getCloudinaryDownloadUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname === 'res.cloudinary.com') {
-      parsed.pathname = parsed.pathname.replace('/raw/upload/', '/raw/upload/fl_attachment/');
-    }
-    return parsed.toString();
-  } catch {
-    return url;
-  }
-}
 
 export default Catalog;

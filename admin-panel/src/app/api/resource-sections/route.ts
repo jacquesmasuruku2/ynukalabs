@@ -11,6 +11,10 @@ export async function OPTIONS() {
 export async function GET(request: NextRequest) {
   try {
     const admin = request.nextUrl.searchParams.get('admin') === '1';
+    if (admin) {
+      const { response } = await requireAdmin();
+      if (response) return response;
+    }
     const slug = request.nextUrl.searchParams.get('slug');
     const sections = await prisma.resourceSection.findMany({
       where: slug
@@ -58,6 +62,12 @@ export async function POST(request: NextRequest) {
     return jsonCors(section, { status: 201 });
   } catch (error) {
     console.error('Error creating resource section:', error);
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+      return jsonCors(
+        { error: 'Une section avec ce slug existe déjà.', code: 'SLUG_CONFLICT' },
+        { status: 409 }
+      );
+    }
     return jsonCors(
       {
         error: 'Failed to create resource section',

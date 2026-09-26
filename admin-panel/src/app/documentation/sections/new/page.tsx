@@ -85,6 +85,7 @@ export default function NewDocumentationSectionPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [resourceFiles, setResourceFiles] = useState<ResourceDraft[]>([]);
   const [createdSectionId, setCreatedSectionId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -119,27 +120,42 @@ export default function NewDocumentationSectionPage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setNotice(null);
 
     try {
       let sectionId = createdSectionId;
       if (!sectionId) {
+        const slug = form.slug || slugify(form.title);
         const sectionResponse = await fetch('/api/resource-sections', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: form.title,
-            slug: form.slug || slugify(form.title),
+            slug,
             description: form.description || null,
             displayOrder: Number(form.displayOrder || 0),
             isActive: form.isActive,
           }),
         });
         const sectionData = await sectionResponse.json().catch(() => ({}));
-        if (!sectionResponse.ok) {
+        if (sectionResponse.status === 409 && sectionData.code === 'SLUG_CONFLICT') {
+          const lookupResponse = await fetch(`/api/resource-sections?admin=1&slug=${encodeURIComponent(slug)}`);
+          const existingSections = await lookupResponse.json().catch(() => []);
+          const existingSection = Array.isArray(existingSections)
+            ? existingSections.find((section) => section.slug === slug)
+            : null;
+          if (!lookupResponse.ok || !existingSection?.id) {
+            throw new Error(sectionData.error || 'Une section avec ce slug existe déjà.');
+          }
+          sectionId = existingSection.id;
+          setCreatedSectionId(sectionId);
+          setNotice(`La section « ${existingSection.title} » existe déjà. Les fichiers seront ajoutés à cette section.`);
+        } else if (!sectionResponse.ok) {
           throw new Error(sectionData.details || sectionData.error || 'Impossible de créer la section.');
+        } else {
+          sectionId = sectionData.id;
+          setCreatedSectionId(sectionId);
         }
-        sectionId = sectionData.id;
-        setCreatedSectionId(sectionId);
       }
 
       for (const resource of resourceFiles) {
@@ -159,7 +175,7 @@ export default function NewDocumentationSectionPage() {
             title: resource.title,
             titleFr: resource.title,
             url: uploadData.url,
-            filePath: uploadData.url,
+            filePath: uploadData.publicId,
             fileType: uploadData.fileType,
             iconKey: 'fileText',
           }),
@@ -383,6 +399,12 @@ export default function NewDocumentationSectionPage() {
                     />
                     Section active (visible sur le site)
                   </label>
+
+                  {notice ? (
+                    <p role="status" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
+                      {notice}
+                    </p>
+                  ) : null}
 
                   {error ? (
                     <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
