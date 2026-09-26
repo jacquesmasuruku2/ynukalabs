@@ -152,6 +152,7 @@ function tagsFromText(...parts: Array<string | string[] | null | undefined>) {
 }
 
 function HomeProjectCard({ project, delay }: { project: HomeProject; delay: number }) {
+  const { t } = useTranslation();
   const inner = (
     <>
       <div className="flex items-start justify-between gap-4">
@@ -170,7 +171,7 @@ function HomeProjectCard({ project, delay }: { project: HomeProject; delay: numb
           {project.name}
         </span>
       </div>
-      <p className="mt-4 flex-1 text-[0.95rem] leading-relaxed text-slate-600 dark:text-[#93c5fc]/80">
+      <p className="mt-4 line-clamp-4 flex-1 text-[0.95rem] leading-relaxed text-slate-600 dark:text-[#93c5fc]/80">
         {project.description}
       </p>
       {project.tags.length ? (
@@ -189,8 +190,14 @@ function HomeProjectCard({ project, delay }: { project: HomeProject; delay: numb
   );
 
   const cardClass =
-    "flex h-full min-h-[180px] flex-col rounded-card border border-slate-200 bg-white px-6 py-5 transition-colors hover:border-[#ffb800]/50 dark:border-[#3b82f6]/25 dark:bg-[#152a48]";
+    "flex h-full min-h-[240px] flex-col rounded-card border border-slate-200 bg-white px-6 py-5 transition-colors hover:border-[#ffb800]/50 dark:border-[#3b82f6]/25 dark:bg-[#152a48]";
   const isExternal = Boolean(project.href && /^https?:\/\//i.test(project.href));
+  const discoverButton = (
+    <span className="mt-5 inline-flex w-full items-center justify-center gap-2 border border-[#0f2847]/15 px-4 py-2.5 text-sm font-semibold text-[#0f2847] transition-colors hover:border-[#ffb800] hover:bg-[#ffb800]/10 dark:border-white/20 dark:text-white dark:hover:border-[#ffb800] dark:hover:text-[#ffb800]">
+      {t("home.discoverProject")}
+      <ArrowRight className="h-4 w-4" aria-hidden />
+    </span>
+  );
 
   return (
     <motion.article
@@ -200,19 +207,16 @@ function HomeProjectCard({ project, delay }: { project: HomeProject; delay: numb
       viewport={{ once: true }}
       className="h-full"
     >
-      {project.href ? (
-        isExternal ? (
-          <a href={project.href} target="_blank" rel="noopener noreferrer" className={cardClass}>
-            {inner}
-          </a>
-        ) : (
-          <Link to={project.href} className={cardClass}>
-            {inner}
-          </Link>
-        )
-      ) : (
-        <div className={cardClass}>{inner}</div>
-      )}
+      <div className={cardClass}>
+        {inner}
+        {project.href ? (
+          isExternal ? (
+            <a href={project.href} target="_blank" rel="noopener noreferrer">{discoverButton}</a>
+          ) : (
+            <Link to={project.href}>{discoverButton}</Link>
+          )
+        ) : null}
+      </div>
     </motion.article>
   );
 }
