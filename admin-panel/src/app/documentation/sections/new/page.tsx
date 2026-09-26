@@ -7,11 +7,13 @@ import { useRouter } from 'next/navigation';
 import {
   BookOpen,
   FileText,
+  FileUp,
   FolderOpen,
   GraduationCap,
   Lightbulb,
   Save,
   Sparkles,
+  Trash2,
   Wrench,
   X,
 } from 'lucide-react';
@@ -26,6 +28,8 @@ const slugify = (value: string) =>
 
 const fieldClass =
   'w-full rounded-lg border border-gray-300 px-4 py-3 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+type ResourceDraft = { id: string; file: File; title: string };
 
 const templates = [
   {
@@ -81,6 +85,8 @@ export default function NewDocumentationSectionPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resourceFiles, setResourceFiles] = useState<ResourceDraft[]>([]);
+  const [createdSectionId, setCreatedSectionId] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: '',
     slug: '',
@@ -114,27 +120,63 @@ export default function NewDocumentationSectionPage() {
     setSaving(true);
     setError(null);
 
-    const res = await fetch('/api/resource-sections', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: form.title,
-        slug: form.slug || slugify(form.title),
-        description: form.description || null,
-        displayOrder: Number(form.displayOrder || 0),
-        isActive: form.isActive,
-      }),
-    });
+    try {
+      let sectionId = createdSectionId;
+      if (!sectionId) {
+        const sectionResponse = await fetch('/api/resource-sections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: form.title,
+            slug: form.slug || slugify(form.title),
+            description: form.description || null,
+            displayOrder: Number(form.displayOrder || 0),
+            isActive: form.isActive,
+          }),
+        });
+        const sectionData = await sectionResponse.json().catch(() => ({}));
+        if (!sectionResponse.ok) {
+          throw new Error(sectionData.details || sectionData.error || 'Impossible de créer la section.');
+        }
+        sectionId = sectionData.id;
+        setCreatedSectionId(sectionId);
+      }
 
-    setSaving(false);
+      for (const resource of resourceFiles) {
+        const uploadBody = new FormData();
+        uploadBody.append('file', resource.file);
+        const uploadResponse = await fetch('/api/resource-files', { method: 'POST', body: uploadBody });
+        const uploadData = await uploadResponse.json().catch(() => ({}));
+        if (!uploadResponse.ok) {
+          throw new Error(`${resource.title} : ${uploadData.error || 'Échec du téléversement.'}`);
+        }
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.details || data.error || 'Impossible de créer la section.');
-      return;
+        const itemResponse = await fetch('/api/resource-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sectionId,
+            title: resource.title,
+            titleFr: resource.title,
+            url: uploadData.url,
+            filePath: uploadData.url,
+            fileType: uploadData.fileType,
+            iconKey: 'fileText',
+          }),
+        });
+        const itemData = await itemResponse.json().catch(() => ({}));
+        if (!itemResponse.ok) {
+          throw new Error(`${resource.title} : ${itemData.details || itemData.error || 'Échec de la publication.'}`);
+        }
+        setResourceFiles((current) => current.filter((item) => item.id !== resource.id));
+      }
+
+      router.push('/documentation');
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Impossible de publier cette section.');
+    } finally {
+      setSaving(false);
     }
-
-    router.push('/documentation');
   };
 
   return (
@@ -221,6 +263,62 @@ export default function NewDocumentationSectionPage() {
                   onChange={(value) => update('description', value)}
                 />
               </div>
+
+              <div className="border-t border-slate-200 pt-6">
+                <label className="mb-2 block text-sm font-semibold text-gray-700">Ressources à publier</label>
+                <p className="mb-3 text-sm text-slate-500">Ajoutez des documents PDF, PowerPoint, Word ou Excel (50 Mo maximum par fichier).</p>
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:bg-blue-50">
+                  <FileUp className="h-4 w-4" />
+                  Choisir des fichiers
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx"
+                    className="sr-only"
+                    disabled={saving}
+                    onChange={(event) => {
+                      const files = Array.from(event.target.files || []);
+                      setResourceFiles((current) => [
+                        ...current,
+                        ...files.map((file) => ({
+                          id: crypto.randomUUID(),
+                          file,
+                          title: file.name.replace(/\.[^.]+$/, ''),
+                        })),
+                      ]);
+                      event.target.value = '';
+                    }}
+                  />
+                </label>
+                {resourceFiles.length > 0 && (
+                  <ul className="mt-4 divide-y divide-slate-200 rounded-lg border border-slate-200">
+                    {resourceFiles.map((resource) => (
+                      <li key={resource.id} className="flex items-center gap-3 p-3">
+                        <FileText className="h-5 w-5 shrink-0 text-blue-700" />
+                        <div className="min-w-0 flex-1">
+                          <input
+                            aria-label={`Titre pour ${resource.file.name}`}
+                            value={resource.title}
+                            disabled={saving}
+                            onChange={(event) => setResourceFiles((current) => current.map((item) => item.id === resource.id ? { ...item, title: event.target.value } : item))}
+                            className="w-full rounded border border-slate-200 px-2 py-1 text-sm font-medium"
+                          />
+                          <p className="mt-1 truncate text-xs text-slate-500">{resource.file.name} · {(resource.file.size / (1024 * 1024)).toFixed(1)} Mo</p>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`Retirer ${resource.file.name}`}
+                          disabled={saving}
+                          onClick={() => setResourceFiles((current) => current.filter((item) => item.id !== resource.id))}
+                          className="rounded p-2 text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -295,11 +393,11 @@ export default function NewDocumentationSectionPage() {
                   <div className="flex flex-col gap-2 border-t border-gray-200 pt-5">
                     <button
                       type="submit"
-                      disabled={saving}
+                      disabled={saving || resourceFiles.some((resource) => !resource.title.trim())}
                       className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b3b8b] px-5 py-3 font-medium text-white transition-colors hover:bg-[#0a326f] disabled:opacity-50"
                     >
                       <Save className="h-4 w-4" />
-                      {saving ? 'Enregistrement...' : 'Créer la section'}
+                      {saving ? 'Publication...' : createdSectionId ? 'Terminer la publication' : 'Créer la section'}
                     </button>
                     <button
                       type="button"

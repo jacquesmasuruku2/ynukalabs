@@ -24,7 +24,7 @@ const iconMap: Record<string, ElementType> = {
 const Catalog = () => {
   const { t } = useTranslation();
 
-  type ResourceItem = { title: string; desc: string };
+  type ResourceItem = { title: string; desc: string; url?: string };
   type ResourceSection = { icon: ElementType; category: string; items: ResourceItem[] };
 
   const hardcodedSections: ResourceSection[] = [
@@ -75,7 +75,7 @@ const Catalog = () => {
                   item.description_fr ?? item.desc_fr ?? item.description ?? item.desc ?? ""
                 );
                 if (!title && !desc) return null;
-                return { title, desc };
+                return { title, desc, url: String(item.url || "") };
               })
               .filter((x): x is ResourceItem => x !== null && x.title.length > 0);
 
@@ -129,9 +129,13 @@ const Catalog = () => {
                   >
                     <h3 className="font-display font-semibold mb-2">{item.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
-                    <Button variant="link" className="p-0 h-auto text-primary">
-                      <Download className="mr-1 h-3 w-3" /> {t("resources.access")}
-                    </Button>
+                    {item.url ? (
+                      <Button variant="link" asChild className="p-0 h-auto text-primary">
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" download>
+                          <Download className="mr-1 h-3 w-3" /> {t("resources.access")}
+                        </a>
+                      </Button>
+                    ) : null}
                   </motion.div>
                 ))}
               </div>
