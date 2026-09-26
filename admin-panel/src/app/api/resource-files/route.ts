@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       folder: 'ynuka/resources',
       publicId: `${baseName}-${randomUUID()}${extension}`,
       resourceType: 'raw',
+      accessMode: 'public',
     });
 
     return NextResponse.json({

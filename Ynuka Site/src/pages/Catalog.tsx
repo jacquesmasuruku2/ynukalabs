@@ -24,7 +24,7 @@ const iconMap: Record<string, ElementType> = {
 const Catalog = () => {
   const { t } = useTranslation();
 
-  type ResourceItem = { title: string; desc: string; url?: string };
+  type ResourceItem = { title: string; desc: string; url?: string; fileType?: string };
   type ResourceSection = { icon: ElementType; category: string; items: ResourceItem[] };
 
   const hardcodedSections: ResourceSection[] = [
@@ -75,7 +75,9 @@ const Catalog = () => {
                   item.description_fr ?? item.desc_fr ?? item.description ?? item.desc ?? ""
                 );
                 if (!title && !desc) return null;
-                return { title, desc, url: String(item.url || "") };
+                const url = String(item.url || "");
+                const extension = url.match(/\.([a-z0-9]+)(?:[?#]|$)/i)?.[1] || "";
+                return { title, desc, url, fileType: String(item.fileType || extension).toUpperCase() };
               })
               .filter((x): x is ResourceItem => x !== null && x.title.length > 0);
 
@@ -127,14 +129,23 @@ const Catalog = () => {
                     transition={{ ...fadeUp.transition, delay: i * 0.1 }}
                     className="glass rounded-card p-6 hover:border-primary/30 transition-colors"
                   >
-                    <h3 className="font-display font-semibold mb-2">{item.title}</h3>
+                    <h3 className="font-display font-semibold mb-2">
+                      {item.url ? (
+                        <a href={getCloudinaryDownloadUrl(item.url)} className="hover:text-primary">
+                          {item.title}
+                        </a>
+                      ) : item.title}
+                    </h3>
                     <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
                     {item.url ? (
-                      <Button variant="link" asChild className="p-0 h-auto text-primary">
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" download>
-                          <Download className="mr-1 h-3 w-3" /> {t("resources.access")}
-                        </a>
-                      </Button>
+                      <div className="flex items-center justify-between gap-3">
+                        {item.fileType && <span className="rounded border border-border px-2 py-1 text-xs font-semibold text-muted-foreground">{item.fileType}</span>}
+                        <Button variant="link" asChild className="ml-auto p-0 h-auto text-primary">
+                          <a href={getCloudinaryDownloadUrl(item.url)} download>
+                            <Download className="mr-1 h-3 w-3" /> {t("resources.access")}
+                          </a>
+                        </Button>
+                      </div>
                     ) : null}
                   </motion.div>
                 ))}
@@ -146,5 +157,17 @@ const Catalog = () => {
     </div>
   );
 };
+
+function getCloudinaryDownloadUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'res.cloudinary.com') {
+      parsed.pathname = parsed.pathname.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
 
 export default Catalog;

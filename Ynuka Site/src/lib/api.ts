@@ -657,6 +657,7 @@ export async function fetchResourceSections(limit = 50) {
       title: sub.titleFr || sub.title || "",
       description: sub.descriptionFr || sub.description || "",
       url: sub.url || sub.filePath || "",
+      fileType: sub.fileType || "",
       iconKey: sub.iconKey || "bookOpen",
     })),
   }));

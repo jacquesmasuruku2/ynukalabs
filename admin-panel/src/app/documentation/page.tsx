@@ -14,6 +14,8 @@ type ResourceItem = {
   category?: string | null;
   iconKey?: string | null;
   url?: string | null;
+  filePath?: string | null;
+  fileType?: string | null;
 };
 
 type ResourceSection = {
@@ -115,10 +117,13 @@ export default function DocumentationPage() {
 
                   <h2 className="text-lg font-semibold text-primary">{item.title}</h2>
                   <p className="mt-2 text-sm text-secondary">{item.description || 'Aucune description'}</p>
-                  {item.category && <p className="mt-3 text-xs font-medium text-blue-600">{item.category}</p>}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {item.category && <p className="text-xs font-medium text-blue-600">{item.category}</p>}
+                    {item.fileType && <span className="rounded border px-2 py-0.5 text-[11px] font-semibold text-secondary">{item.fileType.toUpperCase()}</span>}
+                  </div>
 
-                  {item.url && (
-                    <a href={item.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-blue-600">
+                  {(item.url || item.filePath) && (
+                    <a href={item.url || item.filePath || undefined} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-blue-600">
                       Ouvrir le lien <ArrowUpRight className="h-4 w-4" />
                     </a>
                   )}
