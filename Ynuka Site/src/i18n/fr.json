@@ -402,8 +402,6 @@
     "capacityLabel": "Capacité",
     "resourcesLabel": "Ressources",
     "all": "Tous",
-    "categories": "Catégories",
-    "noCategories": "Aucune catégorie disponible.",
     "upcoming": "À venir",
     "past": "Passés",
     "workshop": "Atelier",
@@ -464,6 +462,8 @@
   "projects": {
     "title": "Découvrez nos Projets",
     "subtitle": "Des solutions Web3 innovantes, des projets environnementaux, hackathons et programmes d'éducation construits et incubés par Ynuka Labs.",
+    "categories": "Catégories",
+    "noCategories": "Aucune catégorie disponible.",
     "all": "Tous",
     "viewProject": "Lire le projet",
     "viewGithub": "GitHub",
