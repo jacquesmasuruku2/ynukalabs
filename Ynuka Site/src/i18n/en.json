@@ -401,6 +401,8 @@
     "capacityLabel": "Capacity",
     "resourcesLabel": "Resources",
     "all": "All",
+    "categories": "Categories",
+    "noCategories": "No categories available.",
     "upcoming": "Upcoming",
     "past": "Past",
     "workshop": "Workshop",

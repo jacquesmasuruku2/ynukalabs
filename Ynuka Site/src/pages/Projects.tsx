@@ -9,7 +9,6 @@ import { DEMO_PROJECTS, USE_DEMO_PROJECTS } from "@/data/demoProjects";
 
 const ALL_CATEGORY = "__all__";
 const FALLBACK_IMAGE = "/logo.png";
-const NAV_CATEGORIES = ["Education", "Environnement", "Blockchain"] as const;
 /** Même largeur / paddings que la barre de menu */
 const PAGE_SHELL =
   "mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10";
@@ -143,7 +142,7 @@ function ProjectCard({
 }
 
 const Projects = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const catFromUrl = searchParams.get("cat")?.trim() || "";
 
@@ -165,7 +164,7 @@ const Projects = () => {
       liveUrl: demo.liveUrl,
       githubUrl: demo.githubUrl,
     }));
-  }, [t, i18n.language]);
+  }, [t]);
 
   const projectShowcases = useMemo(() => {
     if (!demoProjects.length) return apiProjects;
@@ -241,19 +240,18 @@ const Projects = () => {
   );
 
   const categories = useMemo(() => {
-    const fromData = Array.from(
+    return Array.from(
       new Set(projectShowcases.map((project) => project.category).filter(Boolean))
-    );
-    if (USE_DEMO_PROJECTS) {
-      NAV_CATEGORIES.forEach((cat) => {
-        if (!fromData.includes(cat)) fromData.push(cat);
-      });
-    }
-    if (catFromUrl && !fromData.includes(catFromUrl)) {
-      fromData.push(catFromUrl);
-    }
-    return fromData.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-  }, [projectShowcases, catFromUrl]);
+    ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  }, [projectShowcases]);
+
+  const categoryCounts = useMemo(
+    () => new Map(categories.map((category) => [
+      category,
+      projectShowcases.filter((project) => normalizeText(project.category) === normalizeText(category)).length,
+    ])),
+    [categories, projectShowcases]
+  );
 
   const filteredProjects = useMemo(() => {
     const normalizedQuery = normalizeText(searchQuery);
@@ -312,84 +310,98 @@ const Projects = () => {
       <section className="relative border-t border-border/60 bg-gradient-to-b from-slate-50 via-white to-slate-50 py-12 dark:from-[#0a1628] dark:via-background dark:to-[#0a1628]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ffb800]/50 to-transparent" />
         <div className={`relative ${PAGE_SHELL}`}>
-          <div className="mb-8 space-y-4 text-center">
-            <div className="flex flex-wrap justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => selectCategory(ALL_CATEGORY)}
-                className={`rounded-none px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all ${
-                  activeCategory === ALL_CATEGORY
-                    ? "bg-[#ffb800] text-[#0f2847]"
-                    : "border border-[#0f2847]/15 bg-white text-[#0f2847] hover:border-[#ffb800] dark:border-white/15 dark:bg-[#12253f] dark:text-white"
-                }`}
-              >
-                {t("projects.all")}
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => selectCategory(category)}
-                  className={`rounded-none px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all ${
-                    activeCategory === category
-                      ? "bg-[#ffb800] text-[#0f2847]"
-                      : "border border-[#0f2847]/15 bg-white text-[#0f2847] hover:border-[#ffb800] dark:border-white/15 dark:bg-[#12253f] dark:text-white"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative mx-auto max-w-xl">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("projects.searchPlaceholder")}
-                aria-label={t("projects.searchPlaceholder")}
-                className="w-full rounded-none border border-[#0f2847]/15 bg-white py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#ffb800]/35 dark:border-white/15 dark:bg-[#12253f]"
-              />
-            </div>
-          </div>
-
-          {loading ? (
-            <div
-              className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-              aria-busy="true"
-              aria-live="polite"
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse overflow-hidden rounded-card border border-[#0f2847]/10 bg-muted/50 dark:border-white/10"
-                >
-                  <div className="aspect-[16/10] bg-muted sm:aspect-[16/9]" />
-                  <div className="h-20 bg-muted/40" />
-                </div>
-              ))}
-              <span className="sr-only">{t("projects.loading")}</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((project, i) => (
-                <ProjectCard
-                  key={project.id || project.slug}
-                  project={project}
-                  delay={Math.min(i * 0.06, 0.3)}
-                  fallbackCategory={t("projects.fallbackCategory")}
-                  labels={cardLabels}
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start">
+            <main className="order-2 min-w-0 lg:order-1">
+              <div className="relative mb-6 max-w-xl">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t("projects.searchPlaceholder")}
+                  aria-label={t("projects.searchPlaceholder")}
+                  className="w-full rounded-none border border-[#0f2847]/15 bg-white py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#ffb800]/35 dark:border-white/15 dark:bg-[#12253f]"
                 />
-              ))}
+              </div>
 
-              {filteredProjects.length === 0 && (
-                <div className="rounded-card border border-border/70 bg-card/60 p-5 text-center text-muted-foreground sm:col-span-2 lg:col-span-3">
-                  {emptyMessage}
+              {loading ? (
+                <div
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                  aria-busy="true"
+                  aria-live="polite"
+                >
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="animate-pulse overflow-hidden rounded-card border border-[#0f2847]/10 bg-muted/50 dark:border-white/10"
+                    >
+                      <div className="aspect-[16/10] bg-muted sm:aspect-[16/9]" />
+                      <div className="h-20 bg-muted/40" />
+                    </div>
+                  ))}
+                  <span className="sr-only">{t("projects.loading")}</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {filteredProjects.map((project, i) => (
+                    <ProjectCard
+                      key={project.id || project.slug}
+                      project={project}
+                      delay={Math.min(i * 0.06, 0.3)}
+                      fallbackCategory={t("projects.fallbackCategory")}
+                      labels={cardLabels}
+                    />
+                  ))}
+
+                  {filteredProjects.length === 0 && (
+                    <div className="rounded-card border border-border/70 bg-card/60 p-5 text-center text-muted-foreground sm:col-span-2 xl:col-span-3">
+                      {emptyMessage}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
+            </main>
+
+            <aside className="order-1 lg:sticky lg:top-24 lg:order-2" aria-label={t("projects.categories")}>
+              <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <h2 className="mb-3 text-sm font-semibold text-foreground">{t("projects.categories")}</h2>
+                <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0" role="group" aria-label={t("projects.categories")}>
+                  <button
+                    type="button"
+                    onClick={() => selectCategory(ALL_CATEGORY)}
+                    aria-pressed={activeCategory === ALL_CATEGORY}
+                    className={`flex shrink-0 items-center justify-between gap-4 rounded-md border px-3 py-2.5 text-left text-sm font-medium transition-colors lg:w-full ${
+                      activeCategory === ALL_CATEGORY
+                        ? "border-[#ffb800] bg-[#ffb800] text-[#0f2847]"
+                        : "border-border bg-background text-foreground hover:border-[#ffb800]"
+                    }`}
+                  >
+                    <span>{t("projects.all")}</span>
+                    <span className="tabular-nums text-xs opacity-75">{projectShowcases.length}</span>
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => selectCategory(category)}
+                      aria-pressed={activeCategory === category}
+                      className={`flex shrink-0 items-center justify-between gap-4 rounded-md border px-3 py-2.5 text-left text-sm font-medium transition-colors lg:w-full ${
+                        activeCategory === category
+                          ? "border-[#ffb800] bg-[#ffb800] text-[#0f2847]"
+                          : "border-border bg-background text-foreground hover:border-[#ffb800]"
+                      }`}
+                    >
+                      <span>{category}</span>
+                      <span className="tabular-nums text-xs opacity-75">{categoryCounts.get(category) || 0}</span>
+                    </button>
+                  ))}
+                  {!loading && categories.length === 0 && (
+                    <p className="px-1 py-2 text-xs text-muted-foreground">{t("projects.noCategories")}</p>
+                  )}
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
       </section>
     </div>
