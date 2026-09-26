@@ -7,7 +7,6 @@
  * Configuration Google Cloud:
  * - Projet: ynukalabs-497722
  * - Client ID: 1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com
- * - Client Secret: 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
  * - Redirect URIs configurées:
  *   - https://admin.ynukalabs.com/api/api.php?action=google_callback
  *   - https://ynukalabs-497722.firebaseapp.com/__/auth/handler
@@ -16,13 +15,13 @@
  */
 
 // ============ CONFIGURATION GOOGLE OAUTH ============
-// Credentials depuis Google Cloud Console
-define('GOOGLE_CLIENT_ID', '1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com');
-define('GOOGLE_CLIENT_SECRET', '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');
-define('GOOGLE_PROJECT_ID', 'ynukalabs-497722');
+// Le client ID est public; le secret reste uniquement dans l'environnement serveur.
+define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com');
+define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET') ?: '');
+define('GOOGLE_PROJECT_ID', getenv('GOOGLE_PROJECT_ID') ?: 'ynukalabs-497722');
 
 // Redirect URI - doit correspondre à celui configuré dans Google Console
-define('GOOGLE_REDIRECT_URI', 'https://admin.ynukalabs.com/api/api.php?action=google_callback');
+define('GOOGLE_REDIRECT_URI', getenv('GOOGLE_REDIRECT_URI') ?: 'https://admin.ynukalabs.com/api/api.php?action=google_callback');
 
 // Public Google Client Library pour vérifier les ID tokens
 // À installer via Composer: composer require google/auth
@@ -64,6 +63,10 @@ function get_google_auth_url() {
  * @return array Token d'accès et informations
  */
 function exchange_google_code_for_token($code) {
+    if (GOOGLE_CLIENT_SECRET === '') {
+        throw new Exception('Google OAuth server secret is not configured');
+    }
+
     $params = [
         'client_id' => GOOGLE_CLIENT_ID,
         'client_secret' => GOOGLE_CLIENT_SECRET,

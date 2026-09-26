@@ -4,6 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+echo "==> Syncing production environment"
+node scripts/sync-production-env.mjs
+
 echo "==> [0/5] Cleaning stale build cache"
 node scripts/clean-build.mjs
 

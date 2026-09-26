@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 export type NowPaymentsPlanInterval = 'day' | 'week' | 'month' | 'year';
 
 function getBaseUrl() {
-  return (process.env.NOWPAYMENTS_API_BASE_URL || 'https://api.nowpayments.io/v1').replace(/\/$/, '');
+  return (process.env.NOWPAYMENTS_API_BASE_URL || process.env.NOWPAYMENTS_API_URL || 'https://api.nowpayments.io/v1').replace(/\/$/, '');
 }
 
 function getApiKey() {

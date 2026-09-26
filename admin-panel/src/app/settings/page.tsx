@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Activity, Bell, Camera, Check, Clock, Copy, Database, Globe, Key, Loader2, Palette, RefreshCw, Save, Shield, Trash2, User, UserPlus } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useTheme } from '@/components/ThemeProvider';
 import { useAuth } from '@/components/AuthProvider';
+import AtlosPayButton from '@/components/AtlosPayButton';
 
 type Theme = 'blue' | 'gray' | 'dark' | 'green' | 'purple' | 'orange';
 type Notice = { type: 'success' | 'error'; text: string } | null;
@@ -22,6 +23,7 @@ type TeamMember = { id: string; email: string; name: string; isActive: boolean; 
 type InviteRow = { id: string; email: string; status: string; expiresAt: string };
 
 function SettingsContent() {
+  const paymentOrderSuffix = useId().replace(/[^a-zA-Z0-9]/g, '');
   const { theme, setTheme } = useTheme();
   const { user, refreshUser } = useAuth();
   const searchParams = useSearchParams();
@@ -170,7 +172,7 @@ function SettingsContent() {
   return <div className="space-y-6 pb-6">
     <div><h1 className="text-3xl font-bold text-primary">Paramètres</h1><p className="mt-1 text-secondary">Gérer les paramètres du panneau d&apos;administration</p></div>
     {notice && <div className={`rounded-md border p-3 text-sm ${notice.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>{notice.text}</div>}
-    <section className="card rounded-lg border border-amber-200 bg-amber-50 p-6 shadow-sm dark:border-amber-900 dark:bg-amber-950/30"><Heading icon={<Shield className="h-5 w-5 text-amber-600" />} title="Accès Premium" />{user?.isSuperAdmin ? <p className="text-sm text-amber-900 dark:text-amber-100">L’accès Premium est activé par défaut pour le Super Admin.</p> : <div className="space-y-4"><p className="text-sm text-amber-900 dark:text-amber-100">Débloquez les fonctionnalités avancées du panel avec l’abonnement Premium.</p><div className="grid gap-3 md:grid-cols-2"><button type="button" onClick={() => { window.location.href = '/api/admin/premium/checkout?plan=monthly'; }} className="rounded-md border border-amber-300 bg-white px-4 py-3 text-left transition hover:border-amber-500 hover:bg-amber-100"><div className="text-sm font-semibold text-amber-900">5 $ / mois</div><div className="text-xs text-amber-800">Accès premium valide pendant 1 mois.</div></button><button type="button" onClick={() => { window.location.href = '/api/admin/premium/checkout?plan=annual'; }} className="rounded-md border border-amber-300 bg-amber-600 px-4 py-3 text-left text-white transition hover:bg-amber-700"><div className="text-sm font-semibold">39 $ / an</div><div className="text-xs text-amber-100">Accès premium pour 12 mois.</div></button></div><p className="text-xs text-amber-800 dark:text-amber-200">Le paiement sécurisé est ouvert via ATLOS. L’accès expire automatiquement après 1 mois pour le plan mensuel.</p></div>}</section>
+    <section className="card rounded-lg border border-amber-200 bg-amber-50 p-6 shadow-sm dark:border-amber-900 dark:bg-amber-950/30"><Heading icon={<Shield className="h-5 w-5 text-amber-600" />} title="Accès Premium" />{user?.isSuperAdmin ? <p className="text-sm text-amber-900 dark:text-amber-100">L’accès Premium est activé par défaut pour le Super Admin.</p> : <div className="space-y-4"><p className="text-sm text-amber-900 dark:text-amber-100">Débloquez les fonctionnalités avancées du panel avec l’abonnement Premium.</p><div className="grid gap-3 md:grid-cols-2"><div className="space-y-3 rounded-md border border-amber-300 bg-white p-4"><div className="text-sm font-semibold text-amber-900">5 $ / mois</div><div className="text-xs text-amber-800">Accès premium valide pendant 1 mois.</div><a href="/api/admin/premium/checkout?plan=monthly" className="block rounded-md border border-amber-300 px-3 py-2 text-center text-sm font-medium text-amber-900 transition hover:bg-amber-100">Payer par facture</a><AtlosPayButton orderId={`premium-monthly-${user?.id || 'admin'}-${paymentOrderSuffix}`} orderAmount={5} className="w-full" /></div><div className="space-y-3 rounded-md border border-amber-600 bg-amber-600 p-4"><div className="text-sm font-semibold text-white">39 $ / an</div><div className="text-xs text-amber-100">Accès premium pour 12 mois.</div><a href="/api/admin/premium/checkout?plan=annual" className="block rounded-md bg-white/15 px-3 py-2 text-center text-sm font-medium text-white transition hover:bg-white/25">Payer par facture</a><AtlosPayButton orderId={`premium-annual-${user?.id || 'admin'}-${paymentOrderSuffix}`} orderAmount={39} className="w-full bg-white text-amber-800 hover:bg-amber-50" /></div></div><p className="text-xs text-amber-800 dark:text-amber-200">Choisissez le paiement par facture ou ouvrez directement le widget crypto ATLOS.</p></div>}</section>
     {hasPremiumAccess && <AdminPresenceSection team={team} />}
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <section className="card rounded-lg border p-6 shadow-sm"><Heading icon={<Palette className="h-5 w-5 text-pink-600" />} title="Apparence" /><div className="grid grid-cols-3 gap-3">{themes.map((item) => <button key={item.value} type="button" onClick={() => setTheme(item.value)} aria-pressed={theme === item.value} className={`flex flex-col items-center rounded-lg border-2 p-3 transition-all ${theme === item.value ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}><span className={`mb-2 h-8 w-8 rounded-full ${item.color}`} /><span className="text-xs text-gray-700">{item.name}</span>{theme === item.value && <Check className="mt-1 h-3 w-3 text-blue-600" />}</button>)}</div></section>

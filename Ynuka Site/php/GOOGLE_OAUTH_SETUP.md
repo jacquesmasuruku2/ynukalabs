@@ -26,21 +26,32 @@ Your admin panel now has Google OAuth authentication with email whitelist restri
 
 ### 2. Configure Environment Variables
 
-Add these to your server environment (`.env` file or server config):
+Add these to the PHP server environment (hosting variables or server config, not the Vite `.env` file):
 
 ```bash
 GOOGLE_CLIENT_ID=your_client_id_here.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_client_secret_here
 GOOGLE_REDIRECT_URI=https://yourdomain.com/php/google-callback.php
+GOOGLE_PROJECT_ID=your-google-project-id
 ```
 
-Or edit directly in `/php/google-oauth.php` (not recommended for production):
+For this project, use:
 
-```php
-define('GOOGLE_CLIENT_ID', 'your_client_id_here.apps.googleusercontent.com');
-define('GOOGLE_CLIENT_SECRET', 'your_client_secret_here');
-define('GOOGLE_REDIRECT_URI', 'https://yourdomain.com/php/google-callback.php');
+```bash
+GOOGLE_CLIENT_ID=1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com
+GOOGLE_REDIRECT_URI=https://admin.ynukalabs.com/api/api.php?action=google_callback
+GOOGLE_PROJECT_ID=ynukalabs-497722
 ```
+
+Set `GOOGLE_CLIENT_SECRET` to the secret from Google Cloud Console in the hosting environment. Do not commit it or expose it as a `VITE_` variable.
+
+The public site only needs this Vite variable:
+
+```bash
+VITE_GOOGLE_CLIENT_ID=1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com
+```
+
+Do not edit the secret directly in `/php/google-oauth.php`.
 
 ### 3. Add Email Whitelist (Already Done)
 

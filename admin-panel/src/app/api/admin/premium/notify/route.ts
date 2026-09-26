@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const payload = JSON.parse(rawBody || '{}');
 
     if (payload.MerchantId || payload.Status !== undefined) {
-      const merchantId = process.env.ATLOS_MERCHANT_ID;
+      const merchantId = process.env.ATLOS_MERCHANT_ID || process.env.NEXT_PUBLIC_ATLOS_MERCHANT_ID;
       const apiSecret = process.env.ATLOS_API_SECRET;
       const signature = request.headers.get('Signature');
       if (!merchantId || !apiSecret || !signature || payload.MerchantId !== merchantId) {
