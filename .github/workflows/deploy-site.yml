@@ -36,6 +36,8 @@ jobs:
         run: |
           mkdir -p deploy_site/api
           cp -r "Ynuka Site/dist"/* deploy_site/
+          test -f "Ynuka Site/dist/.htaccess"
+          cp "Ynuka Site/dist/.htaccess" deploy_site/htaccess-for-deploy
           cp "Ynuka Site/php/api.php" deploy_site/api/
           cp "Ynuka Site/php/config.php" deploy_site/api/
           cp "Ynuka Site/php/database.php" deploy_site/api/
@@ -62,10 +64,19 @@ jobs:
           script: |
             echo "✓ Ynuka Site deployment started"
             SITE_DIR="domains/ynukalabs.com/public_html"
+
+            # SCP glob patterns omit dotfiles, so install the copied rule under its real name.
+            if [ -f "$SITE_DIR/htaccess-for-deploy" ]; then
+              mv -f "$SITE_DIR/htaccess-for-deploy" "$SITE_DIR/.htaccess"
+            else
+              echo "✗ Missing SPA routing rules (.htaccess)"
+              exit 1
+            fi
             
             # Fix permissions
             chmod 755 "$SITE_DIR"
             chmod 644 "$SITE_DIR/index.html"
+            chmod 644 "$SITE_DIR/.htaccess"
             chmod -R 755 "$SITE_DIR/api" 2>/dev/null || true
             chmod -R 644 "$SITE_DIR/api"/* 2>/dev/null || true
             chmod -R 755 "$SITE_DIR/assets" 2>/dev/null || true
@@ -74,6 +85,8 @@ jobs:
             # Verify critical files exist
             echo "✓ Verifying deployment files:"
             ls -lh "$SITE_DIR/index.html"
+            grep -q 'RewriteRule \^ index.html' "$SITE_DIR/.htaccess"
+            echo "✓ SPA rewrite rule installed"
             echo "✓ Checking API directory:"
             ls -la "$SITE_DIR/api/" | head -5
             echo "✓ Testing API endpoint:"

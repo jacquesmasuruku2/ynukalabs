@@ -10,13 +10,12 @@
     # Pass Authorization header to PHP (pour les appels API)
     RewriteCond %{HTTP:Authorization} ^(.+)$
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Keep the PHP API outside the SPA fallback.
+    RewriteRule ^php(/|$) - [QSA,L,NC]
     
-    # Si le fichier demandé existe, le servir directement
+    # Serve real files; directories such as /resources must remain SPA routes.
     RewriteCond %{REQUEST_FILENAME} -f
-    RewriteRule ^ - [QSA,L]
-    
-    # Si le dossier demandé existe, le servir directement
-    RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [QSA,L]
     
     # Pour tous les autres chemins, rediriger vers index.html

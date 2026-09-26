@@ -8,10 +8,9 @@
   # 1) Laisser intact le backend PHP sous /php/ (api.php, config.php, etc.)
   RewriteRule ^php(/|$) - [L,NC]
 
-  # 2) Ne pas réécrire les fichiers et dossiers qui existent réellement
-  #    (assets/, index.html, favicon, images, etc.)
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
+  # 2) Servir les fichiers présents (assets, images, index.html, etc.)
+  #    Les dossiers comme /resources contiennent des médias mais sont aussi des routes React.
+  RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
 
   # 3) Routes virtuelles React (/events, /resources, …) → SPA
