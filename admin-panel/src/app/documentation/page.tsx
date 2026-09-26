@@ -3,7 +3,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { FileText, FolderOpen, Plus, ArrowUpRight } from 'lucide-react';
+import { FileText, FolderOpen, Plus, ArrowUpRight, Trash2 } from 'lucide-react';
 
 type ResourceItem = {
   id: string;
@@ -16,6 +16,7 @@ type ResourceItem = {
   url?: string | null;
   filePath?: string | null;
   fileType?: string | null;
+  canDelete?: boolean;
 };
 
 type ResourceSection = {
@@ -52,6 +53,8 @@ const fallbackSections: ResourceSection[] = [
 export default function DocumentationPage() {
   const [sections, setSections] = useState<ResourceSection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSections = async () => {
@@ -77,6 +80,25 @@ export default function DocumentationPage() {
     [sections]
   );
 
+  const deleteItem = async (item: ResourceItem) => {
+    if (!window.confirm(`Supprimer la ressource « ${item.title} » ?`)) return;
+    setDeletingItemId(item.id);
+    setDeleteError(null);
+    try {
+      const response = await fetch(`/api/resource-items/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Impossible de supprimer la ressource.');
+      setSections((current) => current.map((section) => ({
+        ...section,
+        items: section.items.filter((sectionItem) => sectionItem.id !== item.id),
+      })));
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Impossible de supprimer la ressource.');
+    } finally {
+      setDeletingItemId(null);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -92,6 +114,8 @@ export default function DocumentationPage() {
           </div>
         </div>
 
+        {deleteError && <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{deleteError}</p>}
+
         {loading ? (
           <p className="py-12 text-center text-secondary">Chargement...</p>
         ) : (
@@ -106,6 +130,7 @@ export default function DocumentationPage() {
                       </div>
                       <span className="text-xs font-medium uppercase tracking-wide text-secondary">{item.sectionTitle}</span>
                     </div>
+                    {item.canDelete && <button type="button" onClick={() => void deleteItem(item)} disabled={deletingItemId === item.id} title="Supprimer la ressource" aria-label={`Supprimer ${item.title}`} className="rounded-md p-2 text-secondary transition hover:bg-red-50 hover:text-red-700 disabled:opacity-50 dark:hover:bg-red-950/40"><Trash2 className="h-4 w-4" /></button>}
                   </div>
 
                   <h2 className="text-lg font-semibold text-primary">{item.title}</h2>

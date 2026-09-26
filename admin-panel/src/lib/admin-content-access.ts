@@ -21,11 +21,21 @@ export function hasPremiumAccess(session: AdminAccessSession) {
   return !!session.adminUser.isPremium && !!session.adminUser.premiumExpiresAt && new Date(session.adminUser.premiumExpiresAt) > new Date();
 }
 
-export async function claimContentOwnership(resourceType: string, resourceId: string, session: AdminAccessSession | null) {
-  if (!session || isSuperAdminSession(session) || hasPremiumAccess(session)) return;
-  await prisma.adminContentOwnership.create({
+export async function claimContentOwnership(
+  resourceType: string,
+  resourceId: string,
+  session: AdminAccessSession | null,
+  options: { recordForPrivilegedUsers?: boolean } = {},
+) {
+  if (!session || (!options.recordForPrivilegedUsers && (isSuperAdminSession(session) || hasPremiumAccess(session)))) return;
+  const createOwnership = prisma.adminContentOwnership.create({
     data: { resourceType, resourceId, adminUserId: session.adminUserId },
-  }).catch(() => undefined);
+  });
+  if (options.recordForPrivilegedUsers) {
+    await createOwnership;
+  } else {
+    await createOwnership.catch(() => undefined);
+  }
 }
 
 export async function requireContentOwner(resourceType: string, resourceId: string, session: AdminAccessSession) {
@@ -36,4 +46,30 @@ export async function requireContentOwner(resourceType: string, resourceId: stri
   });
   if (ownership?.adminUserId === session.adminUserId) return null;
   return NextResponse.json({ error: 'Vous ne pouvez modifier ou supprimer que vos propres contenus.' }, { status: 403 });
+}
+
+export async function requireResourceItemOwner(resourceId: string, sectionId: string | null, session: AdminAccessSession) {
+  if (isSuperAdminSession(session)) return null;
+
+  const itemOwnership = await prisma.adminContentOwnership.findUnique({
+    where: { resourceType_resourceId: { resourceType: 'resource-item', resourceId } },
+    select: { adminUserId: true },
+  });
+  if (itemOwnership) {
+    return itemOwnership.adminUserId === session.adminUserId
+      ? null
+      : NextResponse.json({ error: 'Vous ne pouvez gérer que vos propres ressources.' }, { status: 403 });
+  }
+
+  if (!sectionId) {
+    return NextResponse.json({ error: 'Vous ne pouvez gérer que vos propres ressources.' }, { status: 403 });
+  }
+
+  const sectionOwnership = await prisma.adminContentOwnership.findUnique({
+    where: { resourceType_resourceId: { resourceType: 'resource-section', resourceId: sectionId } },
+    select: { adminUserId: true },
+  });
+  return sectionOwnership?.adminUserId === session.adminUserId
+    ? null
+    : NextResponse.json({ error: 'Vous ne pouvez gérer que vos propres ressources.' }, { status: 403 });
 }

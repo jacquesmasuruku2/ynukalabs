@@ -16,6 +16,17 @@ export function createCloudinaryDownloadUrl(publicId: string, format: string) {
   });
 }
 
+export async function deleteCloudinaryRawAsset(publicId: string) {
+  if (!isCloudinaryConfigured()) throw new Error('CLOUDINARY_URL is not configured');
+
+  cloudinary.config({ secure: true });
+  return cloudinary.uploader.destroy(publicId, {
+    resource_type: 'raw',
+    type: 'upload',
+    invalidate: true,
+  });
+}
+
 export async function uploadToCloudinary(buffer: Buffer, options: { folder: string; resourceType?: 'image' | 'raw' | 'auto'; publicId?: string; overwrite?: boolean; accessMode?: 'public' | 'authenticated' }) {
   if (!isCloudinaryConfigured()) throw new Error('CLOUDINARY_URL is not configured');
 
