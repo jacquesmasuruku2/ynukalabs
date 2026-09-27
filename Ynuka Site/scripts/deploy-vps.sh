@@ -45,6 +45,12 @@ printf 'Installing dependencies and building...\n'
 npm ci --no-audit --no-fund
 npm run build
 
+if [[ -f "$APP_DIR/.htaccess" ]]; then
+  cp "$APP_DIR/.htaccess" "$APP_DIR/dist/.htaccess"
+else
+  printf 'Warning: .htaccess not found in %s\n' "$APP_DIR" >&2
+fi
+
 SERVE_BIN="$(command -v serve)"
 if pm2 describe "$PM2_APP_NAME" >/dev/null 2>&1; then
   pm2 restart "$PM2_APP_NAME" --update-env
