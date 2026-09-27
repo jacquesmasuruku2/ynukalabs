@@ -17,26 +17,47 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 'Ynuka Site/package-lock.json'
 
-      - name: Configure trusted VPS host key
-        env:
-          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
-        run: |
-          test -n "$KNOWN_HOSTS"
-          mkdir -p ~/.ssh
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+      - name: Install dependencies
+        working-directory: 'Ynuka Site'
+        run: npm ci
 
-      - name: Deploy on VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
+      - name: Build frontend
+        working-directory: 'Ynuka Site'
+        run: npm run build
+
+      - name: Prepare deployment files
         run: |
-          test -n "$VPS_HOST"
-          test -n "$VPS_USER"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" \
-            'bash "/var/www/ynukalabs/frontend/Ynuka Site/scripts/deploy-vps.sh"'
+          mkdir -p deploy-dist
+          cp -a "Ynuka Site/dist/." deploy-dist/
+          cp "Ynuka Site/.htaccess" deploy-dist/.htaccess
+
+      - name: Copy build to VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          source: deploy-dist
+          target: "/var/www/ynukalabs/frontend/Ynuka Site/dist/"
+          strip_components: 1
+          overwrite: true
+
+      - name: Restart frontend on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: pm2 restart ynuka-frontend --update-env
