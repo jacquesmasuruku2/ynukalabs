@@ -275,19 +275,20 @@ export async function fetchBlogComments(articleId: string) {
     Array<{
       id: string;
       author_name: string;
+      author_avatar: string;
       content: string;
       created_at: string;
-      replies?: Array<{ id: string; author_name: string; content: string; created_at: string }>;
+      replies?: Array<{ id: string; author_name: string; author_avatar: string; content: string; created_at: string }>;
     }>
   >('/blog-comments', { articleId });
 }
 
 export async function submitBlogComment(data: { articleId: string; authorName: string; authorEmail: string; content: string }) {
-  return adminPost<{ id: string; author_name: string; content: string; created_at: string }>('/blog-comments', data);
+  return adminPost<{ id: string; author_name: string; author_avatar: string; content: string; created_at: string }>('/blog-comments', data);
 }
 
 export async function submitBlogCommentReply(data: { commentId: string; authorName: string; authorEmail: string; content: string }) {
-  return adminPost<{ id: string; author_name: string; content: string; created_at: string }>('/blog-comments/replies', data);
+  return adminPost<{ id: string; author_name: string; author_avatar: string; content: string; created_at: string }>('/blog-comments/replies', data);
 }
 
 export async function fetchContentReactions(resourceType: string, resourceId: string, userEmail?: string) {

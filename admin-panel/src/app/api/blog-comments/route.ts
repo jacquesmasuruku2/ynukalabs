@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { createCommentAvatar } from '@/lib/comment-avatar';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     include: {
       replies: {
         orderBy: { createdAt: 'asc' },
-        select: { id: true, authorName: true, content: true, createdAt: true },
+        select: { id: true, authorName: true, authorEmail: true, content: true, createdAt: true },
       },
     },
   });
@@ -25,11 +26,13 @@ export async function GET(request: NextRequest) {
     comments.map((comment) => ({
       id: comment.id,
       author_name: comment.authorName,
+      author_avatar: createCommentAvatar(comment.authorEmail),
       content: comment.content,
       created_at: comment.createdAt.toISOString(),
       replies: comment.replies.map((reply) => ({
         id: reply.id,
         author_name: reply.authorName,
+        author_avatar: createCommentAvatar(reply.authorEmail),
         content: reply.content,
         created_at: reply.createdAt.toISOString(),
       })),
@@ -49,8 +52,8 @@ export async function POST(request: NextRequest) {
 
     const article = await prisma.article.findUnique({ where: { id: articleId }, select: { id: true } });
     if (!article) return jsonCors({ error: 'Article introuvable.' }, { status: 404 });
-    const comment = await prisma.blogComment.create({ data: { articleId, authorName, authorEmail, content }, select: { id: true, authorName: true, content: true, createdAt: true } });
-    return jsonCors({ id: comment.id, author_name: comment.authorName, content: comment.content, created_at: comment.createdAt.toISOString() }, { status: 201 });
+    const comment = await prisma.blogComment.create({ data: { articleId, authorName, authorEmail, content }, select: { id: true, authorName: true, authorEmail: true, content: true, createdAt: true } });
+    return jsonCors({ id: comment.id, author_name: comment.authorName, author_avatar: createCommentAvatar(comment.authorEmail), content: comment.content, created_at: comment.createdAt.toISOString() }, { status: 201 });
   } catch (error) {
     console.error('Blog comment error:', error);
     return jsonCors({ error: 'Impossible de publier le commentaire.' }, { status: 500 });

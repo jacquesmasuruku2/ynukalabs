@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { createCommentAvatar } from '@/lib/comment-avatar';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         authorName: true,
+        authorEmail: true,
         content: true,
         createdAt: true,
       },
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest) {
     return jsonCors({
       id: reply.id,
       author_name: reply.authorName,
+      author_avatar: createCommentAvatar(reply.authorEmail),
       content: reply.content,
       created_at: reply.createdAt.toISOString(),
     }, { status: 201 });

@@ -3,6 +3,7 @@
  */
 
 const STORAGE_KEY = "ynuka_auth_user";
+export const AUTH_CHANGE_EVENT = "ynuka-auth-change";
 
 export interface AuthUser {
   email: string;
@@ -41,11 +42,13 @@ class AuthService {
 
   signIn(user: AuthUser): void {
     this.persistUser(user);
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
   }
 
   signOut(): void {
     this.user = null;
     localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
   }
 }
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
-import { authService } from "@/lib/auth";
+import { AUTH_CHANGE_EVENT, authService } from "@/lib/auth";
 import {
   fetchSiteNotifications,
   markAllNotificationsRead,
@@ -62,7 +62,9 @@ export default function NotificationBell() {
   const [items, setItems] = useState<SiteNotification[]>([]);
   const [email, setEmail] = useState(() => authService.getUser()?.email ?? null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const seenRef = useRef<Set<string>>(loadSeenIds());
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>();
 
   const unread = items.filter((n) => !n.read).length;
 
@@ -92,10 +94,16 @@ export default function NotificationBell() {
 
   useEffect(() => {
     void refresh();
-    const onStorage = () => void refresh();
+    const onAuthChange = () => {
+      setEmail(authService.getUser()?.email ?? null);
+      void refresh();
+    };
+    const onStorage = () => onAuthChange();
+    window.addEventListener(AUTH_CHANGE_EVENT, onAuthChange);
     window.addEventListener("storage", onStorage);
     const interval = window.setInterval(() => void refresh(), 15000);
     return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, onAuthChange);
       window.removeEventListener("storage", onStorage);
       window.clearInterval(interval);
     };
@@ -108,6 +116,35 @@ export default function NotificationBell() {
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const updatePanelPosition = () => {
+      const anchor = buttonRef.current?.getBoundingClientRect();
+      if (!anchor) return;
+
+      const margin = 12;
+      const width = Math.min(352, window.innerWidth - margin * 2);
+      const left = Math.max(margin, Math.min(anchor.right - width, window.innerWidth - width - margin));
+      const top = Math.min(anchor.bottom + 8, window.innerHeight - 180);
+      setPanelStyle({
+        position: "fixed",
+        top,
+        left,
+        width,
+        maxHeight: `calc(100dvh - ${top + margin}px)`,
+      });
+    };
+
+    updatePanelPosition();
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("scroll", updatePanelPosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("scroll", updatePanelPosition, true);
+    };
   }, [open]);
 
   const ensurePermission = async () => {
@@ -156,10 +193,13 @@ export default function NotificationBell() {
   return (
     <div ref={rootRef} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => void onToggle()}
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#0f2847] transition hover:bg-black/[0.05] dark:text-white dark:hover:bg-white/10"
         aria-label="Notifications"
+        aria-expanded={open}
+        aria-controls="notification-panel"
         title="Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -171,7 +211,11 @@ export default function NotificationBell() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-[60] mt-2 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-md border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#0c1a2e]">
+        <div
+          id="notification-panel"
+          style={panelStyle}
+          className="z-[60] overflow-hidden rounded-md border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#0c1a2e]"
+        >
           <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5 dark:border-slate-700">
             <p className="text-sm font-semibold text-[#0f2847] dark:text-white">Notifications</p>
             {unread > 0 ? (

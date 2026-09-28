@@ -505,13 +505,13 @@ const Navbar = () => {
       >
         <nav
           className={cn(
-            "flex w-full min-h-[3.25rem] items-center gap-2 rounded-2xl border border-slate-200/90 bg-white py-2.5 pl-4 pr-3",
+            "flex w-full min-h-[3.25rem] items-center gap-1.5 rounded-2xl border border-slate-200/90 bg-white py-2.5 pl-2.5 pr-2.5 sm:gap-2 sm:pl-4 sm:pr-3",
             "dark:border-slate-600 dark:bg-slate-900 md:min-h-[3.5rem] md:gap-3 md:rounded-[1.125rem] md:py-3 md:pl-6 md:pr-5 lg:gap-4 lg:min-h-[3.75rem] lg:rounded-[1.25rem] lg:py-3.5 lg:pl-8 lg:pr-6"
           )}
         >
-          <Link to="/" className="flex shrink-0 items-center gap-3 md:gap-3.5">
-            <img src={logo} alt="Ynuka Labs" className="h-11 w-11 md:h-14 md:w-14" />
-            <span className="font-nav text-xl font-bold tracking-[-0.03em] text-slate-800 dark:text-white md:text-2xl">
+          <Link to="/" className="flex shrink-0 items-center gap-2 md:gap-3.5">
+            <img src={logo} alt="Ynuka Labs" className="h-10 w-10 sm:h-11 sm:w-11 md:h-14 md:w-14" />
+            <span className="max-[359px]:hidden font-nav text-xl font-bold tracking-[-0.03em] text-slate-800 dark:text-white md:text-2xl">
               Ynuka <span style={{ color: GOLD }}>Labs</span>
             </span>
           </Link>

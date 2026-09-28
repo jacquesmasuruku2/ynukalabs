@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchBlogComments, fetchBlogPost, submitBlogComment, submitBlogCommentReply } from "@/lib/api";
 import RichTextDisplay from "@/components/RichTextDisplay";
 import { authService } from "@/lib/auth";
+import { createCommentAvatar } from "@/lib/commentAvatar";
 
 interface BlogPostData {
   id: string;
@@ -29,6 +30,7 @@ interface BlogPostData {
 interface CommentReply {
   id: string;
   author_name: string;
+  author_avatar?: string;
   content: string;
   created_at: string;
 }
@@ -36,10 +38,21 @@ interface CommentReply {
 interface Comment {
   id: string;
   author_name: string;
+  author_avatar?: string;
   content: string;
   created_at: string;
   replies: CommentReply[];
 }
+
+const CommentAvatar = ({ src, name }: { src?: string; name: string }) => (
+  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm font-semibold text-primary dark:bg-primary/20">
+    {src ? (
+      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+    ) : (
+      name.trim().charAt(0).toUpperCase() || "?"
+    )}
+  </div>
+);
 
 const BlogPost = () => {
   const { id: slugOrId } = useParams<{ id: string }>();
@@ -53,7 +66,15 @@ const BlogPost = () => {
   const [user, setUser] = useState(authService.getUser());
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
-  const [commentForm, setCommentForm] = useState({ author_name: "", author_email: "", content: "" });
+  const [commentForm, setCommentForm] = useState(() => {
+    const currentUser = authService.getUser();
+    return {
+      author_name: currentUser?.name ?? "",
+      author_email: currentUser?.email ?? "",
+      content: "",
+    };
+  });
+  const [emailAvatar, setEmailAvatar] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -86,6 +107,16 @@ const BlogPost = () => {
     setUser(authService.getUser());
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void createCommentAvatar(commentForm.author_email).then((avatar) => {
+      if (!cancelled) setEmailAvatar(avatar ?? undefined);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [commentForm.author_email]);
+
   const handleGoogleSignIn = () => {
     if (typeof window !== "undefined" && (window as any).google) {
       (window as any).google.accounts.id.initialize({
@@ -106,6 +137,11 @@ const BlogPost = () => {
           
           authService.signIn(authUser);
           setUser(authUser);
+          setCommentForm((current) => ({
+            ...current,
+            author_name: authUser.name,
+            author_email: authUser.email,
+          }));
           setShowAuthDialog(false);
           setIsCommentFormOpen(true);
           
@@ -150,6 +186,11 @@ const BlogPost = () => {
           
           authService.signIn(authUser);
           setUser(authUser);
+          setCommentForm((current) => ({
+            ...current,
+            author_name: authUser.name,
+            author_email: authUser.email,
+          }));
           setShowAuthDialog(false);
           setIsCommentFormOpen(true);
           
@@ -180,19 +221,22 @@ const BlogPost = () => {
     const item = comment as {
       id?: string | number;
       author_name?: string;
+      author_avatar?: string;
       content?: string;
       created_at?: string;
-      replies?: Array<{ id?: string | number; author_name?: string; content?: string; created_at?: string }>;
-      attributes?: { author_name?: string; content?: string; createdAt?: string; created_at?: string; replies?: Array<{ id?: string | number; author_name?: string; content?: string; created_at?: string }> };
+      replies?: Array<{ id?: string | number; author_name?: string; author_avatar?: string; content?: string; created_at?: string }>;
+      attributes?: { author_name?: string; author_avatar?: string; content?: string; createdAt?: string; created_at?: string; replies?: Array<{ id?: string | number; author_name?: string; author_avatar?: string; content?: string; created_at?: string }> };
     };
     return {
       id: String(item.id ?? crypto.randomUUID()),
       author_name: item.attributes?.author_name ?? item.author_name ?? "",
+      author_avatar: item.attributes?.author_avatar ?? item.author_avatar,
       content: item.attributes?.content ?? item.content ?? "",
       created_at: item.attributes?.createdAt ?? item.attributes?.created_at ?? item.created_at ?? new Date().toISOString(),
       replies: (item.attributes?.replies ?? item.replies ?? []).map((reply) => ({
         id: String(reply.id ?? crypto.randomUUID()),
         author_name: reply.author_name ?? "",
+        author_avatar: reply.author_avatar,
         content: reply.content ?? "",
         created_at: reply.created_at ?? new Date().toISOString(),
       })),
@@ -206,8 +250,8 @@ const BlogPost = () => {
     try {
       const createdComment = await submitBlogComment({
         articleId: post.id,
-        authorName: commentForm.author_name,
-        authorEmail: commentForm.author_email,
+        authorName: user?.name || commentForm.author_name,
+        authorEmail: user?.email || commentForm.author_email,
         content: commentForm.content,
       });
 
@@ -236,7 +280,7 @@ const BlogPost = () => {
       });
 
       setComments((current) => current.map((comment) =>
-        comment.id === commentId ? { ...comment, replies: [...comment.replies, { id: createdReply.id, author_name: user.name, content: createdReply.content, created_at: createdReply.created_at }] } : comment
+        comment.id === commentId ? { ...comment, replies: [...comment.replies, { id: createdReply.id, author_name: user.name, author_avatar: createdReply.author_avatar, content: createdReply.content, created_at: createdReply.created_at }] } : comment
       ));
       setReplyingTo(null);
       setReplyText("");
@@ -388,12 +432,10 @@ const BlogPost = () => {
             {comments.map((c) => (
               <article
                 key={c.id}
-                className="mb-4 rounded-2xl border border-border bg-card/90 p-4 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900/80"
+                className="border-b border-border py-5 first:pt-0 last:border-b-0"
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary dark:bg-primary/20">
-                    {c.author_name?.trim()?.charAt(0)?.toUpperCase() || "A"}
-                  </div>
+                  <CommentAvatar src={c.author_avatar} name={c.author_name} />
 
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -429,19 +471,22 @@ const BlogPost = () => {
                     {c.replies.length > 0 && (
                       <div className="mt-4 space-y-3 border-l border-border pl-4 dark:border-slate-600">
                         {c.replies.map((reply) => (
-                          <div key={reply.id} className="rounded-xl bg-muted/50 p-3 dark:bg-slate-800/80">
-                            <div className="mb-1 flex items-center justify-between gap-2">
-                              <span className="text-sm font-semibold text-foreground">{reply.author_name}</span>
-                              <span className="text-[11px] text-muted-foreground">{new Date(reply.created_at).toLocaleDateString()}</span>
+                          <div key={reply.id} className="flex items-start gap-3">
+                            <CommentAvatar src={reply.author_avatar} name={reply.author_name} />
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-sm font-semibold text-foreground">{reply.author_name}</span>
+                                <span className="text-[11px] text-muted-foreground">{new Date(reply.created_at).toLocaleDateString()}</span>
+                              </div>
+                              <p className="text-sm leading-6 text-muted-foreground">{reply.content}</p>
                             </div>
-                            <p className="text-sm leading-6 text-muted-foreground">{reply.content}</p>
                           </div>
                         ))}
                       </div>
                     )}
 
                     {replyingTo === c.id && (
-                      <div className="mt-3 rounded-xl border border-border bg-background p-3 dark:border-slate-600 dark:bg-slate-950">
+                      <div className="mt-4 border-l border-border pl-4 dark:border-slate-600">
                         <Textarea
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
@@ -480,30 +525,38 @@ const BlogPost = () => {
             {isCommentFormOpen && (
               <form
                 onSubmit={handleComment}
-                className="mt-6 rounded-2xl border border-border bg-card/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/80"
+                className="mt-6 border-t border-border pt-5"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="font-display text-lg font-semibold text-foreground">{t("blog.addComment")}</h3>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <CommentAvatar src={user?.avatar || emailAvatar} name={user?.name || commentForm.author_name} />
+                    <div className="min-w-0">
+                      <h3 className="font-display text-lg font-semibold text-foreground">{t("blog.addComment")}</h3>
+                      {user ? <p className="truncate text-xs text-muted-foreground">{user.name}</p> : null}
+                    </div>
+                  </div>
                   <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Public</span>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    placeholder={t("blog.yourName")}
-                    value={commentForm.author_name}
-                    onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })}
-                    required
-                    className="h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                  />
-                  <Input
-                    type="email"
-                    placeholder={t("blog.yourEmail")}
-                    value={commentForm.author_email}
-                    onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })}
-                    required
-                    className="h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                  />
-                </div>
+                {!user && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Input
+                      placeholder={t("blog.yourName")}
+                      value={commentForm.author_name}
+                      onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })}
+                      required
+                      className="h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                    <Input
+                      type="email"
+                      placeholder={t("blog.yourEmail")}
+                      value={commentForm.author_email}
+                      onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })}
+                      required
+                      className="h-11 rounded-xl border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-primary dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                )}
 
                 <Textarea
                   placeholder={t("blog.yourComment")}
