@@ -287,7 +287,7 @@ const BlogPost = () => {
   if (!post) return (
     <div className="py-32 text-center">
       <p className="text-muted-foreground mb-4">{t("blog.notFound")}</p>
-      <Button variant="outline-glow" asChild><Link to="/resources#blog">{t("blog.backToBlog")}</Link></Button>
+      <Button variant="outline-glow" asChild><Link to="/blog">{t("blog.backToBlog")}</Link></Button>
     </div>
   );
 
@@ -299,7 +299,7 @@ const BlogPost = () => {
       <section className="py-20 hero-gradient">
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto">
-            <Link to="/resources#blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
+            <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
               <ArrowLeft className="h-4 w-4" /> {t("blog.backToBlog")}
             </Link>
             <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{post.category}</span>

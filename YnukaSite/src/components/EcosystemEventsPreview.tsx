@@ -138,7 +138,7 @@ export const EcosystemEventsPreview = ({ showDivider = true }: { showDivider?: b
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
             <Link
-              to="/events#proposer-evenement"
+              to="/events/actions/proposer"
               className="inline-flex w-full items-center justify-center gap-2 border border-[#0f2847]/20 bg-white px-5 py-3 text-sm font-bold text-[#0f2847] transition-colors hover:border-[#ffb800] dark:border-slate-600 dark:bg-transparent dark:text-white sm:w-auto"
             >
               {t("events.navPropose")}

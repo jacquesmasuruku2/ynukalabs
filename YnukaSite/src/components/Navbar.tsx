@@ -26,6 +26,21 @@ type NavEntry = NavGroup | { key: string; path: string };
 const GOLD = "#ffb800";
 const EMAIL = "contact@ynukalabs.com";
 const DROPDOWN_VIEWPORT_PAD = 16;
+const canonicalNavPaths: Record<string, string> = {
+  aboutOverview: "/about",
+  domains: "/domaines",
+  services: "/services",
+  team: "/team",
+  partners: "/partners",
+  blockchains: "/blockchains",
+  validators: "/validators",
+  events: "/events",
+  opportunity: "/opportunities",
+  community: "/community",
+  blog: "/blog",
+  educationalContent: "/documentation",
+  gallery: "/gallery",
+};
 
 /** Indicateur sous-menu : chevron (pattern dropdown standard) */
 const MenuExpandHint = ({ open }: { open?: boolean }) => (
@@ -140,30 +155,30 @@ const Navbar = () => {
     {
       label: "nav.about",
       items: [
-        { key: "aboutOverview", path: "/about#presentation" },
-        { key: "domains", path: "/about#domaines" },
-        { key: "services", path: "/about#services" },
-        { key: "team", path: "/about#team" },
-        { key: "partners", path: "/about#partners" },
+        { key: "aboutOverview", path: "/about" },
+        { key: "domains", path: "/domaines" },
+        { key: "services", path: "/services" },
+        { key: "team", path: "/team" },
+        { key: "partners", path: "/partners" },
       ],
     },
     { key: "projects", path: "/projects" },
     {
       label: "nav.ecosystem",
       items: [
-        { key: "blockchains", path: "/blockchains#blockchains" },
-        { key: "validators", path: "/blockchains#validators" },
-        { key: "events", path: "/blockchains#events" },
-        { key: "opportunity", path: "/blockchains#opportunities" },
-        { key: "community", path: "/blockchains#community" },
+        { key: "blockchains", path: "/blockchains" },
+        { key: "validators", path: "/validators" },
+        { key: "events", path: "/events" },
+        { key: "opportunity", path: "/opportunities" },
+        { key: "community", path: "/community" },
       ],
     },
     {
       label: "nav.resources",
       items: [
-        { key: "blog", path: "/resources#blog" },
-        { key: "educationalContent", path: "/resources#education" },
-        { key: "gallery", path: "/resources#gallery" },
+        { key: "blog", path: "/blog" },
+        { key: "educationalContent", path: "/documentation" },
+        { key: "gallery", path: "/gallery" },
       ],
     },
   ];
@@ -189,19 +204,19 @@ const Navbar = () => {
           normalizedLabel.includes("ecosytem")
         ) {
           items = [
-            { key: "blockchains", path: "/blockchains#blockchains" },
-            { key: "validators", path: "/blockchains#validators" },
-            { key: "events", path: "/blockchains#events" },
-            { key: "opportunity", path: "/blockchains#opportunities" },
-            { key: "community", path: "/blockchains#community" },
+            { key: "blockchains", path: "/blockchains" },
+            { key: "validators", path: "/validators" },
+            { key: "events", path: "/events" },
+            { key: "opportunity", path: "/opportunities" },
+            { key: "community", path: "/community" },
           ];
         }
 
         if (normalizedLabel.includes("resource") || normalizedLabel.includes("ressource")) {
           items = [
-            { key: "blog", path: "/resources#blog" },
-            { key: "educationalContent", path: "/resources#education" },
-            { key: "gallery", path: "/resources#gallery" },
+            { key: "blog", path: "/blog" },
+            { key: "educationalContent", path: "/documentation" },
+            { key: "gallery", path: "/gallery" },
           ];
         }
 
@@ -211,11 +226,11 @@ const Navbar = () => {
           normalizedLabel.includes("apropos")
         ) {
           items = [
-            { key: "aboutOverview", path: "/about#presentation" },
-            { key: "domains", path: "/about#domaines" },
-            { key: "services", path: "/about#services" },
-            { key: "team", path: "/about#team" },
-            { key: "partners", path: "/about#partners" },
+            { key: "aboutOverview", path: "/about" },
+            { key: "domains", path: "/domaines" },
+            { key: "services", path: "/services" },
+            { key: "team", path: "/team" },
+            { key: "partners", path: "/partners" },
           ];
         }
 
@@ -290,7 +305,7 @@ const Navbar = () => {
                 if (!labelKey || !path) return null;
                 return {
                   key: stripNavKey(labelKey),
-                  path,
+                  path: canonicalNavPaths[stripNavKey(labelKey)] ?? path,
                 };
               })
               .filter((x): x is { key: string; path: string } => x !== null);
@@ -319,29 +334,29 @@ const Navbar = () => {
           {
             label: "nav.about",
             items: [
-              { key: "aboutOverview", path: "/about#presentation" },
-              { key: "domains", path: "/about#domaines" },
-              { key: "services", path: "/about#services" },
-              { key: "team", path: "/about#team" },
-              { key: "partners", path: "/about#partners" },
+              { key: "aboutOverview", path: "/about" },
+              { key: "domains", path: "/domaines" },
+              { key: "services", path: "/services" },
+              { key: "team", path: "/team" },
+              { key: "partners", path: "/partners" },
             ],
           },
           {
             label: "nav.ecosystem",
             items: [
-              { key: "blockchains", path: "/blockchains#blockchains" },
-              { key: "validators", path: "/blockchains#validators" },
-              { key: "events", path: "/blockchains#events" },
-              { key: "opportunity", path: "/blockchains#opportunities" },
-              { key: "community", path: "/blockchains#community" },
+              { key: "blockchains", path: "/blockchains" },
+              { key: "validators", path: "/validators" },
+              { key: "events", path: "/events" },
+              { key: "opportunity", path: "/opportunities" },
+              { key: "community", path: "/community" },
             ],
           },
           {
             label: "nav.resources",
             items: [
-              { key: "blog", path: "/resources#blog" },
-              { key: "educationalContent", path: "/resources#education" },
-              { key: "gallery", path: "/resources#gallery" },
+              { key: "blog", path: "/blog" },
+              { key: "educationalContent", path: "/documentation" },
+              { key: "gallery", path: "/gallery" },
             ],
           },
         ];

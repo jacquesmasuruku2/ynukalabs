@@ -16,6 +16,24 @@ const Footer = () => {
 
   type FooterMenuItem = { labelKey: string; path: string };
   type FooterMenuGroup = { labelKey: string; items: FooterMenuItem[]; order: number };
+  const canonicalPaths: Record<string, string> = {
+    about: "/about",
+    domains: "/domaines",
+    services: "/services",
+    team: "/team",
+    partners: "/partners",
+    events: "/events",
+    projects: "/projects",
+    gallery: "/gallery",
+    community: "/community",
+    support: "/soutenir",
+    blog: "/blog",
+    educationalContent: "/documentation",
+    contact: "/contact",
+  };
+
+  const canonicalPath = (labelKey: string, path: string) =>
+    canonicalPaths[labelKey.replace(/^nav\./, "")] ?? path;
 
   const fallbackFooterGroups: FooterMenuGroup[] = [
     {
@@ -25,7 +43,7 @@ const Footer = () => {
         { labelKey: "nav.about", path: "/about" },
         { labelKey: "nav.events", path: "/events" },
         { labelKey: "nav.projects", path: "/projects" },
-        { labelKey: "nav.gallery", path: "/resources#gallery" },
+        { labelKey: "nav.gallery", path: "/gallery" },
         { labelKey: "nav.community", path: "/community" },
         { labelKey: "nav.support", path: "/soutenir" },
       ],
@@ -34,8 +52,8 @@ const Footer = () => {
       labelKey: "footer.resources",
       order: 1,
       items: [
-        { labelKey: "nav.blog", path: "/resources#blog" },
-        { labelKey: "nav.educationalContent", path: "/resources#education" },
+        { labelKey: "nav.blog", path: "/blog" },
+        { labelKey: "nav.educationalContent", path: "/documentation" },
         { labelKey: "nav.contact", path: "/contact" },
       ],
     },
@@ -80,7 +98,7 @@ const Footer = () => {
                 const itemLabelKey = String(iAttrs.labelKey ?? "");
                 const path = String(iAttrs.path ?? "");
                 if (!itemLabelKey || !path) return null;
-                return { labelKey: itemLabelKey, path };
+                return { labelKey: itemLabelKey, path: canonicalPath(itemLabelKey, path) };
               })
               .filter((x): x is FooterMenuItem => x !== null);
 
@@ -160,9 +178,9 @@ const Footer = () => {
               {(() => {
                 const gQuick = footerMenuGroups.find((g) => g.labelKey === "footer.quickLinks") ?? footerMenuGroups[0];
                 const quickItems = [...(gQuick?.items ?? [])];
-                const hasGallery = quickItems.some((item) => item.path === "/resources#gallery");
+                const hasGallery = quickItems.some((item) => item.path === "/gallery");
                 if (!hasGallery) {
-                  quickItems.push({ labelKey: "nav.gallery", path: "/resources#gallery" });
+                  quickItems.push({ labelKey: "nav.gallery", path: "/gallery" });
                 }
                 const hasSupport = quickItems.some((item) => item.path === "/soutenir");
                 if (!hasSupport) {

@@ -200,7 +200,7 @@ const EventDetail = () => {
       <header className="border-b border-[#0f2847]/15 bg-[#0f2847] text-white">
         <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 md:py-6">
           <Link
-            to="/events#agenda"
+            to="/events"
             className="mb-4 inline-flex items-center gap-1 text-sm text-white/70 transition-colors hover:text-[#ffb800]"
           >
             <ArrowLeft className="h-4 w-4" /> {t("events.backToEvents")}

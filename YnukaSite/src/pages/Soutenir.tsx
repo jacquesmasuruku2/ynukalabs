@@ -174,7 +174,7 @@ const Soutenir = () => {
       <header className="border-b border-[#0f2847]/15 bg-[#0f2847] text-white">
         <div className="mx-auto max-w-[1200px] px-4 pt-4 sm:px-6 md:px-8">
           <Link
-            to="/events#agenda"
+              to="/events"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-white transition-colors hover:text-[#ffb800]"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />

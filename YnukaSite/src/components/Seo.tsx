@@ -8,8 +8,11 @@ const DEFAULT_DESCRIPTION = 'Ynuka Labs développe les compétences et les proje
 const pages: Record<string, { title: string; description: string }> = {
   '/': { title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION },
   '/about': { title: 'À propos de Ynuka Labs | Innovation numérique en RD Congo', description: 'Découvrez la mission, la vision et l’équipe de Ynuka Labs pour développer l’innovation numérique en RD Congo.' },
+  '/domaines': { title: 'Domaines d’intervention | Ynuka Labs', description: 'Découvrez les domaines d’intervention de Ynuka Labs pour développer les compétences et l’innovation numérique en RD Congo.' },
   '/projects': { title: 'Projets Web3 et numériques | Ynuka Labs', description: 'Explorez les projets Web3, blockchain et numériques portés par Ynuka Labs et sa communauté.' },
   '/events': { title: 'Événements et formations | Ynuka Labs', description: 'Participez aux événements, rencontres et formations de Ynuka Labs autour du Web3 et de l’innovation.' },
+  '/events/actions/proposer': { title: 'Proposer un événement | Ynuka Labs', description: 'Soumettez une proposition d’événement à la communauté Ynuka Labs.' },
+  '/events/actions/speaker': { title: 'Devenir intervenant | Ynuka Labs', description: 'Proposez votre intervention lors des événements Ynuka Labs.' },
   '/opportunities': { title: 'Opportunités | Ynuka Labs', description: 'Découvrez les opportunités, programmes et appels à participation proposés par Ynuka Labs.' },
   '/blog': { title: 'Actualités et analyses Web3 | Ynuka Labs', description: 'Lisez les actualités, analyses et ressources de Ynuka Labs sur le Web3, la blockchain et l’intelligence artificielle.' },
   '/team': { title: 'Équipe Ynuka Labs | Experts du numérique en RD Congo', description: 'Rencontrez l’équipe de Ynuka Labs, engagée pour la formation et l’innovation numérique en RD Congo.' },

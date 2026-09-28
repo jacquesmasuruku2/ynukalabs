@@ -93,19 +93,29 @@ const Events = () => {
 
   useEffect(() => {
     const hash = location.hash.replace("#", "").trim();
+    if (location.pathname === "/events/actions/proposer") {
+      setActiveAction("proposer-evenement");
+      return;
+    }
+    if (location.pathname === "/events/actions/speaker") {
+      setActiveAction("devenir-speaker");
+      return;
+    }
     if (hash === "soutenir") {
       navigate("/soutenir", { replace: true });
       return;
     }
-    const allowed: HubAction[] = ["agenda", "devenir-speaker", "proposer-evenement"];
-    if (!hash) {
-      setActiveAction("agenda");
+    const legacyActionPaths: Record<string, string> = {
+      agenda: "/events",
+      "devenir-speaker": "/events/actions/speaker",
+      "proposer-evenement": "/events/actions/proposer",
+    };
+    if (hash && legacyActionPaths[hash]) {
+      navigate(legacyActionPaths[hash], { replace: true });
       return;
     }
-    if (allowed.includes(hash as HubAction)) {
-      setActiveAction(hash as HubAction);
-    }
-  }, [location.hash, navigate]);
+    setActiveAction("agenda");
+  }, [location.hash, location.pathname, navigate]);
 
   const goAction = (id: HubAction) => {
     if (id === "soutenir") {
@@ -113,11 +123,13 @@ const Events = () => {
       return;
     }
     setActiveAction(id);
-    const url = id === "agenda" ? "/events#agenda" : `/events#${id}`;
-    window.history.replaceState(null, "", url);
-    if (id === "agenda") {
-      document.getElementById("agenda")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    navigate(
+      id === "agenda"
+        ? "/events"
+        : id === "devenir-speaker"
+          ? "/events/actions/speaker"
+          : "/events/actions/proposer"
+    );
   };
 
   const filtered = useMemo(
@@ -168,7 +180,7 @@ const Events = () => {
       <header className="border-b border-[#0f2847]/15 bg-[#0f2847] text-white">
         <div className="mx-auto max-w-[1200px] px-4 pt-4 sm:px-6 md:px-8">
           <Link
-            to="/blockchains#events"
+            to="/blockchains"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-white/75 transition-colors hover:text-[#ffb800]"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />

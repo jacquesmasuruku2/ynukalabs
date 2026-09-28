@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -52,7 +52,7 @@ function classifyTeamDepts(role: string) {
 const About = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const [activeInterv, setActiveInterv] = useState(0);
+  const navigate = useNavigate();
   const [activeTeamDept, setActiveTeamDept] = useState<
     "all" | "administration" | "developers" | "trainers" | "members"
   >("members");
@@ -70,8 +70,6 @@ const About = () => {
     { name: "Safrochain", logo: "/partners/safrochain.png", url: "https://safrochain.com/" },
   ];
   const [partnersList, setPartnersList] = useState<AboutPartner[]>(hardcodedAboutPartners);
-
-  const [selectedServiceIndex, setSelectedServiceIndex] = useState<number | null>(null);
 
   const heroTeamMembers = useMemo(() => teamMembersWithValidImages(team), [team]);
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
@@ -142,6 +140,17 @@ const About = () => {
 
   useEffect(() => {
     const hash = location.hash.replace("#", "").trim();
+    const sectionRoutes: Record<string, string> = {
+      domaines: "/domaines",
+      services: "/services",
+      team: "/team",
+      partners: "/partners",
+    };
+    if (sectionRoutes[hash]) {
+      navigate(sectionRoutes[hash], { replace: true });
+      return;
+    }
+
     const navbarOffset = 96;
 
     if (!hash) {
@@ -154,53 +163,7 @@ const About = () => {
 
     const targetTop = target.getBoundingClientRect().top + window.scrollY - navbarOffset;
     window.scrollTo({ top: targetTop, behavior: "smooth" });
-  }, [location.hash]);
-  const interventionDomains = useMemo(() => {
-    const asPoints = (key: string) => {
-      const points = t(key, { returnObjects: true });
-      return Array.isArray(points) ? (points as string[]) : [];
-    };
-    return [
-      {
-        title: t("about.interv1Title"),
-        description: t("about.interv1Desc"),
-        points: asPoints("about.interv1Points"),
-      },
-      {
-        title: t("about.interv2Title"),
-        description: t("about.interv2Desc"),
-        points: asPoints("about.interv2Points"),
-      },
-      {
-        title: t("about.interv3Title"),
-        description: t("about.interv3Desc"),
-        points: asPoints("about.interv3Points"),
-      },
-      {
-        title: t("about.interv4Title"),
-        description: t("about.interv4Desc"),
-        points: asPoints("about.interv4Points"),
-      },
-    ];
-  }, [t, i18n.language]);
-
-  const services = useMemo(() => {
-    return [1, 2, 3, 4, 5, 6].map((n) => {
-      const points = [1, 2, 3, 4]
-        .map((p) => t(`about.service${n}Point${p}`))
-        .filter((point) => point && !point.startsWith("about."));
-      return {
-        title: t(`about.service${n}Title`),
-        description: t(`about.service${n}Desc`),
-        intro: t(`about.service${n}Intro`),
-        points,
-      };
-    });
-  }, [t, i18n.language]);
-
-  const toggleService = (serviceIndex: number) => {
-    setSelectedServiceIndex((prev) => (prev === serviceIndex ? null : serviceIndex));
-  };
+  }, [location.hash, navigate]);
 
   const teamDepartments = useMemo(
     () => [
@@ -443,98 +406,6 @@ const About = () => {
               </div>
             </div>
           </motion.div>
-        </Container>
-      </section>
-
-      {/* Domaines d'intervention — axe à gauche, sous-points à droite */}
-      <section className="about-section scroll-mt-28" id="domaines">
-        <Container size="lg">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            viewport={{ once: true }}
-            className="mb-8 md:mb-10"
-          >
-            <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
-              {t("about.interventionTitle")}{" "}
-              <span className="text-[#ffb800]">{t("about.interventionTitleHighlight")}</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid items-stretch gap-8 lg:grid-cols-12 lg:gap-10">
-            <div className="flex flex-col justify-center gap-2 lg:col-span-5">
-              {interventionDomains.map((domain, i) => {
-                const active = i === activeInterv;
-                return (
-                  <button
-                    key={domain.title}
-                    type="button"
-                    onClick={() => setActiveInterv(i)}
-                    className={`group relative w-full rounded-none border-l-[3px] px-4 py-3.5 text-left transition-all duration-300 md:px-5 md:py-4 ${
-                      active
-                        ? "border-[#ffb800] bg-[#0f2847] text-white"
-                        : "border-transparent bg-transparent text-[#0f2847] hover:border-[#ffb800]/50 hover:bg-[#0f2847]/[0.04] dark:text-[#dbeafe]"
-                    }`}
-                  >
-                    <span
-                      className={`mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.14em] ${
-                        active ? "text-[#ffb800]" : "text-[#0f2847]/45 dark:text-white/40"
-                      }`}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="block text-base font-bold leading-snug md:text-lg">
-                      {domain.title}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="lg:col-span-7">
-              <div className="relative flex h-full min-h-[280px] flex-col justify-center overflow-hidden bg-[#0f2847] px-6 py-8 text-white md:min-h-[320px] md:px-8 md:py-10">
-                <div
-                  className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-[#ffb800]/15 blur-3xl"
-                  aria-hidden
-                />
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeInterv}
-                    initial={{ opacity: 0, x: 18 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -12 }}
-                    transition={{ duration: 0.35 }}
-                    className="relative z-10"
-                  >
-                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[#ffb800]">
-                      {String(activeInterv + 1).padStart(2, "0")} — {interventionDomains[activeInterv]?.title}
-                    </p>
-                    <p className="mt-4 text-justify text-base font-medium leading-relaxed text-white/85 md:text-[1.05rem] md:leading-[1.75]">
-                      {interventionDomains[activeInterv]?.description}
-                    </p>
-                    <ul className="mt-6 space-y-3">
-                      {(interventionDomains[activeInterv]?.points ?? []).map((point, pi) => (
-                        <motion.li
-                          key={`${activeInterv}-${point}`}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: 0.12 + pi * 0.12 }}
-                          className="flex gap-3 text-[0.95rem] font-semibold leading-snug text-white md:text-base"
-                        >
-                          <span
-                            className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#ffb800]"
-                            aria-hidden
-                          />
-                          <span>{point}</span>
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
         </Container>
       </section>
 

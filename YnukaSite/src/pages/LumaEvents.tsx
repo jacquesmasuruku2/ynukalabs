@@ -65,7 +65,7 @@ const LumaEvents = () => {
         <div className="mx-auto flex max-w-[1100px] flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="min-w-0">
             <Link
-              to="/events#agenda"
+              to="/events"
               className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-white/65 transition-colors hover:text-white"
             >
               <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden />

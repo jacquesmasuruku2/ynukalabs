@@ -10,6 +10,7 @@ import { useStrapiAuth } from "@/hooks/useStrapiAuth";
 import Layout from "./components/Layout";
 import Index from "./pages/Index-final";
 import About from "./pages/About";
+import Domains from "./pages/Domains";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import EventEspace from "./pages/EventEspace";
@@ -72,7 +73,10 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
+              <Route path="/domaines" element={<Domains />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/events/actions/speaker" element={<Events />} />
+              <Route path="/events/actions/proposer" element={<Events />} />
               <Route path="/events/:id" element={<EventDetail />} />
               <Route path="/events/:id/espace" element={<EventEspace />} />
               <Route path="/luma-events" element={<LumaEvents />} />
