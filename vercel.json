@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npm --prefix \"Ynuka Site\" run build",
-  "installCommand": "npm --prefix \"Ynuka Site\" install",
-  "outputDirectory": "Ynuka Site/dist",
+  "buildCommand": "npm --prefix YnukaSite run build",
+  "installCommand": "npm --prefix YnukaSite ci",
+  "outputDirectory": "YnukaSite/dist",
   "framework": "vite",
   "rewrites": [
     {
