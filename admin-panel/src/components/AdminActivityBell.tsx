@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Activity, Bell, Briefcase, Building2, CalendarDays, Mail, MessageSquare, Newspaper, Users } from 'lucide-react';
 
-type ActivityType = 'contact' | 'partnership' | 'newsletter' | 'event-registration' | 'event-message' | 'event-proposal' | 'blog-comment' | 'job-application' | 'opportunity-application';
+type ActivityType = 'contact' | 'partnership' | 'newsletter' | 'event-registration' | 'event-message' | 'event-proposal' | 'blog-comment' | 'job-application' | 'opportunity-application' | 'visitor';
 
 type SiteActivity = {
   id: string;
@@ -25,6 +25,7 @@ const iconByType = {
   'blog-comment': MessageSquare,
   'job-application': Briefcase,
   'opportunity-application': Briefcase,
+  visitor: Activity,
 } satisfies Record<ActivityType, typeof Mail>;
 
 function formatActivityDate(value: string) {
@@ -36,6 +37,7 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
   const [seenIds, setSeenIds] = useState<Set<string> | null>(null);
   const [adminId, setAdminId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const refreshRef = useRef<() => Promise<void>>(async () => {});
 
@@ -46,9 +48,17 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
     const refresh = async () => {
       try {
         const response = await fetch('/api/admin/activity-feed', { cache: 'no-store' });
-        if (!response.ok) return;
+        if (!response.ok) {
+          if (isMounted) {
+            setLoadError(response.status === 401
+              ? 'Session administrateur expirée. Reconnectez-vous pour recevoir les notifications.'
+              : `Impossible de charger les activités (erreur ${response.status}).`);
+          }
+          return;
+        }
         const result = await response.json() as { adminId: string; activities: SiteActivity[] };
         if (!isMounted) return;
+        setLoadError(null);
 
         const nextKey = `admin-activity-seen:v2:${result.adminId}`;
         if (nextKey !== storageKey) {
@@ -66,13 +76,13 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
 
         setActivities(result.activities);
       } catch {
-        // Keep the admin header usable when the activity API is temporarily unavailable.
+        if (isMounted) setLoadError('Activités indisponibles. Vérifiez la connexion au serveur puis réessayez.');
       }
     };
 
     refreshRef.current = refresh;
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 30000);
+    const timer = window.setInterval(() => void refresh(), 10000);
     return () => {
       isMounted = false;
       refreshRef.current = async () => {};
@@ -158,7 +168,9 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
           </header>
 
           <ul className="max-h-[min(65vh,28rem)] divide-y overflow-y-auto" style={{ borderColor: 'var(--sidebar-border)' }}>
-            {activities.length === 0 ? (
+            {loadError ? (
+              <li role="status" className="px-4 py-6 text-center text-sm text-red-700">{loadError}</li>
+            ) : activities.length === 0 ? (
               <li className="px-4 py-10 text-center text-sm text-[var(--text-secondary)]">Aucune activité récente</li>
             ) : activities.map((item) => {
               const Icon = iconByType[item.type];

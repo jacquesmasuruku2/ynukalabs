@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/admin-session';
 
 type Activity = {
   id: string;
-  type: 'contact' | 'partnership' | 'newsletter' | 'event-registration' | 'event-message' | 'event-proposal' | 'blog-comment' | 'job-application' | 'opportunity-application';
+  type: 'contact' | 'partnership' | 'newsletter' | 'event-registration' | 'event-message' | 'event-proposal' | 'blog-comment' | 'job-application' | 'opportunity-application' | 'visitor';
   title: string;
   description: string;
   createdAt: string;
@@ -16,7 +16,7 @@ export async function GET() {
   if (response) return response;
 
   try {
-    const [contacts, partnerships, subscribers, registrations, messages, proposals, comments, replies, jobApplications, opportunityApplications, motivationForms] = await Promise.all([
+    const [contacts, partnerships, subscribers, registrations, messages, proposals, comments, replies, jobApplications, opportunityApplications, motivationForms, visitorViews] = await Promise.all([
       prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, name: true, subject: true, message: true, createdAt: true } }),
       prisma.partnership.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, companyName: true, contactName: true, type: true, createdAt: true } }),
       prisma.newsletterSubscription.findMany({ where: { isActive: true }, orderBy: { subscribedAt: 'desc' }, take: 50, select: { id: true, name: true, email: true, subscribedAt: true } }),
@@ -28,6 +28,7 @@ export async function GET() {
       prisma.jobApplication.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, name: true, email: true, jobOffer: { select: { title: true } }, createdAt: true } }),
       prisma.opportunityApplication.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, userName: true, userEmail: true, opportunity: { select: { titleFr: true, title: true } }, createdAt: true } }),
       prisma.opportunityMotivationForm.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, userName: true, userEmail: true, opportunity: { select: { titleFr: true, title: true } }, createdAt: true } }),
+      prisma.sitePageView.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, path: true, pageTitle: true, userName: true, userEmail: true, createdAt: true } }),
     ]);
 
     const activities: Activity[] = [
@@ -42,6 +43,7 @@ export async function GET() {
       ...jobApplications.map((item) => ({ id: `job-application:${item.id}`, type: 'job-application' as const, title: 'Nouvelle candidature reçue', description: `${item.name} · ${item.jobOffer.title}`, createdAt: item.createdAt.toISOString(), href: `/job-applications?application=${encodeURIComponent(item.id)}` })),
       ...opportunityApplications.map((item) => ({ id: `opportunity-application:${item.id}`, type: 'opportunity-application' as const, title: 'Nouvelle candidature à une opportunité', description: `${item.userName || item.userEmail} · ${item.opportunity.titleFr || item.opportunity.title}`, createdAt: item.createdAt.toISOString(), href: `/opportunity-applications?application=${encodeURIComponent(item.id)}` })),
       ...motivationForms.map((item) => ({ id: `opportunity-motivation:${item.id}`, type: 'opportunity-application' as const, title: 'Nouveau dossier de motivation', description: `${item.userName || item.userEmail} · ${item.opportunity.titleFr || item.opportunity.title}`, createdAt: item.createdAt.toISOString(), href: `/opportunity-applications?motivation=${encodeURIComponent(item.id)}` })),
+      ...visitorViews.map((item) => ({ id: `visitor:${item.id}`, type: 'visitor' as const, title: 'Nouvelle visite du site', description: `${item.userName || item.userEmail || 'Visiteur anonyme'} · ${item.pageTitle || item.path}`, createdAt: item.createdAt.toISOString(), href: '/live-visitors' })),
     ];
 
     activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
