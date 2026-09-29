@@ -40,8 +40,14 @@ const regStatusClass: Record<string, string> = {
   waitlisted: 'bg-amber-100 text-amber-800',
 };
 
-export default function EventRegistrationsPanel({ events }: { events: EventOption[] }) {
-  const [eventId, setEventId] = useState(events[0]?.id || '');
+export default function EventRegistrationsPanel({
+  events,
+  initialRegistration,
+}: {
+  events: EventOption[];
+  initialRegistration?: { id: string; eventId: string } | null;
+}) {
+  const [eventId, setEventId] = useState(initialRegistration?.eventId || events[0]?.id || '');
   const [rows, setRows] = useState<RegistrationRow[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +57,7 @@ export default function EventRegistrationsPanel({ events }: { events: EventOptio
   const [reply, setReply] = useState('');
   const [notifyMessage, setNotifyMessage] = useState('');
   const importInputRef = useRef<HTMLInputElement>(null);
+  const openedInitialRegistration = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (!eventId) return;
@@ -73,14 +80,29 @@ export default function EventRegistrationsPanel({ events }: { events: EventOptio
     void load();
   }, [load]);
 
-  const openChat = async (row: RegistrationRow) => {
+  useEffect(() => {
+    if (initialRegistration?.eventId && initialRegistration.eventId !== eventId) {
+      setEventId(initialRegistration.eventId);
+    }
+  }, [eventId, initialRegistration]);
+
+  const openChat = useCallback(async (row: RegistrationRow) => {
     setActive(row);
     const res = await fetch(`/api/event-conversations/${row.id}?admin=1`);
     if (res.ok) {
       const data = await res.json();
       setMessages(data.messages || []);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const requested = initialRegistration?.id;
+    if (!requested || openedInitialRegistration.current === requested) return;
+    const row = rows.find((item) => item.id === requested);
+    if (!row) return;
+    openedInitialRegistration.current = requested;
+    void openChat(row);
+  }, [initialRegistration, openChat, rows]);
 
   const toggle = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));

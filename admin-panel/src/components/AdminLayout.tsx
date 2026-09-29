@@ -32,6 +32,7 @@ import {
   Star,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
+import AdminActivityBell from '@/components/AdminActivityBell';
 
 function formatDateTime(value?: string | null) {
   if (!value) return '—';
@@ -143,6 +144,7 @@ function AdminUserMenu({
             style={{ color: 'var(--text-secondary)' }}
           />
         </button>
+        <AdminActivityBell onBeforeOpen={() => setIsOpen(false)} />
         <PowerLogoutButton onClick={onLogout} />
       </div>
 

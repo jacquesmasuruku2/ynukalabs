@@ -8,9 +8,6 @@ Je signale un problème critique sur mon compte d'hébergement.
 
 **COMPTE AFFECTÉ:**
 - Domaine: ynukalabs.com
-- IP: 205.209.109.3
-- Utilisateur DirectAdmin: ynukalab
-- Email: jacquesmasuruku2@gmail.com
 
 **PROBLÈME:**
 LiteSpeed Web Server s'est arrêté et n'écoute plus sur les ports 80/443. Le domaine affiche une erreur 404.

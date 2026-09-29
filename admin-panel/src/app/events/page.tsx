@@ -59,6 +59,17 @@ export default function EventsPage() {
   const [proposals, setProposals] = useState<ProposalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ProposalRow | null>(null);
+  const [initialRegistration, setInitialRegistration] = useState<{ id: string; eventId: string } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedTab = params.get('tab');
+    if (requestedTab === 'registrations' || requestedTab === 'proposals') setTab(requestedTab);
+
+    const registrationId = params.get('registration');
+    const eventId = params.get('eventId');
+    if (registrationId && eventId) setInitialRegistration({ id: registrationId, eventId });
+  }, []);
 
   const loadEvents = useCallback(async () => {
     const res = await fetch('/api/events?admin=1');
@@ -150,7 +161,10 @@ export default function EventsPage() {
         {loading ? (
           <p className="py-12 text-center text-secondary">Chargement...</p>
         ) : tab === 'registrations' ? (
-          <EventRegistrationsPanel events={items.map((i) => ({ id: i.id, title: i.title }))} />
+          <EventRegistrationsPanel
+            events={items.map((i) => ({ id: i.id, title: i.title }))}
+            initialRegistration={initialRegistration}
+          />
         ) : tab === 'published' ? (
           <div className="overflow-hidden rounded-lg border">
             <table className="min-w-full divide-y">

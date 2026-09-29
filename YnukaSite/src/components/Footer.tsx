@@ -129,9 +129,9 @@ const Footer = () => {
   return (
     <footer className="border-t border-white/15 bg-[#0f2847] text-white">
       <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-2 md:gap-12 lg:grid-cols-4">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="col-span-2 space-y-4 md:col-span-1">
             <h3 className="font-display text-xl font-bold text-white">
               Ynuka <span className="text-[#ffb800]">Labs</span>
             </h3>
@@ -226,7 +226,7 @@ const Footer = () => {
           </div>
 
           {/* Newsletter */}
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <h4 className="typo-label font-display mb-6 text-white">
               {t("footer.newsletter")}
             </h4>

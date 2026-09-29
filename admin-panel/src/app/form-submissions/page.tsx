@@ -40,6 +40,12 @@ export default function FormSubmissionsPage() {
     fetchData();
   }, [activeTab]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tab') === 'partnerships') {
+      setActiveTab('partnerships');
+    }
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {
