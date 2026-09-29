@@ -47,17 +47,17 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
         const result = await response.json() as { adminId: string; activities: SiteActivity[] };
         if (!isMounted) return;
 
-        const nextKey = `admin-activity-seen:${result.adminId}`;
+        const nextKey = `admin-activity-seen:v2:${result.adminId}`;
         if (nextKey !== storageKey) {
           storageKey = nextKey;
           setAdminId(result.adminId);
           try {
             const stored = localStorage.getItem(nextKey);
-            const initialSeen = stored ? new Set<string>(JSON.parse(stored) as string[]) : new Set(result.activities.map((item) => item.id));
+            const initialSeen = stored ? new Set<string>(JSON.parse(stored) as string[]) : new Set<string>();
             setSeenIds(initialSeen);
             if (!stored) localStorage.setItem(nextKey, JSON.stringify([...initialSeen]));
           } catch {
-            setSeenIds(new Set(result.activities.map((item) => item.id)));
+            setSeenIds(new Set<string>());
           }
         }
 
@@ -97,7 +97,7 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
     if (!adminId) return;
     const ids = new Set(activities.map((item) => item.id));
     setSeenIds(ids);
-    localStorage.setItem(`admin-activity-seen:${adminId}`, JSON.stringify([...ids]));
+    localStorage.setItem(`admin-activity-seen:v2:${adminId}`, JSON.stringify([...ids]));
   };
 
   const markActivitySeen = (id: string) => {
@@ -105,7 +105,7 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
     const ids = new Set(seenIds);
     ids.add(id);
     setSeenIds(ids);
-    localStorage.setItem(`admin-activity-seen:${adminId}`, JSON.stringify([...ids]));
+    localStorage.setItem(`admin-activity-seen:v2:${adminId}`, JSON.stringify([...ids]));
   };
 
   return (
