@@ -78,7 +78,13 @@ export default function EventsPage() {
 
   const loadProposals = useCallback(async () => {
     const res = await fetch('/api/event-proposals');
-    if (res.ok) setProposals(await res.json());
+    if (res.ok) {
+      const rows = await res.json() as ProposalRow[];
+      setProposals(rows);
+      const requestedId = new URLSearchParams(window.location.search).get('proposal');
+      const requestedProposal = rows.find((item) => item.id === requestedId);
+      if (requestedProposal) setSelected(requestedProposal);
+    }
   }, []);
 
   useEffect(() => {

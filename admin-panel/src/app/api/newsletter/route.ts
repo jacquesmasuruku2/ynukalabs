@@ -86,6 +86,7 @@ export async function POST(request: Request) {
           interests: validInterests.length > 0 ? validInterests : existingSubscriber.interests,
           isActive: true,
           unsubscribedAt: null,
+          subscribedAt: new Date(),
         },
       });
 

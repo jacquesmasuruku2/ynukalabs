@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Activity, Bell, Building2, CalendarDays, Mail, MessageSquare, Newspaper, Users } from 'lucide-react';
+import { Activity, Bell, Briefcase, Building2, CalendarDays, Mail, MessageSquare, Newspaper, Users } from 'lucide-react';
 
-type ActivityType = 'contact' | 'partnership' | 'newsletter' | 'event-registration' | 'event-message' | 'event-proposal' | 'blog-comment';
+type ActivityType = 'contact' | 'partnership' | 'newsletter' | 'event-registration' | 'event-message' | 'event-proposal' | 'blog-comment' | 'job-application' | 'opportunity-application';
 
 type SiteActivity = {
   id: string;
@@ -23,6 +23,8 @@ const iconByType = {
   'event-message': MessageSquare,
   'event-proposal': CalendarDays,
   'blog-comment': MessageSquare,
+  'job-application': Briefcase,
+  'opportunity-application': Briefcase,
 } satisfies Record<ActivityType, typeof Mail>;
 
 function formatActivityDate(value: string) {
@@ -35,6 +37,7 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
   const [adminId, setAdminId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const refreshRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     let isMounted = true;
@@ -67,10 +70,12 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
       }
     };
 
+    refreshRef.current = refresh;
     void refresh();
     const timer = window.setInterval(() => void refresh(), 30000);
     return () => {
       isMounted = false;
+      refreshRef.current = async () => {};
       window.clearInterval(timer);
     };
   }, []);
@@ -114,7 +119,10 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
         type="button"
         onClick={() => {
           const nextOpen = !isOpen;
-          if (nextOpen) onBeforeOpen?.();
+          if (nextOpen) {
+            onBeforeOpen?.();
+            void refreshRef.current();
+          }
           setIsOpen(nextOpen);
         }}
         aria-label={unreadCount ? `Activités récentes, ${unreadCount} nouvelles` : 'Activités récentes'}
@@ -126,7 +134,7 @@ export default function AdminActivityBell({ onBeforeOpen }: { onBeforeOpen?: () 
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
           <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {unreadCount.toLocaleString('fr-FR')}
           </span>
         )}
       </button>

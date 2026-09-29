@@ -18,6 +18,7 @@ export default function NewsletterSubscribersPage() {
   const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+  const [requestedSubscriberId, setRequestedSubscriberId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +33,19 @@ export default function NewsletterSubscribersPage() {
 
   useEffect(() => {
     fetchSubscribers();
+    setRequestedSubscriberId(new URLSearchParams(window.location.search).get('subscriber'));
   }, []);
+
+  useEffect(() => {
+    if (!requestedSubscriberId || !subs.length) return;
+    const subscriber = subs.find((item) => item.id === requestedSubscriberId);
+    if (subscriber) setQuery(subscriber.email);
+  }, [requestedSubscriberId, subs]);
+
+  useEffect(() => {
+    if (!requestedSubscriberId || loading) return;
+    document.getElementById(`newsletter-subscriber-${requestedSubscriberId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [loading, query, requestedSubscriberId, subs]);
 
   const fetchSubscribers = async () => {
     setLoading(true);
@@ -423,7 +436,7 @@ export default function NewsletterSubscribersPage() {
                     </tr>
                   ) : (
                     paginatedSubs.map((s) => (
-                      <tr key={s.id} className="hover:bg-gray-50 align-top">
+                      <tr id={`newsletter-subscriber-${s.id}`} key={s.id} className={`align-top hover:bg-gray-50 ${requestedSubscriberId === s.id ? 'bg-amber-50 ring-1 ring-inset ring-amber-300' : ''}`}>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600">

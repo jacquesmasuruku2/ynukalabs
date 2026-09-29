@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { 
   Mail, 
@@ -35,16 +35,29 @@ export default function FormSubmissionsPage() {
   const [partnerWebsiteUrl, setPartnerWebsiteUrl] = useState('');
   const [isPartnerSaving, setIsPartnerSaving] = useState(false);
   const [isPartnerUploading, setIsPartnerUploading] = useState(false);
+  const openedActivityId = useRef<string | null>(null);
 
   useEffect(() => {
     fetchData();
   }, [activeTab]);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'partnerships') {
-      setActiveTab('partnerships');
-    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'partnerships') setActiveTab('partnerships');
   }, []);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (!id || openedActivityId.current === id) return;
+    const rows = activeTab === 'contact' ? contactMessages : partnerships;
+    const target = rows.find((item) => item.id === id);
+    if (!target) return;
+    openedActivityId.current = id;
+    setSelectedItem(target);
+    setPartnerImageUrl(target.imageUrl || '');
+    setPartnerWebsiteUrl(target.websiteUrl || '');
+    setShowDetailModal(true);
+  }, [activeTab, contactMessages, partnerships]);
 
   const fetchData = async () => {
     setLoading(true);

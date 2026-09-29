@@ -1,9 +1,37 @@
 import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
 
 export async function OPTIONS() {
   return corsOptions();
+}
+
+export async function GET() {
+  const { response } = await requireAdmin();
+  if (response) return response;
+
+  try {
+    const [applications, motivationForms] = await Promise.all([
+      prisma.opportunityApplication.findMany({
+        include: { opportunity: { select: { id: true, title: true, titleFr: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.opportunityMotivationForm.findMany({
+        include: { opportunity: { select: { id: true, title: true, titleFr: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return NextResponse.json([
+      ...applications.map((item) => ({ ...item, kind: 'application' as const })),
+      ...motivationForms.map((item) => ({ ...item, kind: 'motivation' as const })),
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+  } catch (error) {
+    console.error('Error fetching opportunity applications:', error);
+    return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
+  }
 }
 
 /** Public application / motivation submission from the main site */

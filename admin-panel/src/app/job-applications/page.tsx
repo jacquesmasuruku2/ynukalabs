@@ -26,10 +26,20 @@ export default function JobApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [requestedApplicationId, setRequestedApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApplications();
+    setRequestedApplicationId(new URLSearchParams(window.location.search).get('application'));
   }, []);
+
+  useEffect(() => {
+    if (!requestedApplicationId) return;
+    const requested = applications.find((item) => item.id === requestedApplicationId);
+    if (!requested) return;
+    setSelectedItem(requested);
+    setShowDetailModal(true);
+  }, [applications, requestedApplicationId]);
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -39,7 +49,8 @@ export default function JobApplicationsPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setApplications(Array.isArray(data) ? data : []);
+      const rows = Array.isArray(data) ? data : [];
+      setApplications(rows);
     } catch (error) {
       console.error('Error fetching job applications:', error);
       setApplications([]);
