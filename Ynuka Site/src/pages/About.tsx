@@ -220,7 +220,7 @@ const About = () => {
   return (
     <div className="min-h-screen" style={{ background: "var(--dark-bg)" }}>
       {/* Hero Section */}
-      <section id="presentation" className="relative scroll-mt-28 overflow-hidden py-8 sm:py-12 md:py-24">
+      <section id="presentation" className="relative scroll-mt-28 overflow-hidden py-6 sm:py-10 md:py-14">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/70 via-slate-950/60 to-transparent" />
           <div
@@ -317,132 +317,68 @@ const About = () => {
         </Container>
       </section>
 
-      {/* Notre histoire — frise gauche étirée sur la hauteur du récit */}
-      <section className="relative overflow-hidden bg-[#0f2847] py-16 text-white md:py-20" id="historique">
-        <div
-          className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-[#ffb800]/10 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -left-16 bottom-0 h-56 w-56 rounded-full bg-white/5 blur-3xl"
-          aria-hidden
-        />
-        <Container size="lg" className="relative z-10">
-          <div className="grid items-stretch gap-10 lg:grid-cols-12 lg:gap-14">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55 }}
-              viewport={{ once: true }}
-              className="flex h-full flex-col lg:col-span-4"
-            >
-              <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl lg:text-[3.15rem] lg:leading-[1.1]">
-                {t("about.historyTitle")}{" "}
-                <span className="text-[#ffb800]">{t("about.historyTitleHighlight")}</span>
-              </h2>
+      {/* Mission & Vision */}
+      <section className="about-section relative" id="mission-vision">
+        <Container size="lg">
+          <div className="grid items-center gap-10 lg:grid-cols-12">
+            <div className="flex flex-col gap-12 lg:col-span-6 relative z-10">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
+                  Notre <span className="text-[#ffb800]">Mission</span>
+                </h2>
+                <p className="mv-copy mt-4">{t("about.missionDesc")}</p>
+              </motion.div>
 
-              <ol className="mt-8 flex min-h-0 flex-1 flex-col justify-between border-l-2 border-white/25 pl-6 md:mt-10 md:pl-7">
-                {[
-                  { year: t("about.historyYear2021"), label: t("about.historyLabel2021") },
-                  { year: t("about.historyYear2022"), label: t("about.historyLabel2022") },
-                  { year: t("about.historyYearImpact"), label: t("about.historyLabelImpact") },
-                  { year: t("about.historyYear2026"), label: t("about.historyLabel2026") },
-                ].map((item) => (
-                  <li key={item.year} className="relative py-1 first:pt-0 last:pb-0">
-                    <span
-                      className="absolute -left-[1.7rem] top-2 h-3.5 w-3.5 rounded-full bg-[#ffb800] ring-[5px] ring-[#0f2847] md:-left-[1.85rem] md:top-2.5 md:h-4 md:w-4"
-                      aria-hidden
-                    />
-                    <p className="font-display text-3xl font-bold leading-none tracking-tight text-[#ffb800] md:text-4xl lg:text-[2.75rem]">
-                      {item.year}
-                    </p>
-                    <p className="mt-2 text-sm font-medium leading-snug text-white/80 md:text-base">
-                      {item.label}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
+                  Notre <span className="text-[#ffb800]">Vision</span>
+                </h2>
+                <p className="mv-copy mt-4">{t("about.visionDesc")}</p>
+              </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.08 }}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
-              className="flex h-full flex-col justify-between lg:col-span-8"
+              className="lg:col-span-6 flex justify-center lg:justify-end"
             >
-              <div className="space-y-5 md:space-y-6">
-                <p className="text-justify text-base font-medium leading-relaxed text-white/90 md:text-lg md:leading-[1.8]">
-                  {t("about.historyP1")}
-                </p>
-                <p className="text-justify text-base leading-relaxed text-white/75 md:text-[1.05rem] md:leading-[1.8]">
-                  {t("about.historyP2")}
-                </p>
-                <p className="text-justify text-base leading-relaxed text-white/75 md:text-[1.05rem] md:leading-[1.8]">
-                  {t("about.historyP3")}
-                </p>
+              <div className="relative w-full max-w-[450px] aspect-square drop-shadow-2xl">
+                <svg viewBox="0 0 400 400" className="w-full h-full text-transparent">
+                  <defs>
+                    <clipPath id="vision-shape">
+                      <path d="M 32,0 
+                               H 368 A 32,32 0 0 1 400,32 
+                               V 160 A 40,40 0 0 0 400,240 
+                               V 368 A 32,32 0 0 1 368,400 
+                               H 160 A 32,32 0 0 1 128,368 
+                               V 288 A 32,32 0 0 0 96,256 
+                               H 32 A 32,32 0 0 1 0,224 
+                               V 32 A 32,32 0 0 1 32,0 Z" />
+                    </clipPath>
+                  </defs>
+                  <image 
+                    href="/about/mission3.jpg" 
+                    width="100%" 
+                    height="100%" 
+                    preserveAspectRatio="xMidYMid slice" 
+                    clipPath="url(#vision-shape)" 
+                  />
+                </svg>
               </div>
-
-              <blockquote className="mt-8 border-l-[3px] border-[#ffb800] bg-white/[0.06] px-5 py-5 md:mt-10 md:px-6 md:py-6">
-                <p className="text-justify font-display text-lg font-semibold italic leading-relaxed text-white md:text-xl md:leading-[1.7]">
-                  {t("about.historyP4")}
-                </p>
-              </blockquote>
             </motion.div>
           </div>
-        </Container>
-      </section>
-
-      {/* Mission & Vision — coins opposés marine/jaune + textes italiques */}
-      <section className="about-section" id="mission-vision">
-        <Container size="lg" className="space-y-10 md:space-y-12">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="grid items-center gap-6 lg:grid-cols-12 lg:gap-10"
-          >
-            <div className="lg:col-span-6">
-              <div className="mv-frame mv-frame--mission">
-                <span className="mv-corner mv-corner--tl" aria-hidden />
-                <span className="mv-corner mv-corner--br" aria-hidden />
-                <div className="mv-frame-media">
-                  <img src={missionImage} alt="" loading="lazy" />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col justify-center lg:col-span-6">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
-                Notre <span className="text-[#ffb800]">Mission</span>
-              </h2>
-              <p className="mv-copy">{t("about.missionDesc")}</p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            viewport={{ once: true }}
-            className="grid items-center gap-6 lg:grid-cols-12 lg:gap-10"
-          >
-            <div className="order-2 flex flex-col justify-center lg:order-1 lg:col-span-6">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
-                Notre <span className="text-[#ffb800]">Vision</span>
-              </h2>
-              <p className="mv-copy">{t("about.visionDesc")}</p>
-            </div>
-            <div className="order-1 lg:order-2 lg:col-span-6">
-              <div className="mv-frame mv-frame--vision">
-                <span className="mv-corner mv-corner--tr" aria-hidden />
-                <span className="mv-corner mv-corner--bl" aria-hidden />
-                <div className="mv-frame-media">
-                  <img src={visionImage} alt="" loading="lazy" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </Container>
       </section>
 
@@ -454,7 +390,7 @@ const About = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
             viewport={{ once: true }}
-            className="mb-8 md:mb-10"
+            className="mb-8 md:mb-10 "
           >
             <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl">
               {t("about.interventionTitle")}{" "}
@@ -552,7 +488,7 @@ const About = () => {
               {t("about.servicesTitle")}{" "}
               <span className="text-[#ffb800]">{t("about.servicesHighlight")}</span>
             </h2>
-            <div className="mx-auto mt-4 h-[3px] w-14 bg-[#ffb800]" aria-hidden />
+            <div className="mx-auto mt-4 h-[3px]  w-14 bg-[#ffb800]" aria-hidden />
             <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-[#0f2847]/70 dark:text-[#93c5fc]/85 md:text-lg md:leading-[1.7]">
               {t("about.servicesDesc")}
             </p>
@@ -831,7 +767,7 @@ const About = () => {
             transition={{ duration: 0.55 }}
             className="mx-auto mb-8 max-w-3xl text-center md:mb-10"
           >
-            <h2 className="font-display text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-[#1c4d89] dark:text-white md:text-4xl lg:text-[2.75rem]">
               <span>{t("partners.title")}</span>{" "}
               <span className="text-[#ffb800]">{t("partners.titleHighlight")}</span>
             </h2>
@@ -854,24 +790,29 @@ const About = () => {
                     className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb800] focus-visible:ring-offset-2"
                     aria-label={`${t("partners.visit")} — ${partner.name}`}
                   >
-                    <div className="flex h-[96px] w-[190px] items-center justify-center border border-[#0f2847]/10 bg-white px-4 py-3 md:h-[104px] md:w-[210px] dark:border-white/10">
-                      <img
-                        src={partner.logo}
-                        alt={partner.name}
-                        className="max-h-[64px] w-full object-contain"
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          img.style.display = "none";
-                          const fallback = img.nextElementSibling as HTMLElement | null;
-                          if (fallback) fallback.hidden = false;
-                        }}
-                      />
-                      <span
-                        hidden
-                        className="px-2 text-center text-sm font-bold leading-snug text-[#0f2847]"
-                      >
+                    <div className="flex h-[80px] w-[220px] items-center gap-4 rounded-2xl border border-white/10 bg-[#181a20]/60 backdrop-blur-md px-5 transition-all hover:bg-white/10 hover:scale-105 hover:border-white/20">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white p-2 shadow-sm">
+                        <img
+                          src={partner.logo}
+                          alt={partner.name}
+                          className="max-h-full max-w-full object-contain"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            img.style.display = "none";
+                            const fallback = img.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.hidden = false;
+                          }}
+                        />
+                        <span
+                          hidden
+                          className="text-[10px] font-bold text-[#0f2847]"
+                        >
+                          {partner.name?.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="font-bold text-sm text-white/90 truncate flex-1">
                         {partner.name}
                       </span>
                     </div>
@@ -890,14 +831,11 @@ const About = () => {
           >
             <a
               href={`/contact?subject=${encodeURIComponent(t("partners.becomeCta"))}`}
-              className="inline-flex items-center gap-2 border border-[#ffb800] bg-[#ffb800] px-5 py-2.5 text-sm font-bold text-[#111111] transition hover:brightness-105"
+              className="inline-flex items-center gap-2 border border-[#ffb800] bg-[#ffb800] px-5 py-2.5 text-sm font-bold text-[#111111] transition hover:brightness-105 rounded-xl"
             >
               {t("partners.becomeCta")}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </a>
-            <p className="text-xs font-medium text-[#0f2847]/55 dark:text-[#93c5fc]/70">
-              {t("partners.becomeCtaHint")}
-            </p>
           </motion.div>
         </Container>
       </section>

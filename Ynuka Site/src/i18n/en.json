@@ -461,6 +461,17 @@
   "projects": {
     "title": "Discover our Projects",
     "subtitle": "Innovative Web3 solutions, environmental projects, hackathons and education programs built and incubated by Ynuka Labs.",
+    "heroBadge": "Ynuka Labs",
+    "heroWeb3": "Solutions designed for local communities.",
+    "heroImpactTitle": "Impact",
+    "heroImpact": "Innovation, education and the environment.",
+    "heroTogether": "Building together",
+    "heroTogetherTitle": "Projects with purpose",
+    "heroTopicEducation": "Education",
+    "heroTopicBlockchain": "Blockchain",
+    "heroTopicInnovation": "Innovation",
+    "heroTopicCommunity": "Community",
+    "heroTopicEnvironment": "Environment",
     "all": "All",
     "viewProject": "Read project",
     "viewGithub": "GitHub",
@@ -552,6 +563,50 @@
     "test1": "Ynuka Labs gave me the skills and network to launch my first DApp. The community here is incredible!",
     "test2": "Before Ynuka Labs, blockchain felt impossible to learn. Now I'm building smart contracts!",
     "test3": "The incubation program helped me turn my idea into a funded project. Forever grateful."
+  },
+  "blockchainJourney": {
+    "eyebrow": "YNUKA LABS COMMUNITY",
+    "title": "You have your place here.",
+    "subtitle": "In Goma and beyond, Ynuka Labs brings together curious youth, creators, and innovators who learn, collaborate, and build together.",
+    "subtitle2": "Beginner or builder, explore Web3, blockchain, and sustainable agriculture in an open, inclusive environment without unnecessary barriers.",
+    "subtitle3": "Your ideas matter. Let’s build the future together.",
+    "ctaOpen": "Join the community",
+    "step1Title": "Propose an idea",
+    "step1Text": "Every member can share ideas and propose initiatives to move the community forward.",
+    "step1Action": "Submit an idea",
+    "step2Title": "Debate & exchange",
+    "step2Text": "Let’s discuss, challenge our ideas, and improve our initiatives in a spirit of openness and collaboration.",
+    "step2Action": "Join discussions",
+    "step3Title": "Attend events",
+    "step3Text": "Workshops, meetups, and in-person gatherings: the best way to experience community energy and build connections.",
+    "step3Action": "Discover our events",
+    "step4Title": "Build together",
+    "step4Text": "Educators, organizations, builders, or strategic partners: let’s join forces to accelerate Web3 education and build sustainable local solutions.",
+    "step4Action": "Collaborate with Ynuka Labs",
+
+
+
+
+
+
+
+
+
+
+
+    "socialMessage": "Hello Ynuka Labs, I would like to learn more about the community."
+  },
+  "blockchainTestimonials": {
+    "eyebrow": "Partner testimonials",
+    "title": "What they say about us",
+    "subtitle": "Collaborations that strengthen the local Web3 ecosystem.",
+    "previous": "Previous testimonial",
+    "next": "Next testimonial",
+    "partnerLabel": "Ecosystem partner",
+    "wada": "A committed partner advancing blockchain and artificial intelligence adoption across Africa.",
+    "catalyst": "A collaboration rooted in decentralised innovation and practical solutions.",
+    "ekival": "A partnership focused on accessible digital services that serve communities.",
+    "safrochain": "A shared vision: build Web3 infrastructure grounded in the realities of the region."
   },
   "resources": {
     "title": "Resources",

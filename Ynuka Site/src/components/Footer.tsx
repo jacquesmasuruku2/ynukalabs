@@ -109,15 +109,19 @@ const Footer = () => {
   )}`;
 
   return (
-    <footer className="border-t border-white/15 bg-[#0f2847] text-white">
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+    <footer className="border-t border-white/10 bg-[#0f2847] text-white overflow-hidden relative">
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#ffb800]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="max-w-[1300px] mx-auto px-4 md:px-6 py-4 md:py-20 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.5fr] gap-12 lg:gap-16">
           {/* Brand */}
-          <div className="space-y-4">
-            <h3 className="font-display text-xl font-bold text-white">
+          <div className="space-y-6">
+            <h3 className="font-display text-3xl font-extrabold uppercase tracking-tight text-white">
               Ynuka <span className="text-[#ffb800]">Labs</span>
             </h3>
-            <div className="flex items-center gap-2 text-white/75">
+            <p className="text-white/60 font-medium text-[0.95rem] leading-relaxed max-w-xs">
+              Building Africa's next future through decentralized technologies, AI, and ecological resilience.
+            </p>
+            <div className="flex items-center gap-2 text-white/60 text-[0.95rem] font-medium">
               <MapPin className="h-4 w-4" />
               <span>{t("footer.location")}</span>
             </div>
@@ -150,7 +154,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="typo-label font-display mb-6 text-white">
+            <h4 className="font-display text-sm font-bold uppercase tracking-widest text-white/40 mb-6">
               {(() => {
                 const gQuick = footerMenuGroups.find((g) => g.labelKey === "footer.quickLinks") ?? footerMenuGroups[0];
                 return resolveLabel(gQuick?.labelKey ?? "footer.quickLinks");
@@ -183,7 +187,7 @@ const Footer = () => {
 
           {/* Resources */}
           <div>
-            <h4 className="typo-label font-display mb-6 text-white">
+            <h4 className="font-display text-sm font-bold uppercase tracking-widest text-white/40 mb-6">
               {(() => {
                 const gRes =
                   footerMenuGroups.find((g) => g.labelKey === "footer.resources") ?? footerMenuGroups[1] ?? footerMenuGroups[0];
@@ -209,7 +213,7 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div>
-            <h4 className="typo-label font-display mb-6 text-white">
+            <h4 className="font-display text-sm font-bold uppercase tracking-widest text-white/40 mb-6">
               {t("footer.newsletter")}
             </h4>
             <p className="text-sm text-white/75 mb-3">
@@ -275,10 +279,18 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-white/15">
-          <p className="text-sm text-white/70 flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between sm:items-center sm:text-left">
-            <span className="w-full sm:w-auto">© {new Date().getFullYear()} Ynuka Labs. {t("footer.rights")}</span>
-            <span className="w-full sm:w-auto sm:text-right">
+        <div className="mt-20 pt-8 border-t border-white/10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <p className="text-sm text-white/50 font-medium">
+              © {new Date().getFullYear()} Ynuka Labs. {t("footer.rights")}
+            </p>
+            <div className="flex items-center gap-2 text-sm text-white/50 font-medium">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                System Operational
+              </span>
+            </div>
+            <p className="text-sm text-white/50 font-medium text-center md:text-right">
               {t("footer.developedBy")}{" "}
               <a
                 href={devMailto}
@@ -287,8 +299,8 @@ const Footer = () => {
               >
                 {t("footer.developersTeam")}
               </a>
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

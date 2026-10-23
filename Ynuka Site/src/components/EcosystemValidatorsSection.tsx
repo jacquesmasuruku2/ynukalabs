@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ArrowUpRight, ExternalLink, MessageCircle } from "lucide-react";
+import {
+  ArrowUpRight,
+  Copy,
+  ExternalLink,
+  MessageCircle,
+  Network,
+  ShieldCheck,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { listValidators } from "@/services/validators/validatorsApi";
@@ -14,17 +21,12 @@ const fadeUp = {
   transition: { duration: 0.55 },
 };
 
-const ACCENTS = [
-  {
-    wash: "from-[#ffb800]/25 via-transparent to-transparent",
-    bar: "bg-[#ffb800]",
-    chip: "bg-[#0f2847] text-[#ffb800]",
-  },
-  {
-    wash: "from-[#12B1A6]/20 via-transparent to-transparent",
-    bar: "bg-[#12B1A6]",
-    chip: "bg-[#0f2847] text-[#7dfff3]",
-  },
+const CARD_ICONS = [Network, Copy, ShieldCheck] as const;
+
+const ICON_TONES = [
+  { wrap: "text-[#7dd3fc]", glow: "bg-[#38bdf8]/15" },
+  { wrap: "text-[#818cf8]", glow: "bg-[#6366f1]/15" },
+  { wrap: "text-[#a78bfa]", glow: "bg-[#8b5cf6]/15" },
 ] as const;
 
 function ValidatorCard({
@@ -36,7 +38,8 @@ function ValidatorCard({
 }) {
   const { t, i18n } = useTranslation();
   const isFr = i18n.language.startsWith("fr");
-  const accent = ACCENTS[index % ACCENTS.length];
+  const Icon = CARD_ICONS[index % CARD_ICONS.length];
+  const tone = ICON_TONES[index % ICON_TONES.length];
   const description =
     (isFr && validator.descriptionFr ? validator.descriptionFr : validator.description) ||
     t("validators.defaultDesc", { chain: validator.chain });
@@ -68,80 +71,76 @@ function ValidatorCard({
     <motion.article
       {...fadeUp}
       transition={{ ...fadeUp.transition, delay: index * 0.1 }}
-      className="group relative flex h-full flex-col overflow-hidden bg-white shadow-[0_12px_40px_-24px_rgba(15,40,71,0.45)] ring-1 ring-black/[0.06] dark:bg-[#101820] dark:ring-white/10"
+      className="group relative flex h-full flex-col rounded-[1.25rem] border border-white/[0.08] bg-[#0b1220]/55 p-5 shadow-[0_18px_50px_-32px_rgba(0,0,0,0.85)] backdrop-blur-md transition-[border-color,background-color,transform] duration-300 hover:border-white/20 hover:bg-[#0b1220]/70 sm:p-6"
     >
-      <span className={cn("absolute inset-x-0 top-0 h-1.5", accent.bar)} aria-hidden />
-      <div
-        className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br opacity-90", accent.wash)}
-        aria-hidden
-      />
-
-      <div className="relative aspect-[16/10] overflow-hidden bg-[#111]">
-        {validator.imageUrl ? (
-          <img
-            src={validator.imageUrl}
-            alt={t("validators.imageAlt", { name: validator.name, chain: validator.chain })}
-            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a]">
-            <span className="font-display text-4xl font-extrabold text-white/20">
-              {validator.name.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent p-4 pt-16">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#ffb800]">
+      <div className="flex items-start gap-4">
+        <div
+          className={cn(
+            "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[0.85rem] border border-white/10 outline outline-1 outline-white/10",
+            tone.glow
+          )}
+        >
+          {validator.imageUrl ? (
+            <img
+              src={validator.imageUrl}
+              alt=""
+              className="h-7 w-7 object-contain"
+              loading="lazy"
+            />
+          ) : (
+            <Icon className={cn("h-5 w-5", tone.wrap)} strokeWidth={1.75} aria-hidden />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-white/45">
             {validator.chain}
           </p>
-          <h3 className="mt-0.5 font-display text-2xl font-extrabold text-white">{validator.name}</h3>
+          <h3 className="mt-0.5 text-balance font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
+            {validator.name}
+          </h3>
         </div>
-        {isActive ? (
-          <span
-            className={cn(
-              "absolute right-3 top-3 px-2.5 py-1 text-[0.65rem] font-extrabold uppercase tracking-wide",
-              accent.chip
-            )}
-          >
-            {t("validators.active")}
-          </span>
-        ) : null}
       </div>
 
-      <div className="relative flex flex-1 flex-col p-5 sm:p-6">
-        <p className="text-sm font-medium leading-relaxed text-[#3d4f66] dark:text-slate-300">
-          {description}
+      <p className="mt-4 text-pretty text-sm font-medium leading-relaxed text-slate-400">
+        {description}
+      </p>
+
+      {validator.address ? (
+        <p className="mt-3 break-all font-mono text-[0.62rem] leading-relaxed text-slate-500">
+          {validator.address}
         </p>
+      ) : null}
 
-        {validator.address ? (
-          <p className="mt-3 break-all border-l-2 border-[#ffb800]/70 pl-3 font-mono text-[0.62rem] leading-relaxed text-[#5a6b82] dark:text-slate-500">
-            {validator.address}
-          </p>
-        ) : null}
+      {metrics.length > 0 ? (
+        <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+          {metrics.map((m) => (
+            <div key={m.label}>
+              <dt className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-500">
+                {m.label}
+              </dt>
+              <dd className="mt-0.5 text-sm font-extrabold tabular-nums text-white">{m.value}</dd>
+              {m.hint ? (
+                <p className="text-[0.65rem] font-medium tabular-nums text-slate-500">{m.hint}</p>
+              ) : null}
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
-        {metrics.length > 0 ? (
-          <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-            {metrics.map((m) => (
-              <div key={m.label}>
-                <dt className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#8a96a8]">
-                  {m.label}
-                </dt>
-                <dd className="mt-0.5 text-sm font-extrabold text-[#122033] dark:text-white">{m.value}</dd>
-                {m.hint ? (
-                  <p className="text-[0.65rem] font-medium text-[#6b7c94]">{m.hint}</p>
-                ) : null}
-              </div>
-            ))}
-          </dl>
-        ) : null}
-
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+        {isActive ? (
+          <span className="inline-flex rounded-md bg-emerald-500/10 px-2.5 py-1 text-[0.62rem] font-extrabold uppercase tracking-[0.14em] text-emerald-300">
+            {t("validators.active")}
+          </span>
+        ) : (
+          <span />
+        )}
         {validator.explorerUrl ? (
           <a
             href={validator.explorerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-1.5 self-start text-sm font-bold text-[#122033] underline decoration-[#ffb800] decoration-2 underline-offset-4 transition-colors hover:text-[#0f2847] dark:text-white"
+            className="inline-flex min-h-10 items-center gap-1.5 text-sm font-bold text-white/85 underline decoration-white/25 decoration-2 underline-offset-4 transition-colors hover:text-white hover:decoration-[#ffb800]"
           >
             {t("validators.viewOnExplorer")}
             <ExternalLink className="h-3.5 w-3.5" aria-hidden />
@@ -186,10 +185,8 @@ export const EcosystemValidatorsSection = ({
     <section
       id="validators"
       className={cn(
-        "scroll-mt-28 relative overflow-hidden py-16 md:py-24",
-        "bg-[radial-gradient(1200px_600px_at_10%_-10%,rgba(255,184,0,0.14),transparent_55%),radial-gradient(900px_500px_at_90%_0%,rgba(18,177,166,0.10),transparent_50%),linear-gradient(180deg,#fbfaf7_0%,#f3f1eb_100%)]",
-        "dark:bg-[radial-gradient(1000px_500px_at_15%_0%,rgba(255,184,0,0.12),transparent_50%),linear-gradient(180deg,#0b1219_0%,#101820_100%)]",
-        showDivider && "border-t border-black/[0.06] dark:border-white/10"
+        "scroll-mt-28 relative py-16 md:py-24",
+        showDivider && "border-t border-white/10"
       )}
     >
       <div className="relative mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
@@ -199,31 +196,34 @@ export const EcosystemValidatorsSection = ({
             className="mb-10 grid items-end gap-6 md:mb-14 md:grid-cols-[1.2fr_0.8fr]"
           >
             <div>
-              <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[#b8860b]">
+              <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[#ffb800]">
                 {t("validators.eyebrow")}
               </p>
-              <h2 className="mt-2 max-w-xl font-display text-3xl font-extrabold tracking-tight text-[#122033] md:text-4xl dark:text-white">
+              <h2 className="mt-2 max-w-xl text-balance font-display text-3xl font-extrabold tracking-tight text-white md:text-4xl">
                 {t("validators.title")}
               </h2>
             </div>
-            <p className="max-w-md text-base font-medium leading-relaxed text-[#4a5c73] md:justify-self-end md:text-right dark:text-slate-300">
+            <p className="max-w-md text-pretty text-base font-medium leading-relaxed text-slate-400 md:justify-self-end md:text-right">
               {t("validators.subtitle")}
             </p>
           </motion.div>
         ) : (
-          <p className="mb-8 max-w-2xl text-sm font-medium text-[#4a5c73] dark:text-slate-400">
+          <p className="mb-8 max-w-2xl text-pretty text-sm font-medium text-slate-400">
             {t("validators.subtitle")}
           </p>
         )}
 
-        <p className="mb-6 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[#8a96a8]">
+        <p className="mb-6 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-slate-500">
           {t("validators.ourValidators")}
         </p>
 
         {loading ? (
           <div className="grid gap-5 md:grid-cols-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-[440px] animate-pulse bg-white/70 dark:bg-white/5" />
+              <div
+                key={i}
+                className="h-[280px] animate-pulse rounded-[1.25rem] border border-white/[0.08] bg-white/[0.04]"
+              />
             ))}
           </div>
         ) : (
@@ -242,20 +242,20 @@ export const EcosystemValidatorsSection = ({
         <motion.div
           {...fadeUp}
           transition={{ ...fadeUp.transition, delay: 0.12 }}
-          className="mt-12 flex flex-col items-start gap-4 border-t border-[#122033]/10 pt-8 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between"
+          className="mt-12 flex flex-col items-start gap-4 rounded-[1.25rem] border border-white/10 bg-white/[0.04] px-5 py-5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-6"
         >
           <div className="max-w-xl">
-            <p className="flex items-center gap-2 text-sm font-bold text-[#122033] dark:text-white">
+            <p className="flex items-center gap-2 text-sm font-bold text-white">
               <MessageCircle className="h-4 w-4 text-[#12B1A6]" aria-hidden />
               {t("validators.learnMoreTitle")}
             </p>
-            <p className="mt-1.5 text-sm font-medium leading-relaxed text-[#4a5c73] dark:text-slate-400">
+            <p className="mt-1.5 text-pretty text-sm font-medium leading-relaxed text-slate-400">
               {t("validators.learnMoreDesc")}
             </p>
           </div>
           <Link
             to={contactHref}
-            className="inline-flex items-center gap-2 border border-[#122033]/20 bg-transparent px-4 py-2.5 text-sm font-bold text-[#122033] transition-colors hover:border-[#ffb800] hover:bg-[#ffb800]/15 dark:border-white/25 dark:text-white"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm font-bold text-white transition-[border-color,background-color,transform] duration-200 hover:border-[#ffb800]/70 hover:bg-[#ffb800]/10 active:scale-[0.96]"
           >
             {t("validators.learnMoreCta")}
             <ArrowUpRight className="h-4 w-4" aria-hidden />

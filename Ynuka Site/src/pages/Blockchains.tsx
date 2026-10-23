@@ -5,7 +5,8 @@ import BlockchainEcosystemSection from "@/components/BlockchainEcosystemSection"
 import { EcosystemValidatorsSection } from "@/components/EcosystemValidatorsSection";
 import { EcosystemEventsPreview } from "@/components/EcosystemEventsPreview";
 import OpportunitiesSection from "@/components/OpportunitiesSection";
-import { CommunityPageBody } from "@/pages/Community";
+import { BlockchainCommunityJourney } from "@/components/BlockchainCommunityJourney";
+import { PartnerTestimonialsSection } from "@/components/PartnerTestimonialsSection";
 
 /** Décalage navbar — même logique que la page À propos */
 const NAVBAR_SCROLL_OFFSET = 96;
@@ -53,14 +54,13 @@ const Blockchains = () => {
   }, [location.hash]);
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen bg-transparent pt-20">
       <BlockchainEcosystemSection lang={i18n.language} showDivider={false} />
       <EcosystemValidatorsSection showDivider={false} />
       <EcosystemEventsPreview showDivider={false} />
       <OpportunitiesSection showHeading />
-      <div id="community" className="scroll-mt-28">
-        <CommunityPageBody />
-      </div>
+      <BlockchainCommunityJourney />
+      <PartnerTestimonialsSection />
     </div>
   );
 };

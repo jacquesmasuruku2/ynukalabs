@@ -9,7 +9,6 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo.png";
 import { strapiFetch } from "@/lib/strapi";
@@ -94,7 +93,6 @@ const NavDropdownPanel = ({
         preferAlignEnd ? "right-0 left-auto origin-top-right" : "left-0 origin-top-left"
       )}
     >
-      <div className="h-[3px] w-full bg-[#ffb800]" aria-hidden />
       <div className="flex flex-col py-1.5">
         {items.map((sub) => {
           const active = isActive(sub.path);
@@ -110,15 +108,6 @@ const NavDropdownPanel = ({
               )}
             >
               <span>{t(`nav.${sub.key}`)}</span>
-              <span
-                className={cn(
-                  "text-[0.65rem] font-bold tracking-wide",
-                  active ? "text-[#ffb800]" : "text-[#ffb800]/70"
-                )}
-                aria-hidden
-              >
-                →
-              </span>
             </Link>
           );
         })}
@@ -134,6 +123,14 @@ const Navbar = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const fallbackNavGroups: NavEntry[] = [
     { key: "home", path: "/" },
@@ -427,22 +424,22 @@ const Navbar = () => {
 
   /* Liens menu : Plus Jakarta Sans, poids lisible, chevron pour les groupes */
   const linkBase =
-    "px-3.5 py-2 font-nav text-[0.9375rem] font-semibold tracking-[-0.015em] rounded-lg transition-colors whitespace-nowrap lg:px-4 lg:py-2.5 lg:text-[1rem]";
-  const linkActive = "text-[#ffb800] bg-[#ffb800]/12";
+    "px-3.5 py-2 font-nav text-[0.9375rem] font-semibold tracking-[-0.015em] transition-all whitespace-nowrap lg:px-4 lg:py-2.5 lg:text-[1rem]";
+  const linkActive = "text-[#ffb800] relative after:absolute after:bottom-1 after:left-4 after:right-4 after:h-0.5 after:rounded-full after:bg-[#ffb800]";
   const linkIdle =
-    "text-[#1a2332] hover:bg-black/[0.05] hover:text-[#0f2847] dark:text-neutral-100 dark:hover:bg-white/10 dark:hover:text-white";
+    "text-[#1a2332] hover:text-[#0f2847] dark:text-neutral-100 dark:hover:text-[#ffb800] relative after:absolute after:bottom-1 after:left-4 after:right-4 after:h-0.5 after:rounded-full after:bg-transparent hover:after:bg-[#ffb800]/50 after:transition-colors";
 
   const TopBarSocialIcons = () => (
     <div className="flex shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-2.5 md:gap-3">
       <Link
         to="/goma-drep"
         className={cn(
-          "group relative inline-flex items-center gap-2 border-2 border-[#0f2847] bg-[#0f2847] px-2.5 py-1 text-[#ffb800] shadow-[3px_3px_0_0_rgba(17,17,17,0.25)] transition-colors sm:px-3 sm:py-1.5",
-          "hover:bg-[#163a66]",
-          isActive("/goma-drep") && "bg-[#163a66] ring-2 ring-[#111111]/20 ring-offset-1 ring-offset-[#ffb800]"
+          "group relative inline-flex items-center gap-2 border border-white/20 bg-white/10 px-2.5 py-1 text-white shadow-none transition-colors sm:px-3 sm:py-1.5 backdrop-blur-sm rounded-md",
+          "hover:bg-white/20",
+          isActive("/goma-drep") && "bg-white/20 ring-1 ring-white/30"
         )}
       >
-        <span className="hidden h-1.5 w-1.5 shrink-0 bg-[#ffb800] sm:block" aria-hidden />
+        <span className="hidden h-1.5 w-1.5 rounded-full shrink-0 bg-[#ffb800] sm:block" aria-hidden />
         <span className="whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.06em] sm:text-xs md:text-[0.8125rem]">
           {t("nav.gomaDrep")}
         </span>
@@ -465,33 +462,32 @@ const Navbar = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full shrink-0 isolate">
-      {/* Bandeau or — même jaune que le CTA home « Découvrir Ynuka Labs » */}
+    <header className="fixed top-0 z-50 w-full shrink-0 isolate">
+      {/* Bandeau transparent */}
       <div className="flex w-full flex-col">
-        <div className="flex w-full min-h-[46px] min-w-0 flex-row items-center justify-between gap-3 bg-[#ffb800] px-4 py-2.5 text-[#111111] md:min-h-[52px] md:py-0 md:pl-5 md:pr-5 lg:min-h-[56px] lg:pl-8 lg:pr-10">
+        <div className="flex w-full min-h-[46px] min-w-0 flex-row items-center justify-between gap-3 bg-transparent px-4 py-2.5 text-white md:min-h-[52px] md:py-0 md:pl-5 md:pr-5 lg:min-h-[56px] lg:pl-8 lg:pr-10">
           <a
             href={`mailto:${EMAIL}`}
-            className="inline-flex min-w-0 max-w-full items-center gap-2 text-xs font-bold text-[#111111] underline-offset-2 hover:underline sm:text-sm md:text-[0.95rem]"
+            className="inline-flex min-w-0 max-w-full items-center gap-2 text-xs font-bold text-white underline-offset-2 hover:underline sm:text-sm md:text-[0.95rem]"
           >
             <EnvelopeSimple className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" weight="duotone" />
             <span className="truncate sm:whitespace-normal sm:break-all">{EMAIL}</span>
           </a>
           <TopBarSocialIcons />
         </div>
-        <div className="h-5 w-full shrink-0 bg-[#ffb800] sm:h-7 md:h-9 lg:h-10" aria-hidden />
       </div>
 
       <div
         className={cn(
-          "relative z-20 mx-auto flex w-full max-w-[1200px] justify-center px-4 sm:px-6 md:px-8 lg:px-10",
-          /* Remonte encore la barre menus (hauteur totale du bandeau inchangée) */
-          "-mt-7 sm:-mt-8 md:-mt-9 lg:-mt-10"
+          "relative z-20 mx-auto flex w-full max-w-[1200px] justify-center px-4 sm:px-6 md:px-8 lg:px-10 mt-2"
         )}
       >
         <nav
           className={cn(
-            "flex w-full min-h-[3.25rem] items-center gap-2 rounded-2xl border border-slate-200/90 bg-white py-2.5 pl-4 pr-3",
-            "dark:border-slate-600 dark:bg-slate-900 md:min-h-[3.5rem] md:gap-3 md:rounded-[1.125rem] md:py-3 md:pl-6 md:pr-5 lg:gap-4 lg:min-h-[3.75rem] lg:rounded-[1.25rem] lg:py-3.5 lg:pl-8 lg:pr-6"
+            "flex w-full min-h-[3.25rem] items-center gap-2 py-2.5 pl-4 pr-3 md:min-h-[3.5rem] md:gap-3 md:py-3 md:pl-6 md:pr-5 lg:gap-4 lg:min-h-[3.75rem] lg:py-3.5 lg:pl-8 lg:pr-6 transition-all duration-500",
+            isScrolled
+              ? "rounded-[1.25rem] border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border-white/10 dark:bg-[#0f2847]/95"
+              : "rounded-[1.25rem] border border-transparent bg-white/70 backdrop-blur-md shadow-none dark:bg-[#0f2847]/60"
           )}
         >
           <Link to="/" className="flex shrink-0 items-center gap-3 md:gap-3.5">
@@ -543,8 +539,13 @@ const Navbar = () => {
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:gap-3">
             <div className="flex items-center gap-1 md:gap-2">
               <NotificationBell />
-              <ThemeToggle />
               <LanguageSwitcher />
+              <Link
+                to="/contact"
+                className="hidden rounded-lg bg-[#ffb800] px-3.5 py-2 text-xs font-bold text-[#0f2847] transition-colors hover:bg-[#ffd04a] sm:inline-flex sm:items-center"
+              >
+                {t("nav.contact")}
+              </Link>
             </div>
             <Button
               variant="ghost"
@@ -594,9 +595,6 @@ const Navbar = () => {
                             )}
                           >
                             <span>{t(`nav.${sub.key}`)}</span>
-                            <span className="text-[#ffb800]" aria-hidden>
-                              →
-                            </span>
                           </Link>
                         );
                       })}

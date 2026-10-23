@@ -1,11 +1,7 @@
 /**
- * Projets fictifs pour peupler la page /projects.
- *
- * Pour les retirer quand l'admin a des projets réels :
- *   → passer `USE_DEMO_PROJECTS` à `false`
- *   (ou supprimer ce fichier et l'import dans Projects.tsx)
+ * Projets pour peupler la page /projects et la section projets de la page d'accueil.
  */
-export const USE_DEMO_PROJECTS = false;
+export const USE_DEMO_PROJECTS = true;
 
 export type DemoProject = {
   id: string;
@@ -26,7 +22,7 @@ export const DEMO_PROJECTS: DemoProject[] = [
     titleKey: "projects.demo.edu1Title",
     descKey: "projects.demo.edu1Desc",
     category: "Education",
-    imageUrl: "/projects/mtidano.jpg",
+    imageUrl: "/projects/mission5.jpg",
     liveUrl: "https://ynukalabs.com",
     githubUrl: "https://github.com/YnukaLabs",
   },
@@ -36,7 +32,7 @@ export const DEMO_PROJECTS: DemoProject[] = [
     titleKey: "projects.demo.edu2Title",
     descKey: "projects.demo.edu2Desc",
     category: "Education",
-    imageUrl: "/projects/mtidano.jpg",
+    imageUrl: "/projects/onboarding-program.jpg",
     liveUrl: "https://ynukalabs.com/onboarding",
     githubUrl: null,
   },
@@ -56,7 +52,7 @@ export const DEMO_PROJECTS: DemoProject[] = [
     titleKey: "projects.demo.env2Title",
     descKey: "projects.demo.env2Desc",
     category: "Environnement",
-    imageUrl: "/projects/mtidano.jpg",
+    imageUrl: "/projects/globe.jpg",
     liveUrl: "https://ynukalabs.com",
     githubUrl: null,
   },
@@ -66,7 +62,7 @@ export const DEMO_PROJECTS: DemoProject[] = [
     titleKey: "projects.demo.chain1Title",
     descKey: "projects.demo.chain1Desc",
     category: "Blockchain",
-    imageUrl: "/projects/mtidano.jpg",
+    imageUrl: "/projects/mission5.jpg",
     liveUrl: "https://ynukalabs.com",
     githubUrl: "https://github.com/YnukaLabs",
   },
@@ -76,7 +72,7 @@ export const DEMO_PROJECTS: DemoProject[] = [
     titleKey: "projects.demo.chain2Title",
     descKey: "projects.demo.chain2Desc",
     category: "Blockchain",
-    imageUrl: "/projects/hero.webp",
+    imageUrl: "/projects/globe.jpg",
     liveUrl: "https://ynukalabs.com",
     githubUrl: "https://github.com/YnukaLabs",
   },

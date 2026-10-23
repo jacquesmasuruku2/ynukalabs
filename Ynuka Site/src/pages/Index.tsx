@@ -209,22 +209,27 @@ const Index = () => {
       </SectionWrapper>
 
       {/* Stats Section */}
-      <SectionWrapper background="gray" padding="md">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 md:-mt-16 mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-gradient-to-r from-[#171b26] to-[#1e2330] rounded-[2rem] p-4 md:p-6 flex flex-col md:flex-row justify-between items-stretch shadow-2xl border border-white/10"
+        >
           {stats.map((stat, i) => (
-            <motion.div 
-              key={i} 
-              {...fadeInUpVariants} 
-              transition={{ ...fadeInUpVariants.transition, delay: i * 0.1 }} 
-              className="text-center"
-            >
-              <stat.icon className="h-8 w-8 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground font-display">{stat.value}</div>
-              <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-            </motion.div>
+            <div key={i} className={`flex items-center gap-4 py-4 md:py-2 px-2 md:px-6 w-full md:flex-1 justify-center md:justify-start ${i !== 0 ? 'md:border-l border-t md:border-t-0 border-white/10' : ''}`}>
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-white/5 flex items-center justify-center">
+                <stat.icon className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex flex-col text-left">
+                <div className="text-2xl lg:text-3xl font-bold text-white mb-1 leading-none tracking-tight">{stat.value}</div>
+                <div className="text-xs lg:text-sm text-slate-300 font-medium">{stat.label}</div>
+              </div>
+            </div>
           ))}
-        </div>
-      </SectionWrapper>
+        </motion.div>
+      </div>
 
       {/* About Preview */}
       <SectionWrapper padding="xl">

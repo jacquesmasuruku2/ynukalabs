@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Users, Calendar, Rocket, Trees } from "lucide-react";
 import ModernButton from "@/components/ui/ModernButton";
 import ModernSectionWrapper from "@/components/ui/ModernSectionWrapper";
 import Container from "@/components/ui/Container";
 import { useHeroAnimations } from "@/hooks/useHeroAnimations";
 import { useCountUp } from "@/hooks/useCountUp";
-import { fetchBlogPosts, fetchHomeProjects } from "@/lib/api";
+import { fetchBlogPosts, fetchProjects, fetchHomeProjects } from "@/lib/api";
+import { DEMO_PROJECTS, USE_DEMO_PROJECTS } from "@/data/demoProjects";
 import { cn, withTimeout, stripHtml } from "@/lib/utils";
 import UpcomingEventsCarousel from "@/components/UpcomingEventsCarousel";
 import OpportunitiesSection from "@/components/OpportunitiesSection";
@@ -18,6 +19,7 @@ import {
   pickRecentPreview,
 } from "@/services/events/eventsCatalog";
 import "@/styles/AboutDesign.css";
+
 
 interface Event {
   id?: string;
@@ -153,31 +155,31 @@ function tagsFromText(...parts: Array<string | string[] | null | undefined>) {
 function HomeProjectCard({ project, delay }: { project: HomeProject; delay: number }) {
   const inner = (
     <>
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 mb-2">
         {project.logoUrl ? (
           <img
             src={project.logoUrl}
             alt=""
-            className="h-10 max-w-[160px] object-contain object-left"
+            className="h-12 max-w-[160px] object-contain object-left transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <span className="font-display text-[1.65rem] font-bold leading-none tracking-tight text-[#0f2847] dark:text-white">
+          <span className="font-display text-[1.8rem] font-bold leading-none tracking-tight text-[#0f2847] dark:text-white transition-colors group-hover:text-[#ffb800]">
             {project.name}
           </span>
         )}
-        <span className="shrink-0 pt-1 text-sm font-medium text-slate-300 dark:text-white/30">
-          {project.name}
+        <span className="shrink-0 pt-1 text-sm font-bold uppercase tracking-wider text-[#ffb800]">
+          {project.category}
         </span>
       </div>
-      <p className="mt-4 flex-1 text-[0.95rem] leading-relaxed text-slate-600 dark:text-[#93c5fc]/80">
+      <p className="mt-4 flex-1 text-base leading-relaxed text-slate-600 dark:text-white/70">
         {project.description}
       </p>
       {project.tags.length ? (
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-8 flex flex-wrap gap-2">
           {project.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.72rem] font-medium text-slate-500 dark:border-white/15 dark:bg-transparent dark:text-[#93c5fc]/80"
+              className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/80"
             >
               {tag}
             </span>
@@ -188,7 +190,7 @@ function HomeProjectCard({ project, delay }: { project: HomeProject; delay: numb
   );
 
   const cardClass =
-    "flex h-full min-h-[180px] flex-col rounded-card border border-slate-200 bg-white px-6 py-5 transition-colors hover:border-[#ffb800]/50 dark:border-[#3b82f6]/25 dark:bg-[#152a48]";
+    "group flex h-full min-h-[240px] flex-col rounded-[1.5rem] border border-slate-200/80 bg-white px-8 py-8 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(15,40,71,0.08)] hover:-translate-y-1 dark:border-white/10 dark:bg-[#0f2847]/40 dark:hover:bg-[#0f2847]/70 dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]";
   const isExternal = Boolean(project.href && /^https?:\/\//i.test(project.href));
 
   return (
@@ -326,6 +328,36 @@ const Index = () => {
         youtubeUrl: null,
         sortDate: "2026-12-05",
       },
+      {
+        id: "preview-4",
+        title: "Web3 Pitch Night",
+        date: formatDate("2027-01-15"),
+        type: "Pitch",
+        location: "Kivu Tech Hub",
+        time: "18:00 - 21:00",
+        image: "https://images.unsplash.com/photo-1556761175-5973dc0f32b7?w=800&h=600&fit=crop",
+        description: "Une soirée dédiée aux startups Web3 pour présenter leurs projets devant un panel d'investisseurs locaux et internationaux.",
+        fullDescription: "Une soirée dédiée aux startups Web3 pour présenter leurs projets devant un panel d'investisseurs locaux et internationaux.",
+        isPast: false,
+        recapUrl: null,
+        youtubeUrl: null,
+        sortDate: "2027-01-15",
+      },
+      {
+        id: "preview-5",
+        title: "Masterclass Blockchain Basics",
+        date: formatDate("2027-02-10"),
+        type: "Masterclass",
+        location: "Ynuka Labs, Goma",
+        time: "10:00 - 15:00",
+        image: "https://images.unsplash.com/photo-1639762681485-074b7f4ec8e5?w=800&h=600&fit=crop",
+        description: "Apprenez les bases de la technologie blockchain et comment elle transforme les secteurs clés en Afrique.",
+        fullDescription: "Apprenez les bases de la technologie blockchain et comment elle transforme les secteurs clés en Afrique.",
+        isPast: false,
+        recapUrl: null,
+        youtubeUrl: null,
+        sortDate: "2027-02-10",
+      },
     ];
   }, [t, i18n.language]);
 
@@ -348,7 +380,7 @@ const Index = () => {
   );
 
   useEffect(() => {
-    setUpcomingEvents(fallbackEvents.slice(0, 3));
+    setUpcomingEvents(fallbackEvents.slice(0, 4));
     const fetchUpcoming = async () => {
       try {
         const result = await withTimeout(
@@ -359,7 +391,7 @@ const Index = () => {
             lumaPastLimit: 50,
           })
         );
-        const preview = pickRecentPreview(result.items, 3).map((event) => ({
+        const preview = pickRecentPreview(result.items, 4).map((event) => ({
           id: event.id,
           title: event.title,
           date: event.date,
@@ -379,9 +411,9 @@ const Index = () => {
           timezone: event.timezone,
           sortDate: event.sortDate,
         }));
-        setUpcomingEvents(preview.length > 0 ? preview : fallbackEvents.slice(0, 3));
+        setUpcomingEvents(preview.length > 0 ? preview : fallbackEvents.slice(0, 4));
       } catch {
-        setUpcomingEvents(fallbackEvents.slice(0, 3));
+        setUpcomingEvents(fallbackEvents.slice(0, 4));
       }
     };
     void fetchUpcoming();
@@ -493,259 +525,316 @@ const Index = () => {
     loadProjects();
   }, [t]);
 
+  const [apiProjects, setApiProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadApiProjects = async () => {
+      try {
+        const items = await withTimeout(fetchProjects(10));
+        if (!cancelled && Array.isArray(items)) {
+          setApiProjects(items);
+        }
+      } catch {
+        if (!cancelled) setApiProjects([]);
+      }
+    };
+    void loadApiProjects();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showcaseProjects = useMemo(() => {
+    const demos = USE_DEMO_PROJECTS
+      ? DEMO_PROJECTS.map((demo) => ({
+          id: demo.id,
+          slug: demo.slug,
+          title: t(demo.titleKey),
+          category: demo.category,
+          shortPresentation: t(demo.descKey),
+          imageUrl: demo.imageUrl,
+          liveUrl: demo.liveUrl,
+        }))
+      : [];
+
+    if (!demos.length) {
+      return apiProjects.map((p) => ({
+        id: p.id,
+        slug: p.slug || p.id,
+        title: p.title,
+        category: p.category || 'Projet',
+        shortPresentation: stripHtml(p.description),
+        imageUrl: p.featured_image || '/projects/mission5.jpg',
+        liveUrl: p.live_url || null,
+      }));
+    }
+
+    const apiSlugs = new Set(apiProjects.map((p) => p.slug));
+    const apiTitles = new Set(apiProjects.map((p) => (p.title || '').toLowerCase().trim()));
+    const demosOnly = demos.filter(
+      (d) => !apiSlugs.has(d.slug) && !apiTitles.has(d.title.toLowerCase().trim())
+    );
+
+    const merged = [
+      ...apiProjects.map((p) => ({
+        id: p.id,
+        slug: p.slug || p.id,
+        title: p.title,
+        category: p.category || 'Projet',
+        shortPresentation: stripHtml(p.description),
+        imageUrl: p.featured_image || '/projects/mission5.jpg',
+        liveUrl: p.live_url || null,
+      })),
+      ...demosOnly,
+    ];
+
+    return merged.slice(0, 6);
+  }, [apiProjects, t, i18n.language]);
+
   return (
-    <div className="min-h-screen bg-white text-foreground transition-colors duration-300 dark:bg-background">
-      {/* Hero : même fond que la section Mission/Vision (À propos) = --background ; voile au-dessus de la vidéo */}
+    <div className="relative min-h-screen text-foreground transition-colors duration-300">
+      {/* Hero */}
       <section
-        className="relative min-h-[90vh] flex items-center overflow-hidden bg-white pt-6 md:pt-10 dark:bg-transparent"
+        className="relative min-h-[95vh] flex items-center overflow-hidden bg-transparent pt-32 md:pt-40"
         ref={heroRef}
       >
         <div className="absolute inset-0 overflow-hidden">
           <iframe
             src="https://www.youtube.com/embed/3Lp9Zj2tSRo?autoplay=1&mute=1&loop=1&controls=0&playlist=3Lp9Zj2tSRo&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1&rel=0&fs=0"
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[130%] min-h-full w-[177.78%] min-w-full max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[140%] md:w-[180%]"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[150%] min-h-full w-[177.78%] min-w-full max-w-none -translate-x-1/2 -translate-y-1/2 md:h-[150%] md:w-[200%] opacity-80 mix-blend-luminosity"
             allow="autoplay; encrypted-media"
             title="Ynuka Labs"
             tabIndex={-1}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-950/35 dark:from-blue-900/80 dark:via-blue-800/70 dark:to-indigo-900/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0f2848]/60 via-[#0f2847]/40 to-[#0c2646]/90" />
         </div>
-        
-        <Container className="relative z-10 text-center">
-          <div className="hero-decoration mb-8 inline-flex items-center rounded-full border border-white/30 bg-white/20 px-6 py-3 text-sm font-medium backdrop-blur-md">
-            <span className="text-blue-300">{t("hero.badge")}</span>
+
+        <Container className="relative z-10 w-full">
+          <div className="flex flex-col items-center justify-center text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-8 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-6 py-2.5 text-[0.9rem] font-medium text-white/90 backdrop-blur-md shadow-sm"
+            >
+              Hub d'Innovation Web3 : Afrique Centrale
+            </motion.div>
+
+            <h1
+              ref={titleRef}
+              className="font-display text-[clamp(3.5rem,8vw,6.5rem)] leading-[1.1] tracking-tight font-extrabold text-white mb-6"
+            >
+              Ynuka <span className="text-[#ffb800]">Labs</span>
+            </h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="font-sans text-[clamp(1.1rem,2vw,1.25rem)] font-normal text-white/90 max-w-4xl mb-12 leading-relaxed"
+            >
+              Former la prochaine génération de builders blockchain en RDC à travers l'éducation, l'incubation et la communauté.
+            </motion.p>
+
+            <div
+              ref={buttonsRef}
+              className="flex flex-col sm:flex-row gap-5 justify-center w-full sm:w-auto"
+            >
+              <ModernButton
+                variant="primary"
+                size="lg"
+                href="/about"
+                className="!bg-[#ffb800] !text-[#0a1128] font-bold shadow-[0_0_40px_-10px_rgba(255,184,0,0.5)] hover:shadow-[0_0_60px_-10px_rgba(255,184,0,0.7)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] px-8 py-4 h-auto rounded-xl text-[1.05rem]"
+              >
+                Découvrir Ynuka Labs
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </ModernButton>
+
+              <ModernButton
+                variant="outline"
+                size="lg"
+                href="/community"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-md font-semibold px-8 py-4 h-auto transition-all duration-300 hover:-translate-y-1 rounded-xl text-[1.05rem]"
+              >
+                Rejoindre la communauté
+              </ModernButton>
+            </div>
           </div>
-          
-          <h1 
-            ref={titleRef}
-            className="typo-display mb-6 overflow-hidden text-white"
-          >
-            <span className="text-white">Ynuka </span>
-            <span className="text-[#ffb800]">Labs</span>
-          </h1>
-          
-          <p className="typo-lead mx-auto mb-10 max-w-4xl text-white/90">
-            <span className="text-blue-300">{t("hero.subtitle")}</span>
-          </p>
-          
-          <div 
-            ref={buttonsRef}
-            className="flex flex-col sm:flex-row gap-6 justify-center"
-          >
+        </Container>
+      </section>
+
+      {/* Section About Ynuka (Transparente sans fond) */}
+      <section className="py-10 md:py-16 relative z-10 text-white">
+        <Container>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* Colonne gauche : Grille d'images */}
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-4 lg:gap-6">
+                {/* Image 1 (verticale) + Box */}
+                <div className="flex flex-col gap-4 lg:gap-6">
+                  <div className="w-full h-[300px] lg:h-[400px] rounded-2xl overflow-hidden relative shadow-lg">
+                    <img
+                      src="/assets-about/about.jpg"
+                      alt="About Ynuka Labs"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="rounded-2xl border border-white/20 bg-white/5 backdrop-blur-md p-6 flex flex-col items-center justify-center text-center shadow-lg">
+                    <span className="text-4xl font-extrabold text-[#ffb800] mb-1">5+</span>
+                    <span className="text-sm font-medium text-white/80 uppercase tracking-widest">Années d'Expertise</span>
+                  </div>
+                </div>
+                {/* Images 2 et 3 (empilées) */}
+                <div className="flex flex-col gap-4 lg:gap-6 pt-8 lg:pt-12">
+                  <div className="w-full h-[200px] lg:h-[240px] rounded-2xl overflow-hidden relative shadow-lg">
+                    <img
+                      src="/assets-about/vision-computer.jpg"
+                      alt="Vision"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="w-full h-[200px] lg:h-[240px] rounded-2xl overflow-hidden relative shadow-lg">
+                    <img
+                      src="/hero-bg.jpg"
+                      alt="Team"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Colonne droite : Texte */}
+            <div className="flex flex-col">
+              <span className="text-[#ffb800] text-sm font-bold uppercase tracking-widest mb-4">
+                À propos de Ynuka Labs
+              </span>
+              <h2 className="font-display text-[clamp(1.8rem,4vw,2.5rem)] leading-tight font-extrabold mb-6">
+                Ynuka Labs imagine un avenir où la technologie devient un véritable moteur de transformation.
+              </h2>
+              <p className="text-white/80 text-lg leading-relaxed mb-8">
+                Nous réunissons innovation, Web3, données et créativité pour aider les organisations et les communautés à relever les défis de demain et à créer de nouvelles opportunités.
+              </p>
+
+              <div>
+                <ModernButton
+                  variant="primary"
+                  size="lg"
+                  href="/about"
+                  className="!bg-[#ffb800] !text-[#0a1128] font-bold shadow-[0_0_20px_-5px_rgba(255,184,0,0.4)] hover:!bg-[#ffb800]/90 transition-all rounded-xl px-8 py-3 h-auto"
+                >
+                  En savoir plus
+                </ModernButton>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Section Réalisations en chiffres (Floating Pill Bar) */}
+      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 my-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-[#0f2847]/95 backdrop-blur-xl rounded-[2rem] p-4 md:p-6 flex flex-col md:flex-row justify-between items-stretch shadow-[0_20px_50px_-12px_rgba(15,40,71,0.5)] border border-blue-400/20"
+        >
+          {[
+            { icon: Users, value: "500+", label: "Membres de la communauté" },
+            { icon: Calendar, value: "30+", label: "Événements organisés" },
+            { icon: Rocket, value: "15+", label: "Projets incubés" },
+            { icon: Trees, value: "10000+", label: "Arbres plantés" },
+          ].map((stat, i) => (
+            <div key={i} className="flex flex-col md:flex-row w-full md:flex-1 items-center">
+              {i !== 0 && (
+                <>
+                  <div className="w-full h-px bg-blue-400/10 md:hidden my-2" />
+                  <div className="hidden md:block w-px h-12 bg-blue-400/10" />
+                </>
+              )}
+              <div className="group flex items-center gap-5 py-3 md:py-2 px-2 md:px-6 w-full flex-1 justify-center md:justify-start transition-all hover:bg-white/5 rounded-2xl">
+                <div className="flex-shrink-0 w-14 h-14 rounded-full bg-white/5 flex items-center justify-center transition-transform group-hover:scale-110">
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white mb-1 leading-none tracking-tight">{stat.value}</div>
+                  <div className="text-xs lg:text-sm text-blue-200/80 font-medium">{stat.label}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Section Solutions / Projets Phares */}
+      <section className="py-10 md:py-16 relative z-10 text-white">
+        <Container>
+          <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12">
+            <h2 className="font-display text-[clamp(2.5rem,4vw,3.5rem)] leading-tight font-extrabold mb-4 sm:mb-6">
+              Des solutions pour la communauté
+            </h2>
+            <p className="text-white/80 text-base md:text-lg leading-relaxed">
+              Découvrez nos projets phares qui offrent des réponses concrètes aux besoins de la communauté.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {showcaseProjects.map((project) => (
+              <div
+                key={project.id || project.slug}
+                className="bg-[#0f2847]/80 backdrop-blur-md rounded-2xl overflow-hidden shadow-xl flex flex-col group border border-white/10 transition-all hover:bg-[#0f2847] hover:border-white/25 hover:-translate-y-1"
+              >
+                <Link to={`/projects/${project.slug}`} className="block h-56 overflow-hidden relative bg-slate-900">
+                  <img
+                    src={project.imageUrl || '/projects/mission5.jpg'}
+                    alt={project.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+                </Link>
+                <div className="p-6 md:p-8 flex flex-col flex-1">
+                  <div className="bg-blue-500/20 text-blue-300 text-[0.65rem] font-bold uppercase tracking-widest py-1.5 px-3.5 rounded-full self-start mb-4 border border-blue-400/20">
+                    {project.category}
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-extrabold text-white mb-3 leading-snug group-hover:text-[#ffb800] transition-colors">
+                    <Link to={`/projects/${project.slug}`}>
+                      {project.title}
+                    </Link>
+                  </h3>
+                  <p className="text-white/80 text-sm leading-relaxed flex-1 line-clamp-3">
+                    {project.shortPresentation}
+                  </p>
+                  <div className="mt-6 pt-2">
+                    <Link
+                      to={`/projects/${project.slug}`}
+                      className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[0.8rem] font-bold transition-all flex items-center justify-center gap-2 group-hover:bg-[#ffb800] group-hover:text-[#0f2847] group-hover:border-[#ffb800]"
+                    >
+                      Voir le projet <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
             <ModernButton
               variant="primary"
-              size="lg"
-              href="/about"
-              className="!bg-[#ffb800] !text-[#111111] shadow-none hover:shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:brightness-105 focus-visible:ring-2 focus-visible:ring-[#ffb800]/60"
+              href="/projects"
+              className="rounded-xl bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
             >
-              {t("home.discoverCta")}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </ModernButton>
-            
-            <ModernButton variant="outline" size="lg" href="/community" className="bg-white/20 border-white/30 text-white hover:bg-white/30">
-              {t("hero.joinBtn")}
+              Découvrir tous les projets
+              <ArrowRight className="ml-2 h-4 w-4" />
             </ModernButton>
           </div>
         </Container>
       </section>
 
-      {/* Un seul fond continu (thème) : mission / visuels → impacts → blog */}
-      <div>
-      {/* About */}
-      <ModernSectionWrapper className="py-16 md:py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="grid items-center gap-8 lg:grid-cols-12 lg:gap-10"
-        >
-          <div className="lg:col-span-6">
-            <div className="relative w-full">
-              <div className="mission-visual-grid">
-                <span className="mission-visual-blob mission-visual-blob--tr" aria-hidden />
-                <span className="mission-visual-blob mission-visual-blob--bl" aria-hidden />
-                {homeMosaicImages.map((src, i) => (
-                  <div key={src} className={`mission-visual-card mission-visual-${i + 1}`}>
-                    <img
-                      src={src}
-                      alt={t("home.innovationPhotoAlt")}
-                      loading={i === 0 ? "eager" : "lazy"}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="absolute right-3 top-3 z-20 inline-flex items-center gap-2 rounded-none bg-[#0f2847] px-3 py-2.5 text-white sm:right-4 sm:top-4 sm:px-3.5 sm:py-3">
-                <span className="text-[1.6rem] font-extrabold leading-none sm:text-[1.85rem]">+5</span>
-                <span className="max-w-[5.5rem] text-[0.65rem] font-semibold uppercase leading-tight tracking-wide text-white/95 sm:text-[0.7rem]">
-                  {t("home.yearsOfExistence")}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-start justify-center gap-5 lg:col-span-6">
-            <motion.ul
-              initial={{ opacity: 0, y: 22 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="w-full space-y-3"
-            >
-              {innovationPoints.map((point, i) => (
-                <motion.li
-                  key={point}
-                  initial={{ opacity: 0, x: 12 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.45, delay: i * 0.06 }}
-                  viewport={{ once: true }}
-                  className="flex gap-3 text-[0.95rem] font-semibold leading-relaxed text-[#0f2847] dark:text-[#dbeafe] sm:text-base md:text-[1.05rem]"
-                >
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#ffb800]" aria-hidden />
-                  <span>
-                    {i === 0 ? (
-                      <>
-                        <span className="text-[#ffb800]">Ynuka Labs</span>
-                        {point.replace(/^Ynuka Labs/, "")}
-                      </>
-                    ) : (
-                      point
-                    )}
-                  </span>
-                </motion.li>
-              ))}
-            </motion.ul>
-            <ModernButton
-              variant="primary"
-              href="/about"
-              className="!rounded-none !bg-[#ffb800] !text-[#111111] hover:brightness-105"
-            >
-              {t("home.learnMore")}
-            </ModernButton>
-          </div>
-        </motion.div>
-      </ModernSectionWrapper>
-
-      {/* Impacts — bandeau marine, grille type réalisations */}
-      <section className="bg-[#0f2847] py-16 text-white md:py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:grid-rows-2 md:auto-rows-fr md:min-h-[24rem] md:gap-5">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              viewport={{ once: true, margin: "-40px" }}
-              className="flex items-center md:col-span-5"
-            >
-              <h2 className="impact-title max-w-[18ch] font-display text-white">
-                <span className="block">{t("home.statsImpactPart1")}</span>
-                <span className="mt-2 block text-[#ffb800]">{t("home.statsImpactPart2")}</span>
-              </h2>
-            </motion.div>
-
-            <div className="grid grid-cols-1 gap-4 md:col-span-7 md:grid-cols-2 md:gap-5">
-              <ImpactStatCard
-                value={15}
-                suffix="+"
-                label={t("stats.projects")}
-                points={projectPoints}
-                delay={0.05}
-                locale={impactLocale}
-              />
-              <ImpactStatCard
-                value={500}
-                suffix="+"
-                label={t("stats.members")}
-                points={memberPoints}
-                delay={0.1}
-                locale={impactLocale}
-              />
-            </div>
-
-            <div className="md:col-span-4">
-              <ImpactStatCard
-                value={10000}
-                suffix="+"
-                label={t("stats.treesPlanted")}
-                points={treePoints}
-                delay={0.12}
-                locale={impactLocale}
-              />
-            </div>
-
-            <div className="md:col-span-4">
-              <ImpactStatCard
-                value={30}
-                suffix="+"
-                label={t("stats.events")}
-                points={eventPoints}
-                delay={0.16}
-                locale={impactLocale}
-              />
-            </div>
-
-            <motion.article
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              viewport={{ once: true, margin: "-40px" }}
-              className="h-full md:col-span-4"
-            >
-              <div
-                style={{ animationDelay: "0.85s" }}
-                className="impact-card flex h-full items-center justify-center rounded-card border border-[#ffb800]/40 bg-[#ffb800]/[0.08] px-6 py-6 text-center md:px-7 md:py-7"
-              >
-                <p className="typo-lead mx-auto max-w-[20ch] text-pretty text-center leading-snug text-white">
-                  {t("home.statsTagline")}
-                </p>
-              </div>
-            </motion.article>
-          </div>
-        </div>
-      </section>
-
-      {/* Projects — uniquement ceux flagués show_on_home par l'admin */}
-      {displayHomeProjects.length > 0 && (
-      <ModernSectionWrapper className="py-16 md:py-20">
-        <div id="home-projects">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            viewport={{ once: true }}
-            className="mb-10 text-center md:mb-12"
-          >
-            <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
-              {t("home.projectsTitle")}
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-[#93c5fc]/80 md:text-lg">
-              {t("home.projectsSubtitle")}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {displayHomeProjects.map((project, i) => (
-              <HomeProjectCard key={`${project.name}-${i}`} project={project} delay={i * 0.06} />
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
-            <ModernButton
-              variant="primary"
-              href="/projects"
-              className="!rounded-none bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
-            >
-              {t("home.viewAllProjects")}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </ModernButton>
-          </div>
-        </div>
-      </ModernSectionWrapper>
-      )}
-
       {/* Events — compact editorial carousel */}
-      <ModernSectionWrapper className="py-16 md:py-20">
+      <ModernSectionWrapper className="py-10 md:py-14">
         <div id="upcoming-events" className="relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -753,7 +842,7 @@ const Index = () => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <div className="mb-10 text-left md:mb-12">
+            <div className="mb-8 text-left md:mb-10">
               <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
                 {t("home.upcomingTitle")}
               </h2>
@@ -767,11 +856,11 @@ const Index = () => {
               <p className="text-center text-muted-foreground">{t("home.noEvents")}</p>
             )}
 
-            <div className="mt-10 text-center">
+            <div className="mt-8 text-center">
               <ModernButton
                 variant="primary"
-                href="/events"
-                className="!rounded-none bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
+                href="/blockchains#events"
+                className="rounded-xl bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
               >
                 {t("home.viewAllEvents")}
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -785,20 +874,23 @@ const Index = () => {
       <OpportunitiesSection />
 
       {/* Actualités & Publications */}
-      <ModernSectionWrapper className="py-16 md:py-20">
+      <ModernSectionWrapper className="py-12 md:py-16 bg-white dark:bg-slate-900">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
           viewport={{ once: true }}
         >
-          <div className="mb-10 text-left md:mb-12">
-            <h2 className="text-3xl font-bold tracking-tight text-[#0f2847] dark:text-white md:text-4xl lg:text-[2.75rem]">
-              {t("home.latestBlogTitle")}
-            </h2>
-            <p className="mt-3 max-w-3xl text-justify text-base font-semibold leading-relaxed text-[#1e3a5f] dark:text-[#93c5fc] md:text-lg">
-              {t("home.latestBlogSubtitle")}
-            </p>
+          <div className="mb-10 border-b border-slate-200 dark:border-white/10 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="max-w-3xl">
+              <span className="text-[#ffb800] font-bold tracking-widest uppercase text-sm mb-4 block">Research & Insights</span>
+              <h2 className="font-display text-[clamp(2.5rem,4vw,3.5rem)] font-extrabold uppercase tracking-tight text-[#0f2847] dark:text-white leading-[1.1]">
+                Ideas that <br /><span className="text-slate-400 dark:text-slate-500">Move Forward.</span>
+              </h2>
+            </div>
+            <ModernButton href="/blog" variant="outline" className="hidden md:flex rounded-full px-6 py-2 border-slate-300 dark:border-white/20 text-[#0f2847] dark:text-white font-semibold">
+              View all publications <ArrowUpRight className="ml-2 h-4 w-4" />
+            </ModernButton>
           </div>
 
           {blogPostsLoading && latestBlogPosts.length === 0 ? (
@@ -825,10 +917,10 @@ const Index = () => {
               const getDate = (post: HomeBlogPost, long = false) =>
                 post.created_at
                   ? new Date(post.created_at).toLocaleDateString(locale, {
-                      day: "numeric",
-                      month: long ? "long" : "short",
-                      year: "numeric",
-                    })
+                    day: "numeric",
+                    month: long ? "long" : "short",
+                    year: "numeric",
+                  })
                   : "";
               const getTags = (post: HomeBlogPost) =>
                 String(post.category || "")
@@ -940,10 +1032,6 @@ const Index = () => {
           )}
         </motion.div>
       </ModernSectionWrapper>
-
-      <ContactSection />
-      </div>
-
     </div>
   );
 };

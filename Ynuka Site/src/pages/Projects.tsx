@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Search } from "lucide-react";
-import { GithubLogo } from "@phosphor-icons/react";
+import { Search } from "lucide-react";
 import { fetchProjects } from "@/lib/api";
 import { DEMO_PROJECTS, USE_DEMO_PROJECTS } from "@/data/demoProjects";
+import { cn } from "@/lib/utils";
 
 const ALL_CATEGORY = "__all__";
-const FALLBACK_IMAGE = "/logo.png";
+const FALLBACK_IMAGE = "/mission5.jpg";
 const NAV_CATEGORIES = ["Education", "Environnement", "Blockchain"] as const;
 /** Même largeur / paddings que la barre de menu */
 const PAGE_SHELL =
@@ -54,12 +54,10 @@ function ProjectCard({
   project,
   delay,
   fallbackCategory,
-  labels,
 }: {
   project: ProjectShowcase;
   delay: number;
   fallbackCategory: string;
-  labels: { viewProject: string; viewGithub: string };
 }) {
   const categoryLabel = project.category || fallbackCategory;
   const detailHref = `/projects/${project.slug}`;
@@ -72,9 +70,9 @@ function ProjectCard({
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay }}
       viewport={{ once: true }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-card border border-[#0f2847]/12 bg-[#0f2847] transition-all duration-300 hover:border-[#ffb800]/70 dark:border-white/10 dark:hover:border-[#ffb800]/55"
+      className="group relative flex h-full flex-col"
     >
-      <Link to={detailHref} className="relative block aspect-[16/10] overflow-hidden bg-[#152a48] sm:aspect-[16/9]">
+      <Link to={detailHref} className="relative block aspect-[16/10] overflow-hidden rounded-2xl bg-slate-100 sm:aspect-[16/9]">
         <img
           src={project.imageUrl || FALLBACK_IMAGE}
           alt={project.title}
@@ -92,51 +90,21 @@ function ProjectCard({
             img.className = "absolute inset-0 m-auto h-10 w-10 object-contain opacity-50";
           }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f2847]/70 via-[#0f2847]/15 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-[#ffb800] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-        <span className="absolute left-0 top-3 inline-flex rounded-none bg-[#ffb800] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#0f2847]">
+        <span className="absolute bottom-3 left-3 inline-flex rounded-full bg-white/95 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-[#1554f6] shadow-sm">
           {categoryLabel}
         </span>
-
-        <div className="absolute inset-x-0 bottom-0 px-3 pb-3 pt-8">
-          <h3 className="font-display text-base font-bold leading-snug tracking-tight text-white transition-colors group-hover:text-[#ffb800] md:text-lg">
-            {project.title}
-          </h3>
-        </div>
       </Link>
 
-      <div className="flex flex-1 flex-col bg-white px-3 py-3 dark:bg-[#12253f]">
+      <div className="flex flex-1 flex-col px-1 pb-2 pt-3">
+        <Link to={detailHref} className="font-display text-base font-bold leading-[1.05] tracking-tight text-[#061a4b] transition-colors hover:text-[#1554f6] md:text-lg">
+          {project.title}
+        </Link>
         {project.shortPresentation ? (
-          <Link to={detailHref} className="line-clamp-2 flex-1 text-[0.78rem] leading-snug text-slate-600 hover:text-[#0f2847] dark:text-[#93c5fc]/85 dark:hover:text-white">
+          <Link to={detailHref} className="mt-2 line-clamp-2 flex-1 text-xs leading-relaxed text-slate-500 hover:text-[#061a4b]">
             {project.shortPresentation}
           </Link>
-        ) : (
-          <div className="flex-1" />
-        )}
-
-        <div className="mt-3 flex items-stretch gap-1.5">
-          <Link
-            to={detailHref}
-            className="inline-flex flex-1 items-center justify-center gap-1 rounded-none bg-[#ffb800] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#0f2847] transition-colors hover:bg-[#e6a600]"
-          >
-            {labels.viewProject}
-            <ArrowRight className="h-3 w-3" aria-hidden />
-          </Link>
-
-          {project.githubUrl ? (
-            <a
-              href={project.githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={labels.viewGithub}
-              title={labels.viewGithub}
-              className="inline-flex w-9 shrink-0 items-center justify-center rounded-none border border-[#0f2847]/15 bg-[#0f2847] text-white transition-colors hover:border-[#ffb800] hover:bg-[#173a62] dark:border-white/20"
-            >
-              <GithubLogo weight="fill" className="h-3.5 w-3.5" aria-hidden />
-            </a>
-          ) : null}
-        </div>
+        ) : null}
+        <span className="mt-3 text-[10px] font-medium text-slate-400">{categoryLabel}</span>
       </div>
     </motion.article>
   );
@@ -277,119 +245,240 @@ const Projects = () => {
 
   const emptyMessage = loadError
     ? t("projects.loadError", {
-        defaultValue: "Impossible de charger les projets. Vérifiez que l’admin API est accessible.",
-      })
+      defaultValue: "Impossible de charger les projets. Vérifiez que l’admin API est accessible.",
+    })
     : activeCategory !== ALL_CATEGORY && !searchQuery.trim()
       ? t("projects.emptyCategory")
       : t("projects.empty");
 
-  const cardLabels = {
-    viewProject: t("projects.viewProject"),
-    viewGithub: t("projects.viewGithub"),
+  const heroPills = [
+    { id: "web3", label: "Web 3" },
+    { id: "innovation", label: "Innovation" },
+    { id: "technologie", label: "Technologie" },
+    { id: "agriculture", label: "Agriculture" },
+    { id: "environnement", label: "Environnement" },
+  ];
+
+  const handlePillClick = (label: string) => {
+    const norm = normalizeText(label);
+    const foundCategory = categories.find((c) => normalizeText(c) === norm);
+    if (foundCategory) {
+      if (activeCategory === foundCategory) {
+        selectCategory(ALL_CATEGORY);
+      } else {
+        selectCategory(foundCategory);
+        setSearchQuery("");
+      }
+    } else {
+      if (normalizeText(searchQuery) === norm) {
+        setSearchQuery("");
+      } else {
+        setSearchQuery(label);
+        selectCategory(ALL_CATEGORY);
+      }
+    }
+
+    const target = document.getElementById("projects-list");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const isPillActive = (pill: (typeof heroPills)[0]) => {
+    const norm = normalizeText(pill.label);
+    return normalizeText(activeCategory) === norm || normalizeText(searchQuery) === norm;
   };
 
   return (
     <div>
-      <section
-        className="relative overflow-hidden py-20"
-        style={{
-          backgroundImage: "url('/projects/hero.webp')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/55" />
-        <div className={`relative z-10 text-center ${PAGE_SHELL}`}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="mb-4 font-display text-4xl font-bold text-[#ffb800] md:text-5xl">
+      <section className="relative overflow-hidden pb-6 pt-10 sm:pb-8 sm:pt-12">
+        <div className={`relative ${PAGE_SHELL}`}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+            className="mx-auto max-w-3xl text-center"
+          >
+            <h1 className="font-display text-4xl font-bold leading-[1.04] tracking-tight text-[#ead836] sm:text-[2.65rem] md:text-5xl">
               {t("projects.title")}
             </h1>
-            <p className="typo-lead mx-auto max-w-2xl text-white/90">{t("projects.subtitle")}</p>
+            <p className="typo-lead mx-auto mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
+              {t("projects.subtitle")}
+            </p>
           </motion.div>
+
+          <div className="relative left-1/2 mt-8 w-full max-w-[1100px] -translate-x-1/2 sm:mt-10">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: 22 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.12 }}
+              className="relative w-full"
+            >
+              {/* SVG Cutout ClipPath with clean rounded-xl geometry (R = 16px) */}
+              <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
+                <defs>
+                  <clipPath id="projects-hero-photo-cutout" clipPathUnits="objectBoundingBox">
+                    <path d="M 0.30 0 H 0.98 Q 1 0 1 0.04 V 0.46 Q 1 0.50 0.98 0.50 H 0.57 Q 0.55 0.50 0.55 0.54 V 0.96 Q 0.55 1 0.53 1 H 0.02 Q 0 1 0 0.96 V 0.42 Q 0 0.38 0.02 0.38 H 0.26 Q 0.28 0.38 0.28 0.34 V 0.04 Q 0.28 0 0.30 0 Z" />
+                  </clipPath>
+                </defs>
+              </svg>
+
+              {/* Main Photo with Cutout & rounded-xl */}
+              <div
+                className="relative z-0 aspect-[2/1] w-full overflow-hidden rounded-xl"
+                style={{ clipPath: "url(#projects-hero-photo-cutout)" }}
+              >
+                <img
+                  src="/projects/mtidano.jpg"
+                  alt=""
+                  className="h-full w-full object-cover object-center rounded-xl"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#1d496af7] via-[#0f3847]/40 to-[#0c2648] rounded-xl" />
+              </div>
+
+              {/* Top-Left Web3 Overlay Box */}
+              <motion.div
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.45, delay: 0.36 }}
+                className="absolute left-0 top-[3%] z-10 hidden w-[25%] rounded-xl bg-[#06051a] p-4 text-white md:block"
+              >
+                <p className="font-display text-[clamp(1.5rem,4.3vw,5rem)] font-bold leading-none">Web3</p>
+                <p className="mt-[clamp(0.35rem,1vw,1.25rem)] text-[clamp(0.5rem,0.85vw,0.9rem)] font-medium leading-snug text-white/70">
+                  {t("projects.heroWeb3")}
+                </p>
+              </motion.div>
+
+              {/* Bottom-Right Pill Buttons - Perfectly contained within the cutout area */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 md:absolute md:bottom-0 md:right-0 md:mt-0 md:h-[50%] md:w-[45%] md:flex-wrap md:content-center md:items-center md:justify-start md:gap-2 md:pl-6 md:pr-4 lg:gap-2.5 lg:pl-10 z-10"
+              >
+                {heroPills.map((pill) => {
+                  const active = isPillActive(pill);
+                  return (
+                    <button
+                      key={pill.id}
+                      type="button"
+                      onClick={() => handlePillClick(pill.label)}
+                      className={cn(
+                        "group inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-300 shadow-md cursor-pointer whitespace-nowrap",
+                        active
+                          ? "bg-[#ffb800] text-[#0f2847] shadow-[0_0_18px_rgba(255,184,0,0.5)] scale-105"
+                          : "border border-white/20 bg-[#0f2847]/85 text-white backdrop-blur-md hover:border-[#ffb800]/80 hover:bg-[#ffb800] hover:text-[#0f2847] hover:scale-105"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "h-2 w-2 rounded-full transition-colors shrink-0",
+                          active
+                            ? "bg-[#0f2847]"
+                            : "bg-[#ffb800] group-hover:bg-[#0f2847]"
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span>{pill.label}</span>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      <section className="relative border-t border-border/60 bg-gradient-to-b from-slate-50 via-white to-slate-50 py-12 dark:from-[#0a1628] dark:via-background dark:to-[#0a1628]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ffb800]/50 to-transparent" />
-        <div className={`relative ${PAGE_SHELL}`}>
-          <div className="mb-8 space-y-4 text-center">
-            <div className="flex flex-wrap justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => selectCategory(ALL_CATEGORY)}
-                className={`rounded-none px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all ${
-                  activeCategory === ALL_CATEGORY
-                    ? "bg-[#ffb800] text-[#0f2847]"
-                    : "border border-[#0f2847]/15 bg-white text-[#0f2847] hover:border-[#ffb800] dark:border-white/15 dark:bg-[#12253f] dark:text-white"
-                }`}
-              >
-                {t("projects.all")}
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => selectCategory(category)}
-                  className={`rounded-none px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all ${
-                    activeCategory === category
-                      ? "bg-[#ffb800] text-[#0f2847]"
-                      : "border border-[#0f2847]/15 bg-white text-[#0f2847] hover:border-[#ffb800] dark:border-white/15 dark:bg-[#12253f] dark:text-white"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative mx-auto max-w-xl">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("projects.searchPlaceholder")}
-                aria-label={t("projects.searchPlaceholder")}
-                className="w-full rounded-none border border-[#0f2847]/15 bg-white py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#ffb800]/35 dark:border-white/15 dark:bg-[#12253f]"
-              />
-            </div>
-          </div>
-
-          {loading ? (
-            <div
-              className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-              aria-busy="true"
-              aria-live="polite"
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse overflow-hidden rounded-card border border-[#0f2847]/10 bg-muted/50 dark:border-white/10"
-                >
-                  <div className="aspect-[16/10] bg-muted sm:aspect-[16/9]" />
-                  <div className="h-20 bg-muted/40" />
+      <section id="projects-list" className="relative scroll-mt-24 py-8 sm:py-12">
+        <div className={PAGE_SHELL}>
+          <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_14rem]">
+            <div>
+              <div className="mb-8 rounded-2xl border border-white/70 bg-white/45 p-4 text-left shadow-[0_12px_32px_rgba(6,26,75,0.07)] backdrop-blur-xl sm:p-5 dark:border-white/15 dark:bg-white/5">
+                <div className="flex flex-col gap-3 border-b border-[#0f2847]/10 pb-4 sm:flex-row sm:items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t("projects.searchPlaceholder")}
+                      aria-label={t("projects.searchPlaceholder")}
+                      className="w-full rounded-xl border border-[#0f2847]/15 bg-white/30 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#1554f6]/20 dark:border-white/15 dark:bg-white/5"
+                    />
+                  </div>
+                  <div className="inline-flex self-end rounded-xl border border-white/75 bg-white/25 p-1 text-xs font-semibold text-[#0f2847] shadow-sm sm:self-auto dark:border-white/15 dark:bg-white/5 dark:text-white">
+                    <span className="rounded-lg bg-white/65 px-3 py-1.5 text-[#1554f6]">▦ Grille</span>
+                    <span className="px-3 py-1.5 text-slate-400">☰ Liste</span>
+                  </div>
                 </div>
-              ))}
-              <span className="sr-only">{t("projects.loading")}</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((project, i) => (
-                <ProjectCard
-                  key={project.id || project.slug}
-                  project={project}
-                  delay={Math.min(i * 0.06, 0.3)}
-                  fallbackCategory={t("projects.fallbackCategory")}
-                  labels={cardLabels}
-                />
-              ))}
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="mr-1 text-xs font-semibold text-slate-500">Filtres :</span>
+                  <button type="button" onClick={() => selectCategory(ALL_CATEGORY)} className={`rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${activeCategory === ALL_CATEGORY ? "border-[#1554f6] text-[#1554f6]" : "border-[#0f2847]/15 text-[#0f2847] hover:border-[#1554f6]/50 dark:border-white/15 dark:text-white"}`}>
+                    {t("projects.all")}
+                  </button>
+                  {categories.map((category) => (
+                    <button key={category} type="button" onClick={() => selectCategory(category)} className={`rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${activeCategory === category ? "border-[#1554f6] text-[#1554f6]" : "border-[#0f2847]/15 text-[#0f2847] hover:border-[#1554f6]/50 dark:border-white/15 dark:text-white"}`}>
+                      {category}
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => { setSearchQuery(""); selectCategory(ALL_CATEGORY); }} className="px-2 py-2 text-xs font-medium text-[#1554f6]">Réinitialiser</button>
+                  <span className="ml-auto py-2 text-xs text-slate-400">{filteredProjects.length} projet{filteredProjects.length > 1 ? "s" : ""} trouvé{filteredProjects.length > 1 ? "s" : ""}</span>
+                </div>
+              </div>
 
-              {filteredProjects.length === 0 && (
-                <div className="rounded-card border border-border/70 bg-card/60 p-5 text-center text-muted-foreground sm:col-span-2 lg:col-span-3">
-                  {emptyMessage}
+              {loading ? (
+                <div
+                  className="grid grid-cols-1 gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3"
+                  aria-busy="true"
+                  aria-live="polite"
+                >
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="animate-pulse"
+                    >
+                      <div className="aspect-[16/10] rounded-2xl bg-muted/60 sm:aspect-[16/9]" />
+                      <div className="mt-3 h-12 rounded bg-muted/40" />
+                    </div>
+                  ))}
+                  <span className="sr-only">{t("projects.loading")}</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredProjects.map((project, i) => (
+                    <ProjectCard
+                      key={project.id || project.slug}
+                      project={project}
+                      delay={Math.min(i * 0.06, 0.3)}
+                      fallbackCategory={t("projects.fallbackCategory")}
+                    />
+                  ))}
+
+                  {filteredProjects.length === 0 && (
+                    <div className="rounded-2xl border border-[#061a4b]/10 p-5 text-center text-muted-foreground sm:col-span-2 lg:col-span-3">
+                      {emptyMessage}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+
+            <aside className="space-y-4 xl:sticky xl:top-24">
+              <div className="rounded-2xl border border-[#ffb800]/45 p-5 text-[#061a4b]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#ffb800] text-base">ϟ</span>
+                <h2 className="mt-3 font-display text-lg font-bold">Vous avez un projet ?</h2>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">Nous sommes là pour vous accompagner et créer des solutions utiles pour votre communauté.</p>
+                <Link to="/services" className="mt-5 block rounded-xl bg-[#ffb800] px-3 py-3 text-center text-xs font-bold text-[#061a4b]">Découvrir nos services</Link>
+              </div>
+              <div className="rounded-2xl border border-[#1554f6]/20 p-5 text-[#061a4b]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#1554f6]/20 text-sm text-[#1554f6]">♧</span>
+                <h2 className="mt-3 font-display text-lg font-bold">Parlez à nos experts</h2>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">Laissez-nous un message pour prendre rendez-vous avec nous.</p>
+                <Link to="/contact" className="mt-5 block rounded-xl border border-[#061a4b] px-3 py-3 text-center text-xs font-bold text-[#061a4b]">Prendre rendez-vous</Link>
+              </div>
+            </aside>
+          </div>
         </div>
       </section>
     </div>
