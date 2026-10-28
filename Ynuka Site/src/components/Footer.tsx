@@ -23,10 +23,10 @@ const Footer = () => {
       order: 0,
       items: [
         { labelKey: "nav.about", path: "/about" },
-        { labelKey: "nav.events", path: "/events" },
+        { labelKey: "nav.events", path: "/blockchains#events" },
         { labelKey: "nav.projects", path: "/projects" },
         { labelKey: "nav.gallery", path: "/resources#gallery" },
-        { labelKey: "nav.community", path: "/community" },
+        { labelKey: "nav.community", path: "/blockchains#community" },
         { labelKey: "nav.support", path: "/soutenir" },
       ],
     },
@@ -34,8 +34,9 @@ const Footer = () => {
       labelKey: "footer.resources",
       order: 1,
       items: [
-        { labelKey: "nav.blog", path: "/resources#blog" },
         { labelKey: "nav.educationalContent", path: "/resources#education" },
+        { labelKey: "nav.blog", path: "/resources#blog" },
+        { labelKey: "nav.gallery", path: "/resources#gallery" },
         { labelKey: "nav.contact", path: "/contact" },
       ],
     },

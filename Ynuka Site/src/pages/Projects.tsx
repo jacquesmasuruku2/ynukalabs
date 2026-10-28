@@ -96,7 +96,7 @@ function ProjectCard({
       </Link>
 
       <div className="flex flex-1 flex-col px-1 pb-2 pt-3">
-        <Link to={detailHref} className="font-display text-base font-bold leading-[1.05] tracking-tight text-[#061a4b] transition-colors hover:text-[#1554f6] md:text-lg">
+        <Link to={detailHref} className="font-display text-base font-bold leading-[1.05] tracking-tight text-[#e6e7ea] transition-colors hover:text-[#1554f6] md:text-lg">
           {project.title}
         </Link>
         {project.shortPresentation ? (
@@ -252,11 +252,18 @@ const Projects = () => {
       : t("projects.empty");
 
   const heroPills = [
-    { id: "web3", label: "Web 3" },
-    { id: "innovation", label: "Innovation" },
     { id: "technologie", label: "Technologie" },
+    { id: "web3", label: "Web3" },
     { id: "agriculture", label: "Agriculture" },
+    { id: "agroecologie", label: "Agroécologie" },
+    { id: "blockchain", label: "Blockchain" },
+    { id: "agriculture-durable", label: "Agriculture durable" },
     { id: "environnement", label: "Environnement" },
+    { id: "intelligence-artificielle", label: "Intelligence artificielle" },
+    { id: "energies-renouvelables", label: "Énergies renouvelables" },
+    { id: "education-numerique", label: "Éducation numérique" },
+    { id: "developpement-durable", label: "Développement durable" },
+
   ];
 
   const handlePillClick = (label: string) => {
@@ -299,7 +306,7 @@ const Projects = () => {
             transition={{ duration: 0.55 }}
             className="mx-auto max-w-3xl text-center"
           >
-            <h1 className="font-display text-4xl font-bold leading-[1.04] tracking-tight text-[#ead836] sm:text-[2.65rem] md:text-5xl">
+            <h1 className="font-display text-4xl font-bold leading-[1.04] tracking-tight text-[#ead836] sm:text-[2.65rem] md:text-6xl">
               {t("projects.title")}
             </h1>
             <p className="typo-lead mx-auto mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
@@ -355,7 +362,7 @@ const Projects = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 md:absolute md:bottom-0 md:right-0 md:mt-0 md:h-[50%] md:w-[45%] md:flex-wrap md:content-center md:items-center md:justify-start md:gap-2 md:pl-6 md:pr-4 lg:gap-2.5 lg:pl-10 z-10"
+                className="mt-6 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 sm:gap-x-2.5 sm:gap-y-2.5 md:absolute md:bottom-0 md:right-0 md:mt-0 md:h-[50%] md:w-[45%] md:content-center md:items-center md:gap-x-2 md:gap-y-2 md:pl-6 md:pr-4 lg:gap-x-2.5 lg:pl-10 z-10"
               >
                 {heroPills.map((pill) => {
                   const active = isPillActive(pill);
@@ -465,17 +472,17 @@ const Projects = () => {
             </div>
 
             <aside className="space-y-4 xl:sticky xl:top-24">
-              <div className="rounded-2xl border border-[#ffb800]/45 p-5 text-[#061a4b]">
+              <div className="rounded-2xl border border-[#ffb800]/45 p-5 text-[#2953bc]">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#ffb800] text-base">ϟ</span>
                 <h2 className="mt-3 font-display text-lg font-bold">Vous avez un projet ?</h2>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">Nous sommes là pour vous accompagner et créer des solutions utiles pour votre communauté.</p>
-                <Link to="/services" className="mt-5 block rounded-xl bg-[#ffb800] px-3 py-3 text-center text-xs font-bold text-[#061a4b]">Découvrir nos services</Link>
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">Nous sommes là pour vous accompagner et créer des solutions utiles pour votre communauté.</p>
+                <Link to="/about#services" className="mt-5 block rounded-xl bg-[#ffb800] px-3 py-3 text-center text-xs font-bold text-[#061a4b]">Découvrir nos services</Link>
               </div>
-              <div className="rounded-2xl border border-[#1554f6]/20 p-5 text-[#061a4b]">
+              <div className="rounded-2xl border border-[#1554f6]/20 p-5 text-[#2b56c3]">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#1554f6]/20 text-sm text-[#1554f6]">♧</span>
                 <h2 className="mt-3 font-display text-lg font-bold">Parlez à nos experts</h2>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">Laissez-nous un message pour prendre rendez-vous avec nous.</p>
-                <Link to="/contact" className="mt-5 block rounded-xl border border-[#061a4b] px-3 py-3 text-center text-xs font-bold text-[#061a4b]">Prendre rendez-vous</Link>
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">Laissez-nous un message pour prendre rendez-vous avec nous.</p>
+                <Link to="/contact" className="mt-5 block rounded-xl border border-[#ffb800] px-3 py-3 text-center text-xs font-bold text-[#2f5fd8]">Prendre rendez-vous</Link>
               </div>
             </aside>
           </div>

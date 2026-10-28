@@ -150,7 +150,7 @@ function OpportunityCard({
           </div>
 
           <div className="mt-auto pt-3">
-            <span className="inline-flex w-full items-center justify-center bg-[#ffb800] px-3 py-2 text-[0.8rem] font-bold text-[#0f2847] hover:bg-[#e6a600]">
+            <span className="inline-flex w-full items-center justify-center rounded-lg bg-[#ffb800] px-3 py-2 text-[0.8rem] font-bold text-[#0f2847] transition-colors hover:bg-[#e6a600]">
               {ctaLabel}
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </span>

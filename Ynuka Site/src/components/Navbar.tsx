@@ -158,8 +158,8 @@ const Navbar = () => {
     {
       label: "nav.resources",
       items: [
-        { key: "blog", path: "/resources#blog" },
         { key: "educationalContent", path: "/resources#education" },
+        { key: "blog", path: "/resources#blog" },
         { key: "gallery", path: "/resources#gallery" },
       ],
     },
@@ -196,8 +196,8 @@ const Navbar = () => {
 
         if (normalizedLabel.includes("resource") || normalizedLabel.includes("ressource")) {
           items = [
-            { key: "blog", path: "/resources#blog" },
             { key: "educationalContent", path: "/resources#education" },
+            { key: "blog", path: "/resources#blog" },
             { key: "gallery", path: "/resources#gallery" },
           ];
         }
@@ -336,8 +336,8 @@ const Navbar = () => {
           {
             label: "nav.resources",
             items: [
-              { key: "blog", path: "/resources#blog" },
               { key: "educationalContent", path: "/resources#education" },
+              { key: "blog", path: "/resources#blog" },
               { key: "gallery", path: "/resources#gallery" },
             ],
           },

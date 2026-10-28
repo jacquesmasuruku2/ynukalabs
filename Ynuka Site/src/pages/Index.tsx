@@ -159,6 +159,16 @@ const Index = () => {
       <SectionWrapper padding="xl" className="relative overflow-hidden">
         <div className="absolute inset-0 hero-gradient" />
         <div className="absolute inset-0 grid-pattern opacity-30" />
+        <motion.div
+          aria-hidden
+          initial={{ y: 0, opacity: 0 }}
+          animate={{ y: "100cqh", opacity: [0, 0.8, 0] }}
+          transition={{
+            y: { type: "spring", bounce: 0.4, duration: 0.5 },
+            opacity: { duration: 0.5, times: [0, 0.12, 1] },
+          }}
+          className="square pointer-events-none absolute left-[12%] top-0 z-[1] h-3 w-3 rotate-45 border border-primary/60 bg-primary/20 shadow-[0_0_22px_rgba(255,184,0,0.55)]"
+        />
         
         <div className="relative z-10">
           <motion.div {...heroVariants} className="max-w-4xl mx-auto text-center">

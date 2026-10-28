@@ -122,6 +122,20 @@ const ImpactStatCard = ({
   );
 };
 
+const HomeStatCounter = ({ value, suffix }: { value: number; suffix: string }) => {
+  const { count, elementRef } = useCountUp({
+    end: value,
+    duration: 4800,
+    startOnView: true,
+  });
+
+  return (
+    <div ref={elementRef} className="text-2xl font-extrabold leading-none tracking-tight text-white lg:text-3xl" aria-label={`${value}${suffix}`}>
+      {count.toLocaleString("fr-FR")}{suffix}
+    </div>
+  );
+};
+
 type HomeProject = {
   name: string;
   category: string;
@@ -525,7 +539,7 @@ const Index = () => {
     loadProjects();
   }, [t]);
 
-  const [apiProjects, setApiProjects] = useState<any[]>([]);
+  const [apiProjects, setApiProjects] = useState<Awaited<ReturnType<typeof fetchProjects>>>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -742,10 +756,10 @@ const Index = () => {
           className="bg-[#0f2847]/95 backdrop-blur-xl rounded-[2rem] p-4 md:p-6 flex flex-col md:flex-row justify-between items-stretch shadow-[0_20px_50px_-12px_rgba(15,40,71,0.5)] border border-blue-400/20"
         >
           {[
-            { icon: Users, value: "500+", label: "Membres de la communauté" },
-            { icon: Calendar, value: "30+", label: "Événements organisés" },
-            { icon: Rocket, value: "15+", label: "Projets incubés" },
-            { icon: Trees, value: "10000+", label: "Arbres plantés" },
+            { icon: Users, value: 500, suffix: "+", label: "Membres de la communauté" },
+            { icon: Calendar, value: 30, suffix: "+", label: "Événements organisés" },
+            { icon: Rocket, value: 15, suffix: "+", label: "Projets incubés" },
+            { icon: Trees, value: 10000, suffix: "+", label: "Arbres plantés" },
           ].map((stat, i) => (
             <div key={i} className="flex flex-col md:flex-row w-full md:flex-1 items-center">
               {i !== 0 && (
@@ -759,7 +773,7 @@ const Index = () => {
                   <stat.icon className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white mb-1 leading-none tracking-tight">{stat.value}</div>
+                  <HomeStatCounter value={stat.value} suffix={stat.suffix} />
                   <div className="text-xs lg:text-sm text-blue-200/80 font-medium">{stat.label}</div>
                 </div>
               </div>

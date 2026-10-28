@@ -791,7 +791,7 @@ const About = () => {
                     aria-label={`${t("partners.visit")} — ${partner.name}`}
                   >
                     <div className="flex h-[80px] w-[220px] items-center gap-4 rounded-2xl border border-white/10 bg-[#181a20]/60 backdrop-blur-md px-5 transition-all hover:bg-white/10 hover:scale-105 hover:border-white/20">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white p-2 shadow-sm">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center">
                         <img
                           src={partner.logo}
                           alt={partner.name}
