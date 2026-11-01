@@ -2,7 +2,7 @@ name: Deploy Ynuka Site
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
     paths:
       - 'Ynuka Site/**'
       - '.github/workflows/deploy-site.yml'
@@ -43,6 +43,7 @@ jobs:
           ls -la deploy_site/
 
       - name: Deploy to Interserver
+        if: github.ref == 'refs/heads/main'
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -54,6 +55,7 @@ jobs:
           overwrite: true
 
       - name: Verify deployment
+        if: github.ref == 'refs/heads/main'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -62,21 +64,14 @@ jobs:
           script: |
             echo "✓ Ynuka Site deployment started"
             SITE_DIR="domains/ynukalabs.com/public_html"
-            
-            # Fix permissions
+
             chmod 755 "$SITE_DIR"
             chmod 644 "$SITE_DIR/index.html"
             chmod -R 755 "$SITE_DIR/api" 2>/dev/null || true
             chmod -R 644 "$SITE_DIR/api"/* 2>/dev/null || true
             chmod -R 755 "$SITE_DIR/assets" 2>/dev/null || true
             chmod -R 644 "$SITE_DIR/assets"/* 2>/dev/null || true
-            
-            # Verify critical files exist
-            echo "✓ Verifying deployment files:"
+
             ls -lh "$SITE_DIR/index.html"
-            echo "✓ Checking API directory:"
             ls -la "$SITE_DIR/api/" | head -5
-            echo "✓ Testing API endpoint:"
-            curl -s https://ynukalabs.com/api/api.php?action=ping | head -c 100
-            echo ""
             echo "✓ Ynuka Site deployed successfully to $SITE_DIR"
