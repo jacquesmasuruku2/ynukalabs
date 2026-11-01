@@ -111,7 +111,7 @@ const ContactSection = ({ initialSubject = "" }: ContactSectionProps) => {
     "w-full border-0 border-b border-slate-300 bg-transparent px-0 py-3 text-base text-[#0f2847] placeholder:text-slate-400 focus:border-[#ffb800] focus:outline-none focus:ring-0 dark:border-white/20 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-[#ffb800]";
 
   return (
-    <ModernSectionWrapper className="py-16 md:py-20">
+    <ModernSectionWrapper className="py-10 md:py-14">
       <div id="contact" className="scroll-mt-24">
         <motion.div
           initial={{ opacity: 0, y: 18 }}

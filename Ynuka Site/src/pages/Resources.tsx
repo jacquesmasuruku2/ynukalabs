@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import BlogPostsSection from "@/components/BlogPostsSection";
-import DocumentationGridSection from "@/components/DocumentationGridSection";
+import { LearningCatalogSection } from "@/components/LearningCatalogSection";
 import { fetchGalleryEvents } from "@/lib/api";
 
 const RESOURCES_GALLERY_BASE_PATH = "/resources/gallery";
@@ -100,23 +100,23 @@ const Resources = () => {
   }, [location.hash, location.pathname]);
 
   return (
-    <div className="min-h-screen bg-background pt-20">
-      <section className="hero-gradient py-14 md:py-16">
+    <div className="min-h-screen bg-background pt-8">
+      <section className="py-10 md:py-14">
         <div className={`${PAGE_SHELL} text-center`}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="mb-3 font-display text-4xl font-bold md:text-5xl">
-              <span className="gradient-text">{t("resources.title")}</span>
+            <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-[#ffb800]">Ynuka Learning</p>
+            <h1 className="mb-3 mt-3 font-display text-6xl font-bold md:text-5xl">
+              {t("resources.title")}
             </h1>
             <p className="typo-lead mx-auto max-w-2xl text-muted-foreground">{t("resources.subtitle")}</p>
           </motion.div>
         </div>
       </section>
 
+      <LearningCatalogSection />
+
       {/* Blog */}
       <BlogPostsSection />
-
-      {/* Contenus éducatifs */}
-      <DocumentationGridSection />
 
       {/* Galerie */}
       <section id="gallery" className="scroll-mt-24 border-t border-border py-16 md:py-20">

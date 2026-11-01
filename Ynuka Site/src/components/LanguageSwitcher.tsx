@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { GlobeSimple } from "@phosphor-icons/react";
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
@@ -25,8 +26,9 @@ const LanguageSwitcher = () => {
   return (
     <button
       onClick={toggle}
-      className="typo-label rounded-lg border border-black/10 bg-white px-3 py-1.5 text-foreground transition-colors hover:border-[#ffb800]/50 hover:text-primary dark:border-white/20 dark:bg-transparent"
+      className="typo-label inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-foreground transition-colors hover:border-[#ffb800]/50 hover:text-primary dark:border-white/20 dark:bg-transparent"
     >
+      <GlobeSimple className="h-3.5 w-3.5" weight="bold" aria-hidden="true" />
       {currentLang.startsWith("en") ? "FR" : "EN"}
     </button>
   );

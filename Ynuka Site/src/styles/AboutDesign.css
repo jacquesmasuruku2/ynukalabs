@@ -112,14 +112,14 @@
 
 /* Section Styles */
 .about-section {
-  padding: 96px 24px;
+  padding: 54px 24px;
   background: var(--dark-bg);
   position: relative;
 }
 
 /* Conservé pour compat : même surface que .about-section (plus de bande grise) */
 .about-section-light {
-  padding: 96px 24px;
+  padding: 54px 24px;
   background: var(--dark-bg);
   position: relative;
 }
@@ -441,14 +441,11 @@
 .mv-copy {
   margin-top: 1rem;
   max-width: 36rem;
-  border-left: 3px solid #ffb800;
-  padding-left: 1rem;
-  font-style: italic;
   font-weight: 500;
   font-size: 0.98rem;
   line-height: 1.75;
   letter-spacing: 0.01em;
-  text-align: justify;
+  text-align: left;
   color: #0f2847;
 }
 
