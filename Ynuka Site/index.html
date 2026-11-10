@@ -8,7 +8,7 @@
     <meta name="author" content="Ynuka Labs - Web3 Innovation" />
     <link rel="canonical" href="https://ynukalabs.com/" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="theme-color" content="#0b3b8b" />
+    <meta name="theme-color" content="#030712" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
 
     <meta property="og:title" content="YNUKA Labs | Web3, IA et innovation en RD Congo" />
@@ -27,11 +27,59 @@
     <script type="application/ld+json">
       {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://ynukalabs.com/#organization","name":"Ynuka Labs","url":"https://ynukalabs.com/","logo":"https://ynukalabs.com/logo.png","areaServed":"CD","sameAs":["https://twitter.com/YnukaLabs"]},{"@type":"WebSite","@id":"https://ynukalabs.com/#website","url":"https://ynukalabs.com/","name":"Ynuka Labs","publisher":{"@id":"https://ynukalabs.com/#organization"},"inLanguage":"fr-CD"}]}
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant preloader while JS bundle loads -->
+      <div id="initial-preloader" style="position:fixed;inset:0;background-color:#030712;display:flex;align-items:center;justify-content:center;z-index:99999;">
+        <style>
+          @keyframes init-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          @keyframes init-pulse { 0%, 100% { transform: scale(0.96); filter: drop-shadow(0 0 10px rgba(56,189,248,0.35)); } 50% { transform: scale(1.04); filter: drop-shadow(0 0 20px rgba(56,189,248,0.65)); } }
+        </style>
+        <div style="position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 200 200" style="width:100%;height:100%;animation:init-spin 1.25s linear infinite;pointer-events:none;">
+            <defs>
+              <filter id="init-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur1" />
+                <feGaussianBlur stdDeviation="6" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <circle cx="172.00" cy="100.00" r="1.20" fill="#0284c7" opacity="0.12" />
+            <circle cx="170.19" cy="116.03" r="1.21" fill="#0284c7" opacity="0.12" />
+            <circle cx="164.84" cy="131.25" r="1.25" fill="#0284c7" opacity="0.13" />
+            <circle cx="156.20" cy="144.89" r="1.31" fill="#0284c7" opacity="0.15" />
+            <circle cx="144.64" cy="156.24" r="1.41" fill="#0284c7" opacity="0.17" />
+            <circle cx="130.60" cy="164.83" r="1.54" fill="#0284c7" opacity="0.20" />
+            <circle cx="114.61" cy="170.11" r="1.71" fill="#0284c7" opacity="0.23" />
+            <circle cx="97.35" cy="171.93" r="1.93" fill="#0284c7" opacity="0.27" />
+            <circle cx="80.60" cy="170.14" r="2.19" fill="#0284c7" opacity="0.32" />
+            <circle cx="65.04" cy="164.71" r="2.49" fill="#0284c7" opacity="0.37" />
+            <circle cx="51.27" cy="155.85" r="2.85" fill="#0284c7" opacity="0.43" />
+            <circle cx="39.80" cy="143.86" r="3.25" fill="#0284c7" opacity="0.49" />
+            <circle cx="31.06" cy="129.23" r="3.71" fill="#0284c7" opacity="0.55" />
+            <circle cx="25.35" cy="112.56" r="4.21" fill="#0284c7" opacity="0.62" />
+            <circle cx="22.88" cy="94.57" r="4.76" fill="#38bdf8" opacity="0.70" />
+            <circle cx="23.77" cy="76.01" r="5.36" fill="#38bdf8" opacity="0.77" filter="url(#init-glow)" />
+            <circle cx="28.02" cy="57.77" r="6.00" fill="#38bdf8" opacity="0.85" filter="url(#init-glow)" />
+            <circle cx="35.48" cy="40.75" r="6.69" fill="#38bdf8" opacity="0.94" filter="url(#init-glow)" />
+            <circle cx="45.92" cy="25.79" r="7.42" fill="#38bdf8" opacity="1.00" filter="url(#init-glow)" />
+            <circle cx="58.98" cy="13.56" r="8.18" fill="#e0f7ff" opacity="1.00" filter="url(#init-glow)" />
+            <circle cx="74.19" cy="4.64" r="8.40" fill="#e0f7ff" opacity="1.00" filter="url(#init-glow)" />
+          </svg>
+          <img src="/logo.png" alt="Ynuka Labs" style="position:absolute;width:56px;height:56px;object-fit:contain;animation:init-pulse 2s ease-in-out infinite;" />
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

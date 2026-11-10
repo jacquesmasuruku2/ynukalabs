@@ -87,44 +87,33 @@ const BlockchainEcosystemSection = ({
     <section
       id="blockchains"
       className={cn(
-        "relative scroll-mt-28 overflow-hidden py-16 md:py-24",
-        "bg-[radial-gradient(900px_420px_at_0%_0%,rgba(255,184,0,0.12),transparent_55%),linear-gradient(180deg,#fbfaf7_0%,#f0eee8_100%)]",
-        "dark:bg-[radial-gradient(800px_400px_at_10%_0%,rgba(255,184,0,0.08),transparent_50%),linear-gradient(180deg,#0b1219_0%,#121a22_100%)]",
+        "relative scroll-mt-10 py-16 md:py-24",
         showDivider && "border-y border-black/[0.06] dark:border-white/10"
       )}
     >
-      <div className="relative z-10 mx-auto w-full max-w-[1200px] px-4 sm:px-6 md:px-8 lg:px-10">
+      <div className="relative z-10 mx-auto max-w-[1360px] px-4 sm:px-6 md:px-8 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
           transition={{ duration: 0.55 }}
-          className="mx-auto mb-10 max-w-2xl text-center md:mb-14"
+          className="mx-auto mb-8 max-w-3xl text-center md:mb-10"
         >
-          <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#122033] md:text-4xl dark:text-white">
+          <h2 className="text-balance font-display text-4xl font-extrabold tracking-tight text-[#ffb800] sm:text-5xl md:text-6xl">
             {ui.sectionTitle}
           </h2>
-          <div
-            className="mx-auto mt-4 h-px w-14 bg-gradient-to-r from-transparent via-[#ffb800] to-transparent"
-            aria-hidden
-          />
-          <p className="mt-5 text-lg font-medium leading-relaxed text-[#3d4f66] dark:text-slate-300">
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-sm font-medium leading-relaxed text-slate-300 sm:text-base md:text-lg">
             {intro}
           </p>
-          <p className="mt-3 text-sm font-medium text-[#8a96a8]">{ui.hint}</p>
+          <p className="mx-auto mt-3 max-w-xl text-pretty text-sm font-medium text-slate-500">
+            {ui.hint}
+          </p>
         </motion.div>
 
-        {/* Rangée principale : 3 + 2 pour un rythme plus vivant */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
           {BLOCKCHAIN_ORDER.map((id, index) => {
             const chain = copy[id];
             const selected = open && activeId === id;
-            const span =
-              index < 3
-                ? "lg:col-span-2"
-                : index === 3
-                  ? "lg:col-span-3"
-                  : "lg:col-span-3";
 
             return (
               <motion.button
@@ -134,39 +123,49 @@ const BlockchainEcosystemSection = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-20px" }}
                 transition={{ duration: 0.45, delay: index * 0.05 }}
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.99 }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => openChain(id)}
                 className={cn(
-                  "group relative flex min-h-[168px] flex-col items-center justify-between overflow-hidden rounded-card border border-black/[0.07] bg-white p-5 text-center transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(15,40,71,0.55)] dark:border-white/10 dark:bg-[#151d27]",
-                  span,
-                  selected && "border-[#ffb800] shadow-[0_0_0_1px_#ffb800]"
+                  "group relative flex min-h-[6.5rem] items-stretch overflow-hidden rounded-xl border border-white/10 bg-[#071727]/45 text-left backdrop-blur-sm transition-[border-color,background-color] duration-300 hover:border-[#ffb800]/55 hover:bg-[#071727]/65 sm:min-h-[7.25rem]",
+                  selected && "border-[#ffb800] shadow-[0_0_0_1px_rgba(255,184,0,0.35)]",
+                  index === BLOCKCHAIN_ORDER.length - 1 && "md:col-span-2 md:max-w-[calc(50%-0.5rem)] md:justify-self-center"
                 )}
               >
                 <span
                   className={cn(
-                    "pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-gradient-to-br opacity-40 blur-2xl transition-opacity group-hover:opacity-70",
+                    "pointer-events-none absolute -left-10 -top-10 h-28 w-28 rounded-full bg-gradient-to-br opacity-25 blur-2xl transition-opacity group-hover:opacity-50",
                     chain.accent
                   )}
                   aria-hidden
                 />
 
-                <div className="relative flex w-full flex-col items-center">
-                  <div className="flex h-12 w-12 items-center justify-center bg-[#f6f4ef] p-2 dark:bg-white/5">
-                    <ChainLogo url={chain.logoUrl} name={chain.name} className="h-8 w-8" />
-                  </div>
-                  <h3 className="mt-4 font-display text-xl font-extrabold text-[#122033] dark:text-white">
-                    {chain.name}
-                  </h3>
-                  <p className="mt-1.5 line-clamp-2 text-sm font-medium leading-snug text-[#5a6b82] dark:text-slate-400">
-                    {chain.tagline}
-                  </p>
+                <div className="relative flex w-[4.75rem] shrink-0 items-center justify-center border-r border-white/10 sm:w-[5.5rem] md:w-[6.25rem]">
+                  <ChainLogo
+                    url={chain.logoUrl}
+                    name={chain.name}
+                    className="h-9 w-9 object-contain sm:h-11 sm:w-11 md:h-12 md:w-12"
+                  />
                 </div>
 
-                <span className="relative mt-4 inline-flex items-center gap-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#8a96a8] transition-colors group-hover:text-[#122033] dark:group-hover:text-[#ffb800]">
-                  {ui.openDetail}
-                  <ArrowRight className="h-3 w-3" aria-hidden />
-                </span>
+                <div className="relative flex min-w-0 flex-1 flex-col justify-center gap-1 px-3 py-3 sm:px-4 sm:py-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-[0.58rem] font-semibold uppercase tracking-[0.2em] text-[#ffb800]">
+                      Network {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <span className="hidden h-1.5 w-1.5 rounded-full bg-[#ffb800] opacity-0 transition-opacity group-hover:opacity-100 sm:block" aria-hidden />
+                  </div>
+                  <h3 className="font-display text-lg font-extrabold leading-tight text-white sm:text-xl">
+                    {chain.name}
+                  </h3>
+                  <p className="line-clamp-2 text-pretty text-[0.8rem] font-medium leading-snug text-slate-400 sm:text-sm">
+                    {chain.tagline}
+                  </p>
+                  <span className="mt-1.5 inline-flex items-center gap-1 font-mono text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-slate-500 transition-colors group-hover:text-[#ffb800]">
+                    {ui.openDetail}
+                    <ArrowRight className="h-3 w-3" aria-hidden />
+                  </span>
+                </div>
               </motion.button>
             );
           })}

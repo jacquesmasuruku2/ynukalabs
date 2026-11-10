@@ -15,8 +15,8 @@ import EventDetail from "./pages/EventDetail";
 import EventEspace from "./pages/EventEspace";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
-import Community from "./pages/Community";
 import Resources from "./pages/Resources";
+import LearningCourseDetail from "./pages/LearningCourseDetail";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Partners from "./pages/Partners";
@@ -25,7 +25,6 @@ import Contact from "./pages/Contact";
 import Validators from "./pages/Validators";
 import Documentation from "./pages/Documentation";
 import Tools from "./pages/Tools";
-import OnboardingProgram from "./pages/OnboardingProgram";
 import Soutenir from "./pages/Soutenir";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -34,8 +33,6 @@ import Gallery from "./pages/Gallery";
 import GomaDrep from "./pages/GomaDrep";
 import Opportunities from "./pages/Opportunities";
 import OpportunityDetail from "./pages/OpportunityDetail";
-import Presentation from "./pages/Presentation";
-import Services from "./pages/Services";
 import Team from "./pages/Team";
 import TeamMemberDetail from "./pages/TeamMemberDetail";
 import Catalog from "./pages/Catalog";
@@ -78,8 +75,9 @@ const App = () => (
               <Route path="/luma-events" element={<LumaEvents />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/:slug" element={<ProjectDetail />} />
-              <Route path="/community" element={<Community />} />
+              <Route path="/community" element={<Navigate to="/blockchains#community" replace />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/resources/courses/:slug" element={<LearningCourseDetail />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:id" element={<BlogPost />} />
               <Route path="/partners" element={<Partners />} />
@@ -88,14 +86,14 @@ const App = () => (
               <Route path="/validators" element={<Validators />} />
               <Route path="/documentation" element={<Documentation />} />
               <Route path="/tools" element={<Tools />} />
-              <Route path="/onboarding" element={<OnboardingProgram />} />
+              <Route path="/onboarding" element={<Navigate to="/community" replace />} />
               <Route path="/soutenir" element={<Soutenir />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/goma-drep" element={<GomaDrep />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/opportunities/:id" element={<OpportunityDetail />} />
-              <Route path="/presentation" element={<Presentation />} />
-              <Route path="/services" element={<Services />} />
+              <Route path="/presentation" element={<Navigate to="/about" replace />} />
+              <Route path="/services" element={<Navigate to="/about" replace />} />
               <Route path="/team" element={<Team />} />
               <Route path="/team/:slug" element={<TeamMemberDetail />} />
               <Route path="/catalog" element={<Catalog />} />

@@ -150,7 +150,7 @@ function OpportunityCard({
           </div>
 
           <div className="mt-auto pt-3">
-            <span className="inline-flex w-full items-center justify-center bg-[#ffb800] px-3 py-2 text-[0.8rem] font-bold text-[#0f2847] hover:bg-[#e6a600]">
+            <span className="inline-flex w-full items-center justify-center rounded-lg bg-[#ffb800] px-3 py-2 text-[0.8rem] font-bold text-[#0f2847] transition-colors hover:bg-[#e6a600]">
               {ctaLabel}
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </span>
@@ -334,7 +334,7 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
       <ModernButton
         variant="primary"
         href="/opportunities"
-        className="!rounded-none bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
+        className="rounded-xl bg-[#ffb800] px-7 py-3 font-bold text-[#0f2847] hover:bg-[#e6a600]"
       >
         {t("opportunities.seeMore")}
         <ArrowRight className="ml-2 h-4 w-4" />
@@ -353,7 +353,7 @@ const OpportunitiesSection = ({ showHeading = true }: OpportunitiesSectionProps)
   }
 
   return (
-    <ModernSectionWrapper className="py-16 md:py-20">
+    <ModernSectionWrapper className="py-10 md:py-14">
       <div id="opportunities" className="scroll-mt-28">
         {heading}
         {body}

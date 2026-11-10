@@ -10,7 +10,7 @@ if (!rootElement) {
 }
 
 createRoot(rootElement).render(
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+  <ThemeProvider attribute="class" forcedTheme="dark" enableSystem={false}>
     <App />
   </ThemeProvider>
 );
