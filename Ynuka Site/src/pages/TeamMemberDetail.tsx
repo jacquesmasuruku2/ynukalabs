@@ -10,6 +10,7 @@ import {
   type TeamMember,
 } from "@/data/teamMembers";
 import { fetchTeamMembers } from "@/lib/api";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const TeamMemberDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -63,7 +64,7 @@ const TeamMemberDetail = () => {
             <div
               className="prose prose-invert mt-8 max-w-none whitespace-pre-wrap"
               dangerouslySetInnerHTML={{
-                __html: member.description || "Aucune description disponible pour le moment.",
+                __html: sanitizeHtml(member.description) || "Aucune description disponible pour le moment.",
               }}
             />
             <div className="mt-8 flex gap-3">

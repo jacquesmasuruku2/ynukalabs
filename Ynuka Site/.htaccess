@@ -24,9 +24,20 @@ DirectoryIndex index.html
 # Pas de listing de répertoires
 Options -Indexes
 
-# Activer CORS pour l'API PHP
+# (CORS « * » supprimée : l'API PHP gère elle-même ses origines autorisées)
+# ============ EN-TÊTES DE SÉCURITÉ ============
 <IfModule mod_headers.c>
-  Header set Access-Control-Allow-Origin "*"
-  Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-  Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+  Header unset X-Powered-By
 </IfModule>
+
+# Fichiers sensibles jamais servis
+<FilesMatch "(^\.|\.(env|sql|md|log|sh|ps1|bak|zip)$|^(config|database|google-oauth)\.php$)">
+  Require all denied
+</FilesMatch>
+

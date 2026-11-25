@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-session';
+import { assertPublicHttpUrl } from '@/lib/safe-url';
 
 export async function POST(request: Request) {
+  const { response: authResponse } = await requireAdmin();
+  if (authResponse) return authResponse;
+
   try {
     const { url } = await request.json();
 
@@ -11,8 +16,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch the article content
+    try {
+      await assertPublicHttpUrl(String(url));
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : 'URL refusée' }, { status: 400 });
+    }
+
+    // Fetch the article content (pas de suivi automatique des redirections : elles pourraient viser le réseau interne)
     const response = await fetch(url, {
+      redirect: 'manual',
+      signal: AbortSignal.timeout(10_000),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },

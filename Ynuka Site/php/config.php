@@ -1,20 +1,29 @@
 <?php
-// Configuration de la base de données MySQL pour PRODUCTION
-// Sur le serveur, la base de données est accessible via localhost
+// Configuration de la base de données MySQL.
+// AUCUN secret ne doit être écrit dans ce fichier (il est versionné dans Git).
+// Les identifiants sont lus depuis config.local.php (non versionné, à créer sur le
+// serveur à partir de config.local.example.php) ou depuis les variables d'environnement.
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'ynukalab_database_website');
-define('DB_USER', 'ynukalab_admin-jacques');
-define('DB_PASS', 'Admin-Jacques.ynuka_db');
-define('DB_CHARSET', 'utf8mb4');
+if (file_exists(__DIR__ . '/config.local.php')) {
+    require_once __DIR__ . '/config.local.php';
+}
 
-// Configuration de l'affichage des erreurs
-// En production, désactivez l'affichage des erreurs pour la sécurité
+function ynuka_cfg($name, $default = null) {
+    if (defined($name)) return constant($name);
+    $env = getenv($name);
+    return ($env !== false && $env !== '') ? $env : $default;
+}
+
+if (!defined('DB_HOST')) define('DB_HOST', ynuka_cfg('DB_HOST', 'localhost'));
+if (!defined('DB_NAME')) define('DB_NAME', ynuka_cfg('DB_NAME', ''));
+if (!defined('DB_USER')) define('DB_USER', ynuka_cfg('DB_USER', ''));
+if (!defined('DB_PASS')) define('DB_PASS', ynuka_cfg('DB_PASS', ''));
+if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
+
+// Production : on n'affiche jamais les erreurs PHP au visiteur (elles sont seulement journalisées).
 error_reporting(E_ALL);
-// Pour débogage temporaire, activer l'affichage des erreurs.
-// Remettre à 0 en production après correction.
-ini_set('display_errors', 1);
-ini_set('log_errors', 1);     // Erreurs loggées dans les fichiers du serveur
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 // Préparer une variable de retour d'erreur si la connexion échoue.
 $pdo = null;

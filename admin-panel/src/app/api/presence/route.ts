@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
 
 const ACTIVE_MS = 2 * 60 * 1000;
 const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -133,6 +134,8 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return jsonCors({ error: 'Forbidden' }, { status: 403 });
     }
+    const { response: authResponse } = await requireAdmin();
+    if (authResponse) return authResponse;
 
     const now = Date.now();
     const activeSince = new Date(now - ACTIVE_MS);

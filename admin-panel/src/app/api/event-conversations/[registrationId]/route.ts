@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -29,6 +30,10 @@ export async function GET(
     const { registrationId } = await params;
     const email = request.nextUrl.searchParams.get('email')?.trim().toLowerCase();
     const admin = request.nextUrl.searchParams.get('admin') === '1';
+    if (admin) {
+      const { response: authResponse } = await requireAdmin();
+      if (authResponse) return authResponse;
+    }
 
     const registration = await prisma.eventRegistration.findUnique({
       where: { id: registrationId },
@@ -88,6 +93,10 @@ export async function POST(
     const body = await request.json();
     const messageBody = String(body.body || body.message || '').trim();
     const senderType = body.senderType === 'team' ? 'team' : 'user';
+    if (senderType === 'team') {
+      const { response: authResponse } = await requireAdmin();
+      if (authResponse) return authResponse;
+    }
     const senderEmail = String(body.senderEmail || body.email || '')
       .trim()
       .toLowerCase();
@@ -171,6 +180,10 @@ export async function PATCH(
       .trim()
       .toLowerCase();
     const admin = body.admin === true || body.admin === '1';
+    if (admin) {
+      const { response: authResponse } = await requireAdmin();
+      if (authResponse) return authResponse;
+    }
 
     const registration = await prisma.eventRegistration.findUnique({
       where: { id: registrationId },

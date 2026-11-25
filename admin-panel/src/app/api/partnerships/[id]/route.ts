@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -9,6 +10,9 @@ export async function OPTIONS() {
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, { params }: Params) {
+  const { response: authResponse } = await requireAdmin();
+  if (authResponse) return authResponse;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -47,6 +51,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
+  const { response: authResponse } = await requireAdmin();
+  if (authResponse) return authResponse;
+
   try {
     const { id } = await params;
     await prisma.partnership.delete({ where: { id } });

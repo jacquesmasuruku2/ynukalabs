@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface RichTextDisplayProps {
   content: string;
@@ -125,7 +126,7 @@ const RichTextDisplay: React.FC<RichTextDisplayProps> = ({
   return (
     <div
       className={`rich-text-content ${className}`}
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
     />
   );
 };

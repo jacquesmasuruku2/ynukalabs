@@ -13,7 +13,6 @@ require_once 'google-oauth.php';
 header('Content-Type: application/json; charset=utf-8');
 
 // CORS headers
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
@@ -73,7 +72,7 @@ try {
     
 } catch (Exception $e) {
     error_log("Google OAuth Callback Error: " . $e->getMessage());
-    $error = urlencode('Authentication failed: ' . $e->getMessage());
+    $error = urlencode('Authentication failed');
     header("Location: /login#error=$error");
     exit;
 }

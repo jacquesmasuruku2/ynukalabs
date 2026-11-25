@@ -1,10 +1,16 @@
 <?php
 // ============ CONFIGURATION ============
 // Utiliser la même configuration que l'API existante
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'ynukalab_database_website');
-define('DB_USER', 'ynukalab_admin-jacques');
-define('DB_PASS', 'Admin-Jacques.ynuka_db');
+// Identifiants lus depuis config.local.php (non versionné) ou les variables d'environnement.
+// Voir "Ynuka Site/php/config.local.example.php".
+foreach ([__DIR__ . '/config.local.php', __DIR__ . '/../php/config.local.php', __DIR__ . '/../config.local.php'] as $localCfg) {
+    if (file_exists($localCfg)) { require_once $localCfg; break; }
+}
+if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: '');
+if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: '');
+if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: '');
+ini_set('display_errors', 0);
 
 // CORS: Configuration par environnement
 define('ALLOWED_ORIGIN', getenv('ALLOWED_ORIGIN') ?: 'https://ynukalabs.com');
@@ -12,7 +18,7 @@ define('ALLOWED_ORIGIN', getenv('ALLOWED_ORIGIN') ?: 'https://ynukalabs.com');
 // ============ CORS ============
 header('Access-Control-Allow-Origin: ' . ALLOWED_ORIGIN);
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Api-Key');
 header('Access-Control-Max-Age: 86400');
 header('Content-Type: application/json; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
@@ -60,20 +66,24 @@ function table_exists(string $t): bool {
 $action = $_GET['action'] ?? '';
 $body = json_decode(file_get_contents('php://input'), true) ?: [];
 
+// ============ AUTHENTIFICATION ============
+// Toutes les actions exigent la clé secrète ACTIVITIES_API_KEY (config.local.php ou variable
+// d'environnement), envoyée dans l'en-tête « X-Api-Key ». Avant, n'importe qui pouvait
+// lire, créer ou supprimer les activités admin.
+$expectedKey = defined('ACTIVITIES_API_KEY') ? ACTIVITIES_API_KEY : (getenv('ACTIVITIES_API_KEY') ?: '');
+if (strlen($expectedKey) < 32) {
+    err('API désactivée : ACTIVITIES_API_KEY non configurée', 503);
+}
+$providedKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
+if (!is_string($providedKey) || !hash_equals($expectedKey, $providedKey)) {
+    err('Unauthorized', 401);
+}
+
 try {
     switch ($action) {
         // ---- DIAGNOSTIC ----
         case 'ping': {
-            $out = [
-                'ok' => true,
-                'php_version' => PHP_VERSION,
-                'time' => date('c'),
-                'config' => [
-                    'db_host' => DB_HOST,
-                    'db_name' => DB_NAME,
-                    'db_user_set' => DB_USER !== 'YOUR_DB_USER',
-                ],
-            ];
+            $out = ['ok' => true, 'time' => date('c')];
             try {
                 if (table_exists('admin_activities')) {
                     $out['db'] = 'ok';
@@ -86,7 +96,7 @@ try {
                 }
             } catch (Throwable $e) {
                 $out['db'] = 'error';
-                $out['db_error'] = $e->getMessage();
+                error_log('activities ping: ' . $e->getMessage());
             }
             json_out($out);
         }
@@ -265,8 +275,10 @@ try {
         }
     }
 } catch (PDOException $e) {
-    err('Database error: ' . $e->getMessage(), 500);
+    error_log('activities DB error: ' . $e->getMessage());
+    err('Database error', 500);
 } catch (Throwable $e) {
-    err('Server error: ' . $e->getMessage(), 500);
+    error_log('activities error: ' . $e->getMessage());
+    err('Server error', 500);
 }
 

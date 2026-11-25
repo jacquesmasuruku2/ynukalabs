@@ -110,14 +110,14 @@ await phpApi.create("blog_posts", {
 define('DB_HOST',     'localhost');                    // Ligne 16
 define('DB_NAME',     'ynukalab_database_website');    // Ligne 17
 define('DB_USER',     'ynukalab_admin-jacques');       // Ligne 18
-define('DB_PASS',     'Admin-Jacques.ynuka_db');       // Ligne 19
+define('DB_PASS',     '********  (voir config.local.php)');       // Ligne 19
 define('JWT_SECRET',  'YOUR_KEY_HERE_MIN_32_CHARS');  // À générer!
 ```
 
 **Les constantes disent**: 
 - "Connecte-toi à la base `ynukalab_database_website`"
 - "Utilise l'utilisateur `ynukalab_admin-jacques`"
-- "Avec le mot de passe `Admin-Jacques.ynuka_db`"
+- "Avec le mot de passe `********  (voir config.local.php)`"
 - "Le serveur est sur `localhost` (même machine)"
 
 ### 7️⃣ CONNEXION à MySQL
@@ -131,7 +131,7 @@ define('JWT_SECRET',  'YOUR_KEY_HERE_MIN_32_CHARS');  // À générer!
 │     dbname=ynukalab_database_website │
 │     ;charset=utf8mb4',               │
 │    'ynukalab_admin-jacques',         │
-│    'Admin-Jacques.ynuka_db'          │
+│    '********  (voir config.local.php)'          │
 │  )                                   │
 └──────────────────────────────────────┘
           │
@@ -260,7 +260,7 @@ Tables: users, blog_posts, etc.
 - ✅ IP: 205.209.109.3
 - ✅ Base MySQL: ynukalab_database_website
 - ✅ User MySQL: ynukalab_admin-jacques
-- ✅ Password MySQL: Admin-Jacques.ynuka_db
+- ✅ Password MySQL: ********  (voir config.local.php)
 - ✅ API Location: public_html/api.php
 
 **Points clés à générer avant déploiement**:

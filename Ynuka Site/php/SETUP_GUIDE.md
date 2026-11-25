@@ -56,7 +56,7 @@ Vérifiez que `php/config.php` contient:
 define('DB_HOST', 'localhost');  // ou votre IP serveur
 define('DB_NAME', 'ynukalab_database_website');
 define('DB_USER', 'ynukalab_admin-jacques');
-define('DB_PASS', 'Admin-Jacques.ynuka_db');
+define('DB_PASS', '********  (voir config.local.php)');
 ```
 
 ### Étape 3: Tester la connexion

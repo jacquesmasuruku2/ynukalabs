@@ -12,3 +12,7 @@ Ynuka Site/dist/
 admin-panel/.next/
 .vercel
 .env*
+
+# Secrets locaux (identifiants base de données, clés API)
+config.local.php
+**/config.local.php

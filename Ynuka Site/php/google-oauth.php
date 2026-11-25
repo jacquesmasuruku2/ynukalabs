@@ -6,8 +6,7 @@
  * 
  * Configuration Google Cloud:
  * - Projet: ynukalabs-497722
- * - Client ID: 1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com
- * - Client Secret: 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
+ * - Client ID / Client Secret : définis dans config.local.php (jamais dans Git)
  * - Redirect URIs configurées:
  *   - https://admin.ynukalabs.com/api/api.php?action=google_callback
  *   - https://ynukalabs-497722.firebaseapp.com/__/auth/handler
@@ -17,8 +16,9 @@
 
 // ============ CONFIGURATION GOOGLE OAUTH ============
 // Credentials depuis Google Cloud Console
-define('GOOGLE_CLIENT_ID', '1039734035041-3ob85lpfheoonvv43759desitdr7rhgc.apps.googleusercontent.com');
-define('GOOGLE_CLIENT_SECRET', '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');
+require_once __DIR__ . '/config.php';
+if (!defined('GOOGLE_CLIENT_ID')) define('GOOGLE_CLIENT_ID', ynuka_cfg('GOOGLE_CLIENT_ID', ''));
+if (!defined('GOOGLE_CLIENT_SECRET')) define('GOOGLE_CLIENT_SECRET', ynuka_cfg('GOOGLE_CLIENT_SECRET', ''));
 define('GOOGLE_PROJECT_ID', 'ynukalabs-497722');
 
 // Redirect URI - doit correspondre à celui configuré dans Google Console
@@ -103,39 +103,35 @@ function exchange_google_code_for_token($code) {
  * @return array Informations utilisateur extraites du token
  */
 function verify_google_id_token($id_token) {
-    // Décomposer le JWT en 3 parties
-    $parts = explode('.', $id_token);
-    if (count($parts) !== 3) {
+    // La signature du jeton est vérifiée par Google (endpoint tokeninfo).
+    // L'ancienne version décodait seulement le contenu sans vérifier la signature :
+    // n'importe qui pouvait fabriquer un faux jeton.
+    if (!is_string($id_token) || substr_count($id_token, '.') !== 2) {
         throw new Exception('Format de token invalide');
     }
-    
-    list($headerEncoded, $payloadEncoded, $signatureEncoded) = $parts;
-    
-    // Décoder le payload (2e partie)
-    $payload = json_decode(
-        base64_decode(strtr($payloadEncoded, '-_', '+/')),
-        true
-    );
-    
-    if (!$payload) {
-        throw new Exception('Impossible de décoder le payload du token');
+    $ch = curl_init('https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($id_token));
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_SSL_VERIFYPEER => true]);
+    $raw = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($raw === false || $status !== 200) {
+        throw new Exception('Token Google invalide');
     }
-    
-    // Vérifier les champs obligatoires
-    if (!isset($payload['email']) || !isset($payload['aud'])) {
+    $payload = json_decode($raw, true);
+    if (!is_array($payload) || !isset($payload['email'], $payload['aud'])) {
         throw new Exception('Token invalide: champs requis manquants');
     }
-    
-    // Vérifier que le token est destiné à notre application
-    if ($payload['aud'] !== GOOGLE_CLIENT_ID) {
+    if (!GOOGLE_CLIENT_ID || $payload['aud'] !== GOOGLE_CLIENT_ID) {
         throw new Exception('Token destiné à une autre application');
     }
-    
-    // Vérifier que le token n'a pas expiré
-    if (isset($payload['exp']) && $payload['exp'] < time()) {
+    if (!in_array($payload['iss'] ?? '', ['accounts.google.com', 'https://accounts.google.com'], true)) {
+        throw new Exception('Émetteur du token invalide');
+    }
+    if (isset($payload['exp']) && (int)$payload['exp'] < time()) {
         throw new Exception('Token expiré');
     }
-    
+    $payload['email_verified'] = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
     // Vérifier que l'e-mail est vérifié
     if (!($payload['email_verified'] ?? false)) {
         throw new Exception('E-mail non vérifié auprès de Google');

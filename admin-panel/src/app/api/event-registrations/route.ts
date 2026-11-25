@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -96,6 +97,12 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get('email')?.trim().toLowerCase();
     const admin = searchParams.get('admin') === '1';
     const id = searchParams.get('id');
+
+    // Mode admin (liste complète / lecture par id sans email) : session admin obligatoire
+    if (admin || (id && !email)) {
+      const { response: authResponse } = await requireAdmin();
+      if (authResponse) return authResponse;
+    }
 
     if (id) {
       const registration = await prisma.eventRegistration.findUnique({

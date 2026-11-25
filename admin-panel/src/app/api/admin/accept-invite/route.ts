@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createSessionToken } from '@/lib/session-token';
 import { ADMIN_ROLE } from '@/lib/adminRoles';
 
 export async function GET(request: NextRequest) {
@@ -29,9 +30,9 @@ export async function POST(request: NextRequest) {
     const invite = await prisma.adminInvite.findUnique({ where: { tokenHash: crypto.createHash('sha256').update(token).digest('hex') }, include: { adminUser: true } });
     if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) return NextResponse.json({ error: 'Invitation invalide ou expirée.' }, { status: 400 });
     const adminUser = await prisma.adminUser.update({ where: { id: invite.adminUserId! }, data: { name: name || invite.name || invite.email.split('@')[0], passwordHash: await bcrypt.hash(password, 12), role: ADMIN_ROLE.ADMIN, isActive: true, emailVerified: true, provider: 'email' } });
-    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const { token: sessionToken, tokenHash: sessionTokenHash } = createSessionToken();
     const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000);
-    await prisma.$transaction([prisma.adminInvite.update({ where: { id: invite.id }, data: { acceptedAt: new Date(), adminUserId: adminUser.id, name: adminUser.name } }), prisma.adminSession.create({ data: { adminUserId: adminUser.id, token: sessionToken, expiresAt } }), prisma.adminUser.update({ where: { id: adminUser.id }, data: { lastLoginAt: new Date() } })]);
+    await prisma.$transaction([prisma.adminInvite.update({ where: { id: invite.id }, data: { acceptedAt: new Date(), adminUserId: adminUser.id, name: adminUser.name } }), prisma.adminSession.create({ data: { adminUserId: adminUser.id, token: sessionTokenHash, expiresAt } }), prisma.adminUser.update({ where: { id: adminUser.id }, data: { lastLoginAt: new Date() } })]);
     const response = NextResponse.json({ success: true, message: 'Mot de passe créé. Vous êtes connecté.' });
     response.cookies.set('admin_session_token', sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', expires: expiresAt });
     return response;

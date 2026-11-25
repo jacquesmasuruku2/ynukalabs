@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
 import { sendNewsletterConfirmationEmail } from '@/lib/email';
+import { requireAdmin } from '@/lib/admin-session';
 import {
   isKnownNewsletterInterest,
 } from '@/lib/newsletterInterests';
@@ -22,6 +23,9 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
+  const { response: authResponse } = await requireAdmin();
+  if (authResponse) return authResponse;
+
   try {
     const subscribers = await prisma.newsletterSubscription.findMany({
       orderBy: { subscribedAt: 'desc' },
@@ -124,6 +128,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const { response: authResponse } = await requireAdmin();
+  if (authResponse) return authResponse;
+
   try {
     const body = await request.json().catch(() => ({}));
     const id = typeof body?.id === 'string' ? body.id : null;
