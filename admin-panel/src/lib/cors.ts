@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 
+/**
+ * Les en-têtes CORS sont désormais posés par src/proxy.ts, uniquement pour les
+ * origines autorisées (lib/allowed-origins.ts). Avant, toutes les réponses
+ * renvoyaient `Access-Control-Allow-Origin: *`.
+ * Ces fonctions sont conservées pour ne pas modifier toutes les routes.
+ */
 export function withCors(response: NextResponse) {
-  response.headers.set('Access-Control-Allow-Origin', '*');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   return response;
 }
 
 export function corsOptions() {
-  return withCors(new NextResponse(null, { status: 204 }));
+  return new NextResponse(null, { status: 204 });
 }
 
 export function jsonCors(data: unknown, init?: ResponseInit) {
-  return withCors(NextResponse.json(data, init));
+  return NextResponse.json(data, init);
 }

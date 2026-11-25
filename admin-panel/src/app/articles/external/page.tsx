@@ -2,6 +2,7 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { useState } from 'react';
 import { ArrowLeft, ExternalLink, RefreshCw, Save } from 'lucide-react';
 import Link from 'next/link';
@@ -308,7 +309,7 @@ export default function ExternalArticlePage() {
               <div className="card rounded-lg shadow-sm border p-6">
                 <div 
                   className="prose prose-sm sm:prose-base max-w-none"
-                  dangerouslySetInnerHTML={{ __html: content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                 />
               </div>
             </>

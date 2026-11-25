@@ -55,7 +55,7 @@ Serveur: Interserver (205.209.109.3)
 Domaine: ynukalabs.com
 Base: ynukalab_database_website
 User: ynukalab_admin-jacques
-Pass: Admin-Jacques.ynuka_db
+Pass: ********  (voir config.local.php)
 ```
 
 ### ✅ Fichiers de Configuration

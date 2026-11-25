@@ -9,6 +9,7 @@ import MotivationFormModal from "@/components/MotivationFormModal";
 import { fetchOpportunity, applyForOpportunity, submitMotivationForm, uploadCVFile } from "@/lib/api";
 import { authService } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface OpportunityData {
   id: string;
@@ -421,7 +422,7 @@ const OpportunityDetail = () => {
               transition={{ delay: 0.2 }}
               className="prose prose-invert prose-lg prose-headings:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-a:text-primary prose-code:text-foreground max-w-none mb-8 text-foreground leading-relaxed [&>mark]:bg-yellow-500/30 [&>u]:underline [&>p]:text-justify [&>div]:text-justify"
             >
-              <div dangerouslySetInnerHTML={{ __html: content || t("opportunities.noContent") }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) || t("opportunities.noContent") }} />
             </motion.div>
 
             {/* Share */}

@@ -2,6 +2,7 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Image as ImageIcon, Eye, Edit } from 'lucide-react';
@@ -251,7 +252,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-500 inline-block">
                       Description du poste
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.description }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.description) }} />
                   </div>
                 )}
 
@@ -260,7 +261,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-green-500 inline-block">
                       Missions principales
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.missions }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.missions) }} />
                   </div>
                 )}
 
@@ -269,7 +270,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-purple-500 inline-block">
                       Profil recherché
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.profile }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.profile) }} />
                   </div>
                 )}
 
@@ -278,7 +279,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-orange-500 inline-block">
                       Qualités recherchées
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.qualities }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.qualities) }} />
                   </div>
                 )}
 
@@ -287,7 +288,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-teal-500 inline-block">
                       Ligne éditoriale
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.editorialLine }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.editorialLine) }} />
                   </div>
                 )}
 
@@ -296,7 +297,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-indigo-500 inline-block">
                       Conditions de collaboration
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.collaborationConditions }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.collaborationConditions) }} />
                   </div>
                 )}
 
@@ -305,7 +306,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-pink-500 inline-block">
                       Dossier de candidature
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.applicationDocuments }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.applicationDocuments) }} />
                   </div>
                 )}
 
@@ -314,7 +315,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-red-500 inline-block">
                       Processus de sélection
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.selectionProcess }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.selectionProcess) }} />
                   </div>
                 )}
 
@@ -323,7 +324,7 @@ export default function JobOfferEditPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-500 inline-block">
                       Exigences
                     </h2>
-                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: formData.requirements }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 pl-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.requirements) }} />
                   </div>
                 )}
 

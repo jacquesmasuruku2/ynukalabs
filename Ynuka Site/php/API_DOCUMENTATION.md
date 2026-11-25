@@ -32,7 +32,7 @@ Vérifiez que `php/config.php` contient les bonnes credentials:
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'ynukalab_database_website');
 define('DB_USER', 'ynukalab_admin-jacques');
-define('DB_PASS', 'Admin-Jacques.ynuka_db');
+define('DB_PASS', '********  (voir config.local.php)');
 ```
 
 ### 3️⃣ Créer un administrateur

@@ -5,7 +5,7 @@ import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 export async function POST(request: NextRequest) {
   try {
     const { response: authResponse } = await requireAdmin();
-    if (authResponse) return authResponse;
+  if (authResponse) return authResponse;
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folder = formData.get('folder') as string || 'Images_blogs';

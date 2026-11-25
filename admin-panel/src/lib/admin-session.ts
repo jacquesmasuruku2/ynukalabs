@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { hashSessionToken } from '@/lib/session-token';
 import { isSuperAdminEmail, isSuperAdminRole, resolveAdminRole } from '@/lib/adminRoles';
 
 export async function getAdminSession() {
@@ -8,7 +9,7 @@ export async function getAdminSession() {
   if (!token) return null;
 
   const session = await prisma.adminSession.findUnique({
-    where: { token },
+    where: { token: hashSessionToken(token) },
     include: { adminUser: true },
   });
 

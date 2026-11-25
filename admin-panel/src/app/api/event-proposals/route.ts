@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { corsOptions, jsonCors } from '@/lib/cors';
+import { requireAdmin } from '@/lib/admin-session';
 
 export async function OPTIONS() {
   return corsOptions();
@@ -13,6 +14,9 @@ function parseDate(value: unknown): Date | null {
 }
 
 export async function GET(request: NextRequest) {
+  const { response: authResponse } = await requireAdmin();
+  if (authResponse) return authResponse;
+
   try {
     const { searchParams } = request.nextUrl;
     const status = searchParams.get('status');

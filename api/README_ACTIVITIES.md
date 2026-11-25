@@ -129,7 +129,7 @@ L'API utilise la même configuration de base de données que l'API existante:
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'ynukalab_database_website');
 define('DB_USER', 'ynukalab_admin-jacques');
-define('DB_PASS', 'Admin-Jacques.ynuka_db');
+define('DB_PASS', '********  (voir config.local.php)');
 ```
 
 ## Test de l'API

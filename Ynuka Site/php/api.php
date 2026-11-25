@@ -9,20 +9,39 @@
 
 // ============ HEADERS ============
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Max-Age: 86400');
+// ============ CONFIG ============
+require_once __DIR__ . '/config.php';
+
+// CORS : seules les origines listées dans ALLOWED_ORIGINS peuvent appeler l'API depuis un navigateur.
+$allowedOrigins = array_filter(array_map(fn($o) => rtrim(trim($o), '/'), explode(',', (string) ynuka_cfg(
+    'ALLOWED_ORIGINS',
+    'https://ynukalabs.com,https://www.ynukalabs.com,https://admin.ynukalabs.com'
+))));
+$requestOrigin = rtrim($_SERVER['HTTP_ORIGIN'] ?? '', '/');
+$originAllowed = $requestOrigin !== '' && in_array($requestOrigin, $allowedOrigins, true);
+if ($originAllowed) {
+    header('Access-Control-Allow-Origin: ' . $requestOrigin);
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    header('Access-Control-Max-Age: 86400');
+}
+header('Vary: Origin');
+header('X-Content-Type-Options: nosniff');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
-// ============ CONFIG ============
-require_once 'config.php';
-if (file_exists('google-oauth.php')) {
-    require_once 'google-oauth.php';
+// Anti-CSRF : une requête d'écriture envoyée par un navigateur depuis un autre site est refusée.
+if ($requestOrigin !== '' && !$originAllowed && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Origin not allowed']);
+    exit;
+}
+
+if (file_exists(__DIR__ . '/google-oauth.php')) {
+    require_once __DIR__ . '/google-oauth.php';
 }
 
 // ============ CHECK DATABASE CONNECTION ============
@@ -31,8 +50,7 @@ if ($pdo === null) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(503);
     echo json_encode([
-        'error' => 'Database connection failed',
-        'details' => $dbConnectionError ?? 'Unknown error'
+        'error' => 'Database connection failed'
     ]);
     exit;
 }
@@ -49,27 +67,48 @@ function error($message, $code = 400) {
 }
 
 function jwt_secret() {
-    return 'CHANGE_ME_TO_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS';
+    $secret = (string) ynuka_cfg('JWT_SECRET', '');
+    // Refuse de fonctionner avec une clé absente, trop courte ou laissée par défaut.
+    if (strlen($secret) < 32 || strpos($secret, 'CHANGE') !== false) {
+        error_log('JWT_SECRET manquant ou trop faible : définissez-le dans config.local.php');
+        error('Server misconfigured', 500);
+    }
+    return $secret;
+}
+
+function b64url_encode($data) {
+    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+}
+
+function b64url_decode($data) {
+    return base64_decode(strtr($data, '-_', '+/'));
 }
 
 function encode_jwt($payload) {
-    $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-    $body = base64_encode(json_encode($payload));
-    $signature = hash_hmac('sha256', "$header.$body", jwt_secret(), true);
-    $signature = base64_encode($signature);
+    $header = b64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $body = b64url_encode(json_encode($payload));
+    $signature = b64url_encode(hash_hmac('sha256', "$header.$body", jwt_secret(), true));
     return "$header.$body.$signature";
 }
 
 function decode_jwt($token) {
     $parts = explode('.', $token);
     if (count($parts) !== 3) return null;
-    
-    $payload = json_decode(base64_decode($parts[1]), true);
+    [$header, $body, $signature] = $parts;
+
+    // Vérification de la signature (absente avant : n'importe qui pouvait fabriquer un jeton).
+    $expected = b64url_encode(hash_hmac('sha256', "$header.$body", jwt_secret(), true));
+    if (!hash_equals($expected, $signature)) return null;
+
+    $headerData = json_decode(b64url_decode($header), true);
+    if (!is_array($headerData) || ($headerData['alg'] ?? '') !== 'HS256') return null;
+
+    $payload = json_decode(b64url_decode($body), true);
     if (!is_array($payload)) return null;
-    
-    // Check expiration
-    if (isset($payload['exp']) && $payload['exp'] < time()) return null;
-    
+
+    // Expiration obligatoire
+    if (!isset($payload['exp']) || $payload['exp'] < time()) return null;
+
     return $payload;
 }
 
@@ -102,12 +141,48 @@ $allowed_tables = [
     'goma_drep_actions',
 ];
 
+// Tables dont la lecture exige un jeton admin valide (données personnelles / comptes).
+$private_read_tables = [
+    'users', 'user_roles', 'admin_users', 'contact_messages', 'newsletter_subscribers',
+    'event_registrations', 'donations',
+];
+
+// Colonnes jamais renvoyées par l'API.
+$hidden_columns = ['password_hash', 'password', 'token', 'reset_token', 'api_key', 'secret'];
+
+// Colonnes qu'un visiteur non connecté ne peut pas fixer lui-même lors d'une création.
+$public_forbidden_columns = ['id', 'approved', 'status', 'published', 'verified', 'role', 'is_admin', 'created_at', 'updated_at'];
+
+function strip_hidden_columns($row) {
+    global $hidden_columns;
+    if (!is_array($row)) return $row;
+    foreach ($hidden_columns as $col) unset($row[$col]);
+    return $row;
+}
+
+function table_columns($pdo, $resource) {
+    $stmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
+    return array_map(fn($r) => $r['Field'], $stmt->fetchAll(PDO::FETCH_ASSOC));
+}
+
+/** Ne garde que les clés qui sont de vraies colonnes de la table (empêche l'injection SQL via les noms de colonnes). */
+function filter_body_columns($body, $columns, $forbidden = []) {
+    $clean = [];
+    foreach ($body as $key => $value) {
+        if (!is_string($key) || !preg_match('/^[A-Za-z0-9_]+$/', $key)) continue;
+        if (!in_array($key, $columns, true) || in_array($key, $forbidden, true)) continue;
+        if (is_array($value) || is_object($value)) $value = json_encode($value);
+        $clean[$key] = $value;
+    }
+    return $clean;
+}
+
 // ============ ROUTES ============
 $action = $_GET['action'] ?? '';
 $resource = $_GET['resource'] ?? '';
 $id = $_GET['id'] ?? null;
-$page = intval($_GET['page'] ?? 1);
-$limit = intval($_GET['limit'] ?? 25);
+$page = max(1, intval($_GET['page'] ?? 1));
+$limit = max(1, min(100, intval($_GET['limit'] ?? 25)));
 $search = $_GET['search'] ?? '';
 
 $body = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -123,17 +198,7 @@ if (!empty($body['table']) && empty($resource)) {
 try {
     // PING (diagnostic, no auth)
     if ($action === 'ping') {
-        $tables = [];
-        $result = $pdo->query("SELECT TABLE_NAME as table_name FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" . DB_NAME . "'");
-        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-            $tables[] = $row['table_name'];
-        }
-        json_response([
-            'status' => 'ok',
-            'database' => DB_NAME,
-            'tables' => $tables,
-            'timestamp' => date('c')
-        ]);
+        json_response(['status' => 'ok', 'timestamp' => date('c')]);
     }
 
     // GOOGLE AUTH URL (initiate Google OAuth flow)
@@ -142,7 +207,8 @@ try {
             $authUrl = get_google_auth_url();
             json_response(['url' => $authUrl]);
         } catch (Exception $e) {
-            error('Failed to generate Google auth URL: ' . $e->getMessage(), 500);
+            error_log('api.php: ' . $e->getMessage());
+            error('Failed to generate Google auth URL', 500);
         }
     }
 
@@ -226,7 +292,8 @@ try {
             header('Location: /login#token=' . urlencode($token));
             exit;
         } catch (Exception $e) {
-            header('Location: /login#error=' . urlencode('Authentication failed: ' . $e->getMessage()));
+            error_log('google_callback: ' . $e->getMessage());
+            header('Location: /login#error=' . urlencode('Authentication failed'));
             exit;
         }
     }
@@ -294,13 +361,17 @@ try {
                 ]
             ]);
         } catch (Exception $e) {
-            error('Failed to process Google authentication: ' . $e->getMessage(), 500);
+            error_log('api.php: ' . $e->getMessage());
+            error('Failed to process Google authentication', 500);
         }
     }
 
     // GOOGLE OAUTH LOGIN (simple variant - accepts pre-validated email and name)
     // Use this if you have another service pre-validating the email
     if ($action === 'google_oauth_login') {
+        // Désactivé : cette action donnait un jeton admin à partir d'un simple email, sans preuve Google.
+        // Utiliser 'google_oauth_verify' (id_token vérifié par Google).
+        error('Action disabled', 410);
         if (!isset($body['email']) || !isset($body['name'])) {
             error('Missing email or name from Google', 400);
         }
@@ -336,7 +407,8 @@ try {
                 ];
             }
         } catch (Exception $e) {
-            error('Failed to process Google authentication: ' . $e->getMessage(), 500);
+            error_log('api.php: ' . $e->getMessage());
+            error('Failed to process Google authentication', 500);
         }
         
         // Generate JWT token with 7 days expiration
@@ -400,6 +472,9 @@ try {
         if (!$resource || !in_array($resource, $allowed_tables)) {
             error('Invalid resource', 400);
         }
+        if (in_array($resource, $private_read_tables, true) && !get_auth_user()) {
+            error('Unauthorized', 401);
+        }
 
         $offset = ($page - 1) * $limit;
 
@@ -451,7 +526,7 @@ try {
         $query = "SELECT * FROM `$resource` $whereClause LIMIT $limit OFFSET $offset";
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = array_map('strip_hidden_columns', $stmt->fetchAll(PDO::FETCH_ASSOC));
 
         // Get columns
         $columnsStmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
@@ -473,6 +548,9 @@ try {
         if (!$resource || !$id || !in_array($resource, $allowed_tables)) {
             error('Invalid resource or id', 400);
         }
+        if (in_array($resource, $private_read_tables, true) && !get_auth_user()) {
+            error('Unauthorized', 401);
+        }
 
         // Find primary key
         $pkStmt = $pdo->query("SHOW KEYS FROM `$resource` WHERE Key_name = 'PRIMARY'");
@@ -484,6 +562,7 @@ try {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$row) error('Not found', 404);
+        $row = strip_hidden_columns($row);
         
         // Get columns
         $columnsStmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
@@ -512,9 +591,9 @@ try {
         if (empty($body)) error('No data provided', 400);
         
         try {
-            // Add timestamp if table supports it
-            $columnsStmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
-            $columns = array_map(fn($r) => $r['Field'], $columnsStmt->fetchAll(PDO::FETCH_ASSOC));
+            $columns = table_columns($pdo, $resource);
+            $body = filter_body_columns($body, $columns, $user ? [] : $public_forbidden_columns);
+            if (empty($body)) error('No valid fields provided', 400);
             
             // Auto-add created_at timestamp
             if (in_array('created_at', $columns) && !isset($body['created_at'])) {
@@ -534,20 +613,21 @@ try {
             $result = $stmt->execute(array_values($body));
             
             if (!$result) {
-                error('Failed to insert data: ' . $stmt->errorInfo()[2], 400);
+                error('Failed to insert data', 400);
             }
             
             $insertId = $pdo->lastInsertId();
             
             // Return Strapi-like response format
             json_response([
-                'data' => array_merge($body, ['id' => $insertId ?: null]),
+                'data' => strip_hidden_columns(array_merge($body, ['id' => $insertId ?: null])),
                 'success' => true,
                 'id' => $insertId ?: null,
                 'message' => 'Created successfully'
             ], 201);
         } catch (Exception $e) {
-            error('Error creating record: ' . $e->getMessage(), 400);
+            error_log('api.php: ' . $e->getMessage());
+            error('Error creating record', 400);
         }
     }
 
@@ -568,9 +648,9 @@ try {
             $pkRow = $pkStmt->fetch(PDO::FETCH_ASSOC);
             $pk = $pkRow ? $pkRow['Column_name'] : 'id';
             
-            // Auto-add updated_at timestamp
-            $columnsStmt = $pdo->query("SHOW COLUMNS FROM `$resource`");
-            $columns = array_map(fn($r) => $r['Field'], $columnsStmt->fetchAll(PDO::FETCH_ASSOC));
+            $columns = table_columns($pdo, $resource);
+            $body = filter_body_columns($body, $columns, [$pk]);
+            if (empty($body)) error('No valid fields provided', 400);
             if (in_array('updated_at', $columns)) {
                 $body['updated_at'] = date('Y-m-d H:i:s');
             }
@@ -583,7 +663,7 @@ try {
             $result = $stmt->execute($values);
             
             if (!$result) {
-                error('Failed to update data: ' . $stmt->errorInfo()[2], 400);
+                error('Failed to update data', 400);
             }
             
             json_response([
@@ -591,7 +671,8 @@ try {
                 'message' => 'Updated successfully'
             ]);
         } catch (Exception $e) {
-            error('Error updating record: ' . $e->getMessage(), 400);
+            error_log('api.php: ' . $e->getMessage());
+            error('Error updating record', 400);
         }
     }
 
@@ -614,7 +695,7 @@ try {
             $result = $stmt->execute([$id]);
             
             if (!$result) {
-                error('Failed to delete data: ' . $stmt->errorInfo()[2], 400);
+                error('Failed to delete data', 400);
             }
             
             json_response([
@@ -622,7 +703,8 @@ try {
                 'message' => 'Deleted successfully'
             ]);
         } catch (Exception $e) {
-            error('Error deleting record: ' . $e->getMessage(), 400);
+            error_log('api.php: ' . $e->getMessage());
+            error('Error deleting record', 400);
         }
     }
 
@@ -636,7 +718,8 @@ try {
         }
         
         $file = $_FILES['file'];
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        // SVG refusé (peut contenir du JavaScript). L'extension est déduite du type réel du fichier.
+        $allowed_types = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
         $max_size = 10 * 1024 * 1024; // 10MB
         
         // Validate file
@@ -661,7 +744,7 @@ try {
         $mime_type = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
         
-        if (!in_array($mime_type, $allowed_types)) {
+        if (!isset($allowed_types[$mime_type])) {
             error('Invalid file type. Only images allowed', 415);
         }
         
@@ -673,7 +756,7 @@ try {
             }
             
             // Generate unique filename
-            $filename = 'img_' . bin2hex(random_bytes(8)) . '_' . time() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'img_' . bin2hex(random_bytes(8)) . '_' . time() . '.' . $allowed_types[$mime_type];
             $filepath = $uploads_dir . '/' . $filename;
             
             // Move file
@@ -691,16 +774,17 @@ try {
                 'message' => 'Image uploaded successfully'
             ]);
         } catch (Exception $e) {
-            error('Upload error: ' . $e->getMessage(), 500);
+            error_log('api.php: ' . $e->getMessage());
+            error('Upload error', 500);
         }
     }
 
-    error('Unknown action: ' . $action, 400);
+    error('Unknown action', 400);
 
 } catch (PDOException $e) {
     error_log("PDO Error: " . $e->getMessage());
-    error('Database error: ' . $e->getMessage(), 500);
+    error('Database error', 500);
 } catch (Exception $e) {
     error_log("General Error: " . $e->getMessage());
-    error('Server error: ' . $e->getMessage(), 500);
+    error('Server error', 500);
 }
